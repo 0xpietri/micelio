@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge, category_dot, graph_head, graph_box %}
+{% block title %}{{ t("explore.title") }} · {{ site.title }}{% endblock %}
+{% block head %}{{ graph_head("explore.js") }}{% endblock %}
+{% block body_class %} class="full"{% endblock %}
+{% block content %}
+<div class="explore">
+  <aside class="explore-panel" id="explore-panel">
+    <h1>{{ t("explore.title") }}</h1>
+    <form class="explore-search" role="search">
+      <label>{{ t("explore.search") }}
+        <input type="search" id="graph-search" placeholder="{{ t('explore.search_placeholder') }}" autocomplete="off">
+      </label>
+      <p id="graph-search-result" class="muted small" aria-live="polite"></p>
+    </form>
+
+    <fieldset class="filter">
+      <legend>{{ t("explore.types") }}</legend>
+      {% for type in types %}
+      <label class="check"><input type="checkbox" name="type" value="{{ type }}"{% if type not in hidden_types %} checked{% endif %}> <span class="shape shape-{{ type }}" aria-hidden="true"></span> {{ t("type." ~ type) }}</label>
+      {% endfor %}
+    </fieldset>
+
+    <fieldset class="filter">
+      <legend>{{ t("explore.categories") }}</legend>
+      {% for category in site_categories %}
+      <label class="check"><input type="checkbox" name="category" value="{{ category.key }}" checked> {{ category_dot(category.key) }} {{ category_name(category) }}</label>
+      {% endfor %}
+      <label class="check"><input type="checkbox" name="category" value="none" checked> <span class="dot dot-none" aria-hidden="true"></span> {{ t("explore.no_category") }}</label>
+    </fieldset>
+
+    <fieldset class="filter">
+      <legend>{{ t("explore.statuses") }}</legend>
+      {% for status in statuses %}
+      <label class="check"><input type="checkbox" name="status" value="{{ status }}" checked> {{ t("status." ~ status) }}</label>
+      {% endfor %}
+      <label class="check"><input type="checkbox" name="status" value="none" checked> {{ t("explore.no_status") }}</label>
+    </fieldset>
+
+    <section>
+      <h2>{{ t("explore.latest") }}</h2>
+      {% if journals %}
+      <ul class="rows">
+        {% for entry in journals %}
+        <li class="row"><span class="muted small">{{ show_date(created(entry)) }}</span> <a href="{{ href(entry) }}">{{ entry.title }}</a></li>
+        {% endfor %}
+      </ul>
+      {% else %}<p class="muted">{{ t("explore.no_journal") }}</p>{% endif %}
+    </section>
+
+    <details class="node-list">
+      <summary>{{ t("explore.list", count=notes|length) }}</summary>
+      <ul class="rows">
+        {% for note in notes %}
+        <li class="row"><a href="{{ href(note) }}">{{ note.title }}</a> <span class="badge">{{ t("type." ~ note.type) }}</span> {{ status_badge(note.status) }}</li>
+        {% endfor %}
+      </ul>
+    </details>
+  </aside>
+  {{ graph_box("all", t("explore.graph_label"), "graph-full", manual=True) }}
+</div>
+{% endblock %}

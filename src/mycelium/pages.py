@@ -1,4 +1,4 @@
-"""The reading pages: projects, notes, journal and the health of the vault."""
+"""The reading pages: projects, notes, journal, the graph and the health of the vault."""
 
 from __future__ import annotations
 
@@ -6,12 +6,13 @@ from collections import Counter
 from dataclasses import dataclass
 from datetime import date
 
-from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import PlainTextResponse, RedirectResponse, Response
+from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
-from mycelium.config import STATUSES, Category, Config
+from mycelium.config import NOTE_TYPES, STATUSES, Category, Config
 from mycelium.formatting import Dates
+from mycelium.graph import GraphBuilder, ScopeError, UnknownNodeError, parse_scope
 from mycelium.i18n import category_names
 from mycelium.render import Renderer, href_for
 from mycelium.vault.index import Note, VaultIndex
@@ -48,6 +49,7 @@ class Pages:
         self.templates = templates
         self.dates = dates
         self.renderer = Renderer(index)
+        self.graphs = GraphBuilder(config, index)
         templates.env.globals.update(
             href=href_for,
             show_date=dates.show,
@@ -175,6 +177,40 @@ class Pages:
                 reverse=True,
             )
             return render(request, "journal.html", {"entries": entries, "nav": "journal"})
+
+        @router.get("/api/graph", include_in_schema=False)
+        def graph(scope: str = Query("all", max_length=300)) -> Response:
+            self.index.refresh()
+            try:
+                data = self.graphs.build(parse_scope(scope))
+            except ScopeError:
+                return JSONResponse(
+                    {"error": "scope must be all, project:<slug> or note:<slug>"},
+                    status_code=400,
+                )
+            except UnknownNodeError:
+                return JSONResponse({"error": "not found"}, status_code=404)
+            return JSONResponse(dict(data), headers={"Cache-Control": "no-store"})
+
+        @router.get("/explore", include_in_schema=False)
+        def explore(request: Request) -> Response:
+            self.index.refresh()
+            notes = sorted(self.index.notes.values(), key=lambda n: (n.title.lower(), n.slug))
+            journals = sorted(
+                (n for n in notes if n.type == "journal"),
+                key=lambda n: (self.dates.created(n), n.slug),
+                reverse=True,
+            )
+            context = {
+                "notes": notes,
+                "journals": journals[:5],
+                "types": [*NOTE_TYPES, "ghost"] if self.index.ghosts else list(NOTE_TYPES),
+                "hidden_types": set(self.config.graph.hide_by_default),
+                "statuses": STATUSES,
+                "site_categories": self.config.categories,
+                "nav": "explore",
+            }
+            return render(request, "explore.html", context)
 
         @router.get("/health", include_in_schema=False)
         def health(request: Request) -> Response:

@@ -1,6 +1,7 @@
 {% extends "base.html" %}
-{% from "_macros.html" import status_badge, category_dot %}
+{% from "_macros.html" import status_badge, category_dot, graph_head, graph_box %}
 {% block title %}{{ note.title }} · {{ site.title }}{% endblock %}
+{% block head %}{{ graph_head("graph-embed.js") }}{% endblock %}
 {% block content %}
 {% set category = category_of(note.category) %}
 <article class="page{% if category %} cat-{{ category.key }}{% endif %}">
@@ -13,6 +14,11 @@
     {{ t("note.created", date=show_date(created(note))) }} · {{ t("note.updated", date=show_date(updated(note))) }}
   </p>
   <div class="prose">{{ body }}</div>
+
+  <section>
+    <h2>{{ t("project.graph") }}</h2>
+    {{ graph_box("project:" ~ note.slug, t("project.graph_label")) }}
+  </section>
 
   <section>
     <h2>{{ t("project.notes") }}</h2>

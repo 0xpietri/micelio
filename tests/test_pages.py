@@ -118,9 +118,22 @@ def test_theme_css(client: TestClient) -> None:
 
 
 def test_no_inline_scripts_or_styles(client: TestClient) -> None:
-    for path in ("/", "/projects", "/projects/learning-bayesian-statistics", "/journal", "/health"):
+    paths = (
+        "/",
+        "/projects",
+        "/projects/learning-bayesian-statistics",
+        "/notes/priors-are-beliefs-you-can-update",
+        "/explore",
+        "/journal",
+        "/health",
+    )
+    for path in paths:
         html = client.get(path).text
-        assert "<script" not in html
+        scripts = re.findall(r"<script([^>]*)>(.*?)</script>", html, re.DOTALL)
+        assert html.count("<script") == len(scripts)
+        for attributes, body in scripts:
+            assert re.search(r'src="/static/[^"]+\.js"', attributes), attributes
+            assert body.strip() == ""
         assert "<style" not in html
         assert "style=" not in html
 
