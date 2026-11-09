@@ -48,3 +48,9 @@ hide_by_default = ["journal", "source"]
 
 [auth]
 mode = "local"                       # local | none (when a gateway in front handles sign-in)
+session_hours = 12
+max_failures = 5                     # failed sign-ins per address before a lockout
+lockout_minutes = 15
+
+[data]
+dir = "data"                         # Mycelium's own state (sessions); safe to delete

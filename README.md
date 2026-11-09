@@ -6,8 +6,8 @@ small self-hosted website. It is read-only: your notes stay plain files that you
 or an AI assistant write.
 
 > **Status: early development.** The first release (v0.1) is being built step by step; see
-> the [roadmap](#roadmap). What works today: reading and checking a vault, and the health
-> endpoint.
+> the [roadmap](#roadmap). What works today: reading and checking a vault, sign-in, and the
+> health endpoint.
 
 ## Why
 
@@ -81,13 +81,33 @@ Copy [`mycelium.example.toml`](mycelium.example.toml) to `mycelium.toml` and poi
 folders and the categories, each with a color and a mushroom species for the landing page.
 Secrets never go in this file; see [`.env.example`](.env.example).
 
+## Signing in
+
+One person signs in, with a password and a code from an authenticator app (any TOTP app:
+Aegis, 2FAS, Google Authenticator, 1Password…). Generate the three secrets once and put them
+in your environment:
+
+```sh
+uv run mycelium user set-password    # prints MYCELIUM_PASSWORD_HASH
+uv run mycelium user totp            # shows a QR code, prints MYCELIUM_TOTP_SECRET
+uv run mycelium user session-key     # prints MYCELIUM_SESSION_KEY
+```
+
+- Sessions last 12 hours and are stored server-side, so signing out really ends them.
+  `mycelium user sign-out-all` ends every session.
+- Five failed attempts from one address lock it out for 15 minutes.
+- On your own computer, `mycelium serve` listens on `127.0.0.1` only; with no secrets set,
+  sign-in is simply off there. On any other address, Mycelium refuses to start without them.
+- Already behind Cloudflare Access, Authelia or another gateway? Set `auth.mode = "none"` and
+  Mycelium trusts whoever reaches it. Only do this when the gateway really guards every path.
+
 ## Roadmap
 
 | Step | What | State |
 | --- | --- | --- |
 | 1 | Skeleton: config, vault reader and index, `/healthz`, CI | done |
-| 2 | Sign-in: password + TOTP, sessions, or `auth.mode = "none"` | next |
-| 3 | Pages and languages: projects, notes, journal, health; English and Spanish | |
+| 2 | Sign-in: password + TOTP, sessions, or `auth.mode = "none"` | done |
+| 3 | Pages and languages: projects, notes, journal, health; English and Spanish | next |
 | 4 | Graphs: whole vault, per project, per note | |
 | 5 | The landing: mushrooms above ground, mycelium below | |
 | 6 | Public notes for anonymous visitors | |

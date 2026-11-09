@@ -113,7 +113,9 @@ Secrets (password hash, TOTP secret, session key) come only from environment var
 - Signed session cookie, `HttpOnly`, `Secure`, `SameSite=Strict`, 12 h, stored server-side in SQLite so sign-out revokes it.
 - 5 failures per IP in 15 minutes lock that IP for the window.
 - `auth.mode = "none"` turns sign-in off for people who put Cloudflare Access or another gateway in front. The README says so plainly.
-- A `mycelium user set-password` and `mycelium user totp` command set the secrets and print a QR code in the terminal.
+- `mycelium user set-password`, `mycelium user totp` (with a QR code in the terminal) and `mycelium user session-key` print the three secrets as `.env` lines; `mycelium user sign-out-all` ends every session.
+- Listening on loopback only with none of the secrets set, sign-in is off (the personal-computer case of §10). On any other address `auth.mode = "local"` refuses to start until all three are set. Setting some but not all is always an error.
+- Password and code are asked together and a failure never says which was wrong. A form token (HMAC with the session key) guards sign-in and sign-out.
 
 ## 5a. Interface languages
 

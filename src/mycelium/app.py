@@ -2,14 +2,38 @@
 
 from __future__ import annotations
 
-from fastapi import FastAPI
+import os
+import time
+from collections.abc import Mapping
+from importlib.resources import files
+from pathlib import Path
+
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse, Response
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
 from mycelium import __version__
+from mycelium.auth import resolve_auth
+from mycelium.auth.store import AuthStore
+from mycelium.auth.web import Clock, SignIn, install_security_headers
 from mycelium.config import Config
+from mycelium.i18n import translator
 from mycelium.vault import VaultIndex
 
+PACKAGE = Path(str(files("mycelium")))
+AUTH_DB = "auth.sqlite3"
 
-def create_app(config: Config, *, index: VaultIndex | None = None) -> FastAPI:
+
+def create_app(
+    config: Config,
+    *,
+    index: VaultIndex | None = None,
+    environ: Mapping[str, str] | None = None,
+    local_only: bool = False,
+    clock: Clock = time.time,
+) -> FastAPI:
+    """Build the app. Raises ``AuthSetupError`` when sign-in is on but not set up."""
     vault = index or VaultIndex(config)
     vault.refresh(force=True)
 
@@ -23,6 +47,23 @@ def create_app(config: Config, *, index: VaultIndex | None = None) -> FastAPI:
     app.state.config = config
     app.state.vault = vault
 
+    language = config.site.language
+    t = translator(language)
+    templates = Jinja2Templates(directory=PACKAGE / "templates")
+    templates.env.globals.update(t=t, site=config.site, language=language)
+
+    settings = resolve_auth(
+        config, os.environ if environ is None else environ, local_only=local_only
+    )
+    store = AuthStore(config.data.dir / AUTH_DB) if settings.enabled else None
+    sign_in = SignIn(config, settings, store, templates, t, clock)
+    app.state.sign_in = sign_in
+    templates.env.globals["sign_in"] = sign_in
+
+    app.mount("/static", StaticFiles(directory=PACKAGE / "static"), name="static")
+    sign_in.install(app)
+    install_security_headers(app)
+
     @app.get("/healthz", include_in_schema=False)
     def healthz() -> dict[str, object]:
         """Liveness for containers and monitoring. Reveals counts only, never titles."""
@@ -32,5 +73,10 @@ def create_app(config: Config, *, index: VaultIndex | None = None) -> FastAPI:
             "version": __version__,
             "notes": len(vault.notes),
         }
+
+    @app.get("/", response_class=HTMLResponse, include_in_schema=False)
+    def home(request: Request) -> Response:
+        vault.refresh()
+        return templates.TemplateResponse(request, "home.html", {"note_count": len(vault.notes)})
 
     return app

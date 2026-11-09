@@ -16,6 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 CONFIG_ENV = "MYCELIUM_CONFIG"
 VAULT_ENV = "MYCELIUM_VAULT"
+DATA_ENV = "MYCELIUM_DATA"
 
 SPECIES: frozenset[str] = frozenset(
     {
@@ -118,6 +119,15 @@ class GraphConfig(_Strict):
 
 class AuthConfig(_Strict):
     mode: Literal["local", "none"] = "local"
+    session_hours: int = Field(default=12, ge=1, le=24 * 30)
+    max_failures: int = Field(default=5, ge=1, le=100)
+    lockout_minutes: int = Field(default=15, ge=1, le=24 * 60)
+
+
+class DataConfig(_Strict):
+    """Mycelium's own small state (sign-in sessions). Safe to delete."""
+
+    dir: Path = Path("data")
 
 
 class Config(_Strict):
@@ -126,6 +136,7 @@ class Config(_Strict):
     categories: list[Category] = Field(default_factory=_default_categories)
     graph: GraphConfig = Field(default_factory=GraphConfig)
     auth: AuthConfig = Field(default_factory=AuthConfig)
+    data: DataConfig = Field(default_factory=DataConfig)
 
     @model_validator(mode="after")
     def _unique_categories(self) -> Config:
@@ -150,25 +161,32 @@ def load_config(path: Path | None = None, *, vault_override: Path | None = None)
     """
     env_path = os.environ.get(CONFIG_ENV)
     config_path = path or (Path(env_path) if env_path else None)
-    data: dict[str, object] = {}
+    raw: dict[str, object] = {}
     base = Path.cwd()
     if config_path is not None:
         try:
-            data = tomllib.loads(config_path.read_text(encoding="utf-8"))
+            raw = tomllib.loads(config_path.read_text(encoding="utf-8"))
         except FileNotFoundError as exc:
             raise ConfigError(f"config file not found: {config_path}") from exc
         except tomllib.TOMLDecodeError as exc:
             raise ConfigError(f"{config_path}: invalid TOML: {exc}") from exc
         base = config_path.resolve().parent
     try:
-        config = Config.model_validate(data)
+        config = Config.model_validate(raw)
     except ValueError as exc:
         raise ConfigError(f"invalid configuration: {exc}") from exc
 
     env_vault = os.environ.get(VAULT_ENV)
     root = vault_override or (Path(env_vault) if env_vault else config.vault.root)
-    root = root.expanduser()
-    if not root.is_absolute():
-        root = base / root
-    vault = config.vault.model_copy(update={"root": root.resolve()})
-    return config.model_copy(update={"vault": vault})
+    vault = config.vault.model_copy(update={"root": _absolute(root, base)})
+    env_data = os.environ.get(DATA_ENV)
+    data_dir = Path(env_data) if env_data else config.data.dir
+    data = config.data.model_copy(update={"dir": _absolute(data_dir, base)})
+    return config.model_copy(update={"vault": vault, "data": data})
+
+
+def _absolute(path: Path, base: Path) -> Path:
+    path = path.expanduser()
+    if not path.is_absolute():
+        path = base / path
+    return path.resolve()

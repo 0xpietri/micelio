@@ -1,0 +1,21 @@
+# English: the reference language. Every other locale has exactly these keys.
+# Values may use {placeholders}; keep them as they are when translating.
+
+[site]
+owners_mycelium = "{owner}'s mycelium"
+
+[login]
+title = "Sign in"
+password = "Password"
+code = "Code from your authenticator app"
+submit = "Sign in"
+failed = "That password and code did not work. Try again."
+locked = "Too many attempts. Try again in {minutes} minutes."
+expired = "The form expired. Please try again."
+
+[logout]
+submit = "Sign out"
+
+[home]
+notes = "{count} notes in the vault"
+coming = "Projects, notes and graphs arrive in the next versions."
