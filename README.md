@@ -6,8 +6,8 @@ small self-hosted website. It is read-only: your notes stay plain files that you
 or an AI assistant write.
 
 > **Status: early development.** The first release (v0.1) is being built step by step; see
-> the [roadmap](#roadmap). What works today: reading and checking a vault, sign-in, and the
-> health endpoint.
+> the [roadmap](#roadmap). What works today: sign-in, and reading your projects, notes, journal
+> and the health of the vault, in English or Spanish. Graphs and the landing come next.
 
 ## Why
 
@@ -74,6 +74,12 @@ paths. A note belongs to a project when the project links to it. Hidden folders 
 `.trash`) and Syncthing conflict copies are ignored. Nothing in the frontmatter is required;
 odd values are reported by `mycelium check`, never fatal.
 
+## Interface languages
+
+The interface ships in English and Spanish (`language = "es"` in `mycelium.toml`); your notes
+are always shown as written. Adding a language takes one file, see
+[CONTRIBUTING.md](CONTRIBUTING.md#adding-a-language).
+
 ## Configuration
 
 Copy [`mycelium.example.toml`](mycelium.example.toml) to `mycelium.toml` and point
@@ -107,8 +113,8 @@ uv run mycelium user session-key     # prints MYCELIUM_SESSION_KEY
 | --- | --- | --- |
 | 1 | Skeleton: config, vault reader and index, `/healthz`, CI | done |
 | 2 | Sign-in: password + TOTP, sessions, or `auth.mode = "none"` | done |
-| 3 | Pages and languages: projects, notes, journal, health; English and Spanish | next |
-| 4 | Graphs: whole vault, per project, per note | |
+| 3 | Pages and languages: projects, notes, journal, health; English and Spanish | done |
+| 4 | Graphs: whole vault, per project, per note | next |
 | 5 | The landing: mushrooms above ground, mycelium below | |
 | 6 | Public notes for anonymous visitors | |
 | 7 | Release v0.1.0: Docker image (amd64 + arm64), PyPI package | |

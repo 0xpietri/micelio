@@ -141,7 +141,7 @@ Secrets (password hash, TOTP secret, session key) come only from environment var
 | `/api/graph?scope=all\|project:<slug>\|note:<slug>` | Nodes and edges as JSON |
 | `/healthz` | Liveness for the container and monitoring |
 
-Markdown is rendered with markdown-it-py and sanitized with nh3. Wikilinks become links to `/notes/<slug>`. Callouts (`> [!warning]`) and task lists render like Obsidian. Times are shown in the configured time zone.
+Markdown is rendered with markdown-it-py and sanitized with nh3. Wikilinks become links to `/notes/<slug>`. Callouts (`> [!warning]`) and task lists render like Obsidian. Times are shown in the configured time zone. Links to projects go to `/projects/<slug>` (and `/notes/<project>` redirects there); links to missing notes render as dashed ghost text; `![[file.png]]` and other non-note embeds render as their name (attachments are not served in v0.1). Category colors come from a generated `/theme.css`, so pages need no inline styles. Light and dark themes follow the system setting.
 
 ## 7. The graph
 

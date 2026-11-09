@@ -1,0 +1,93 @@
+# Español. Mismas claves que en.toml; los {marcadores} quedan sin traducir.
+
+[site]
+owners_mycelium = "El micelio de {owner}"
+
+[nav]
+projects = "Proyectos"
+journal = "Diario"
+health = "Salud"
+main = "Principal"
+
+[login]
+title = "Iniciar sesión"
+password = "Contraseña"
+code = "Código de tu app autenticadora"
+submit = "Entrar"
+failed = "La contraseña y el código no coinciden. Probá de nuevo."
+locked = "Demasiados intentos. Probá de nuevo en {minutes} minutos."
+expired = "El formulario venció. Probá de nuevo."
+
+[logout]
+submit = "Cerrar sesión"
+
+[home]
+notes = "{count} notas en el vault"
+coming = "El mapa vivo de tus ideas llega en una próxima versión. Mientras tanto, mirá los proyectos."
+
+[type]
+project = "Proyecto"
+note = "Nota"
+journal = "Diario"
+source = "Fuente"
+
+[status]
+draft = "Borrador"
+active = "Activo"
+paused = "En pausa"
+closed = "Cerrado"
+unknown = "Desconocido"
+
+[projects]
+title = "Proyectos"
+empty = "Todavía no hay proyectos. Agregá una nota a la carpeta de proyectos y aparece acá."
+uncategorized = "Sin categoría"
+notes = "{count} notas"
+last = "Última conversación: {date}"
+never = "Sin conversaciones todavía"
+
+[project]
+notes = "Notas de este proyecto"
+no_notes = "Este proyecto todavía no enlaza ninguna nota."
+journal = "Conversaciones"
+bridge = "También en otra categoría"
+
+[note]
+created = "Creación: {date}"
+updated = "Última edición: {date}"
+projects = "Forma parte de"
+no_projects = "Todavía no forma parte de ningún proyecto."
+backlinks = "Enlazada desde"
+no_backlinks = "Nada enlaza acá todavía."
+tags = "Etiquetas"
+bridge = "Puente entre categorías"
+
+[journal]
+title = "Diario"
+empty = "Todavía no hay conversaciones."
+
+[health]
+title = "Salud del vault"
+summary = "{notes} notas y {links} enlaces."
+all_good = "Nada para arreglar. Todos los enlaces llegan a una nota y todos los valores son conocidos."
+issues = "Problemas"
+orphans = "Huérfanas"
+orphans_help = "Notas que no enlazan a nada y a las que nada enlaza."
+no_orphans = "No hay huérfanas."
+file = "Archivo"
+detail = "Detalle"
+
+[issue]
+broken-link = "Enlace a una nota que no existe"
+unknown-type = "Tipo desconocido"
+unknown-category = "Categoría desconocida"
+unknown-status = "Estado desconocido"
+category-ignored = "Categoría en una nota que no es un proyecto"
+frontmatter = "Frontmatter ilegible"
+too-large = "Archivo demasiado grande"
+unreadable = "No se pudo leer el archivo"
+
+[errors]
+not_found = "No encontrada"
+not_found_help = "Acá no hay ninguna nota. Puede que la hayan renombrado o movido."
+back = "Volver a los proyectos"

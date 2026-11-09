@@ -242,3 +242,17 @@ def test_unchanged_files_are_not_reparsed(
     (index.root / "notes" / "C.md").write_text("", encoding="utf-8")
     index.refresh(force=True)
     assert calls == ["C"]
+
+
+def test_attachments_are_not_ghosts(make_vault: VaultFactory) -> None:
+    index = make_vault({"notes/A.md": "![[photo.PNG]] [[file.pdf]] [[Version 1.5]] [[B]]"})
+    # A missing "Version 1.5" looks like a file with a ".5" extension: not a ghost either.
+    assert set(index.ghosts) == {"B"}
+    assert ("broken-link", "notes/A.md") in kinds(index)
+
+
+def test_generation_changes_on_rebuild(make_vault: VaultFactory) -> None:
+    index = make_vault({"notes/A.md": ""})
+    before = index.generation
+    index.refresh(force=True)
+    assert index.generation == before + 1

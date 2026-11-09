@@ -79,6 +79,8 @@ def test_custom_categories_and_lowercased_color(tmp_path: Path) -> None:
         ("categories = []\n", "at least one category"),
         ('[auth]\nmode = "oauth"\n', "mode"),
         ('[graph]\nhide_by_default = ["diary"]\n', "hide_by_default"),
+        ('[site]\ntimezone = "Mars/Olympus"\n', "unknown time zone"),
+        ('[site]\nlanguage = "zz-not"\n', "unknown language"),
     ],
 )
 def test_invalid_configs_raise_config_error(tmp_path: Path, text: str, message: str) -> None:

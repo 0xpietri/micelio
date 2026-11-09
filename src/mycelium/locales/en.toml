@@ -4,6 +4,12 @@
 [site]
 owners_mycelium = "{owner}'s mycelium"
 
+[nav]
+projects = "Projects"
+journal = "Journal"
+health = "Health"
+main = "Main"
+
 [login]
 title = "Sign in"
 password = "Password"
@@ -18,4 +24,71 @@ submit = "Sign out"
 
 [home]
 notes = "{count} notes in the vault"
-coming = "Projects, notes and graphs arrive in the next versions."
+coming = "The living map of your ideas arrives in a later version. Meanwhile, browse the projects."
+
+[type]
+project = "Project"
+note = "Note"
+journal = "Journal"
+source = "Source"
+
+[status]
+draft = "Draft"
+active = "Active"
+paused = "Paused"
+closed = "Closed"
+unknown = "Unknown"
+
+[projects]
+title = "Projects"
+empty = "No projects yet. Add a note to the projects folder and it appears here."
+uncategorized = "No category"
+notes = "{count} notes"
+last = "Last conversation {date}"
+never = "No conversations yet"
+
+[project]
+notes = "Notes in this project"
+no_notes = "This project does not link to any note yet."
+journal = "Conversations"
+bridge = "Also in another category"
+
+[note]
+created = "Created {date}"
+updated = "Updated {date}"
+projects = "Part of"
+no_projects = "Not part of any project yet."
+backlinks = "Linked from"
+no_backlinks = "Nothing links here yet."
+tags = "Tags"
+bridge = "Bridge between categories"
+
+[journal]
+title = "Journal"
+empty = "No conversations yet."
+
+[health]
+title = "Health of the vault"
+summary = "{notes} notes and {links} links."
+all_good = "Nothing to fix. Every link resolves and every value is known."
+issues = "Problems"
+orphans = "Orphans"
+orphans_help = "Notes that link nowhere and that nothing links to."
+no_orphans = "No orphans."
+file = "File"
+detail = "Detail"
+
+[issue]
+broken-link = "Link to a missing note"
+unknown-type = "Unknown type"
+unknown-category = "Unknown category"
+unknown-status = "Unknown status"
+category-ignored = "Category on a note that is not a project"
+frontmatter = "Unreadable frontmatter"
+too-large = "File too large"
+unreadable = "File could not be read"
+
+[errors]
+not_found = "Not found"
+not_found_help = "There is no note here. It may have been renamed or moved."
+back = "Back to the projects"

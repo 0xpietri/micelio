@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}{{ t("errors.not_found") }} · {{ site.title }}{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>{{ t("errors.not_found") }}</h1>
+  <p class="muted">{{ t("errors.not_found_help") }}</p>
+  <p><a href="/projects">{{ t("errors.back") }}</a></p>
+</section>
+{% endblock %}

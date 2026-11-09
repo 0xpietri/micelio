@@ -5,7 +5,7 @@
 title = "Mycelium"
 owner = "Your Name"                  # example: shown on the landing page
 tagline = "A living notebook of ideas"
-language = "en"                      # interface language
+language = "en"                      # interface language: en | es
 timezone = "UTC"                     # example: "America/Argentina/Buenos_Aires"
 
 [vault]

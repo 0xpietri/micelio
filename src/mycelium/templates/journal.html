@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}{{ t("journal.title") }} · {{ site.title }}{% endblock %}
+{% block content %}
+<div class="page">
+  <h1>{{ t("journal.title") }}</h1>
+  {% if entries %}
+  <ol class="timeline">
+    {% for entry in entries %}
+    <li>
+      <time class="muted small" datetime="{{ created(entry).isoformat() }}">{{ show_date(created(entry)) }}</time>
+      <a class="row-title" href="{{ href(entry) }}">{{ entry.title }}</a>
+      <p class="muted">{{ excerpt(entry) }}</p>
+    </li>
+    {% endfor %}
+  </ol>
+  {% else %}
+  <p class="muted">{{ t("journal.empty") }}</p>
+  {% endif %}
+</div>
+{% endblock %}

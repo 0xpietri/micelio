@@ -8,6 +8,12 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Reading pages: projects by category, each project with its notes and conversations,
+  notes with backlinks and the projects they belong to, the journal and a health page.
+- Markdown rendered like Obsidian (wikilinks, ghost links, callouts, task lists, tables,
+  footnotes) and sanitized with nh3.
+- Spanish interface; dates per language and in the configured time zone; light and dark
+  themes that follow the system.
 - Sign-in for one person: argon2 password and TOTP code, server-side sessions in SQLite,
   lockout after repeated failures, `auth.mode = "none"` for gateways, and
   `mycelium user` commands to create the secrets.

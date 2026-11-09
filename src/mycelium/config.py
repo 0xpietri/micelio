@@ -11,7 +11,9 @@ import re
 import tomllib
 from pathlib import Path
 from typing import Literal
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+from babel import Locale, UnknownLocaleError
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 CONFIG_ENV = "MYCELIUM_CONFIG"
@@ -53,6 +55,24 @@ class SiteConfig(_Strict):
     tagline: str = "A living notebook of ideas"
     language: str = "en"
     timezone: str = "UTC"
+
+    @field_validator("language")
+    @classmethod
+    def _known_language(cls, value: str) -> str:
+        try:
+            Locale.parse(value.replace("-", "_"))
+        except (ValueError, UnknownLocaleError) as exc:
+            raise ValueError(f"unknown language code {value!r}") from exc
+        return value
+
+    @field_validator("timezone")
+    @classmethod
+    def _known_timezone(cls, value: str) -> str:
+        try:
+            ZoneInfo(value)
+        except (ZoneInfoNotFoundError, ValueError) as exc:
+            raise ValueError(f"unknown time zone {value!r}, use a name like Europe/Madrid") from exc
+        return value
 
 
 class VaultConfig(_Strict):
