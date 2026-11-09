@@ -21,6 +21,10 @@ dependencies = [
     "uvicorn>=0.32",
     "pydantic>=2.9",
     "pyyaml>=6.0",
+    "argon2-cffi>=23.1",
+    "jinja2>=3.1",
+    "python-multipart>=0.0.18",
+    "qrcode>=8.0",
 ]
 
 [project.scripts]
@@ -57,13 +61,17 @@ select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF", "N", "PTH", "S", "C4", "P
 ignore = []
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S101"]
+"tests/**" = ["S101", "S104", "S105", "S106"]
 
 [tool.mypy]
 strict = true
 python_version = "3.12"
 mypy_path = "src"
 packages = ["mycelium"]
+
+[[tool.mypy.overrides]]
+module = ["qrcode", "qrcode.*"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

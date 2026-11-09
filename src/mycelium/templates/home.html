@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card">
+  <h1>{% if site.owner %}{{ t("site.owners_mycelium", owner=site.owner) }}{% else %}{{ site.title }}{% endif %}</h1>
+  {% if site.tagline %}<p class="muted">{{ site.tagline }}</p>{% endif %}
+  <p>{{ t("home.notes", count=note_count) }}</p>
+  <p class="muted">{{ t("home.coming") }}</p>
+</section>
+{% endblock %}

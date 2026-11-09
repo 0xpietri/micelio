@@ -8,6 +8,12 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Sign-in for one person: argon2 password and TOTP code, server-side sessions in SQLite,
+  lockout after repeated failures, `auth.mode = "none"` for gateways, and
+  `mycelium user` commands to create the secrets.
+- Security headers (CSP without inline code, no framing) on every response.
+- Interface strings in `locales/en.toml`.
+
 - Project skeleton: packaging with `uv`, lint, types, tests and CI on Linux, macOS and Windows.
 - `mycelium.toml` loading and validation, with categories, colors and mushroom species.
 - Vault reader: frontmatter, titles and Obsidian-style wikilinks (aliases, headings, paths).

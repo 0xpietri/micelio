@@ -14,11 +14,24 @@ EXAMPLE_VAULT = Path(__file__).resolve().parents[1] / "examples" / "vault"
 @pytest.fixture(autouse=True)
 def _clean_env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("MYCELIUM_CONFIG", raising=False)
-    monkeypatch.delenv("MYCELIUM_VAULT", raising=False)
+    for name in (
+        "MYCELIUM_VAULT",
+        "MYCELIUM_DATA",
+        "MYCELIUM_PASSWORD_HASH",
+        "MYCELIUM_TOTP_SECRET",
+        "MYCELIUM_SESSION_KEY",
+    ):
+        monkeypatch.delenv(name, raising=False)
 
 
-def config_for(root: Path) -> Config:
-    return Config(vault=VaultConfig(root=root))
+def config_for(root: Path, *, data: Path | None = None, auth: str = "local") -> Config:
+    return Config.model_validate(
+        {
+            "vault": VaultConfig(root=root),
+            "data": {"dir": data or root.parent / "data"},
+            "auth": {"mode": auth},
+        }
+    )
 
 
 @pytest.fixture(scope="session")
