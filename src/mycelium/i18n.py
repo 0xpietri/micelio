@@ -53,3 +53,18 @@ def translator(language: str) -> Translate:
         return text.format(**values) if values else text
 
     return t
+
+
+def category_names(language: str) -> dict[str, str]:
+    """Translated names of the default categories (``category.<key>``), English fallback."""
+    names = {
+        key.removeprefix("category."): text
+        for key, text in load_strings(DEFAULT_LANGUAGE).items()
+        if key.startswith("category.")
+    }
+    names.update(
+        (key.removeprefix("category."), text)
+        for key, text in load_strings(language).items()
+        if key.startswith("category.")
+    )
+    return names

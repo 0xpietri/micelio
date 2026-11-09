@@ -6,7 +6,7 @@
   <h1>{{ t("projects.title") }}</h1>
   {% for group in groups %}
   <section class="group{% if group.category %} cat-{{ group.category.key }}{% endif %}">
-    <h2>{% if group.category %}{{ category_dot(group.category.key) }} {{ group.category.label }}{% else %}{{ t("projects.uncategorized") }}{% endif %}</h2>
+    <h2>{% if group.category %}{{ category_dot(group.category.key) }} {{ category_name(group.category) }}{% else %}{{ t("projects.uncategorized") }}{% endif %}</h2>
     <ul class="rows">
       {% for row in group.projects %}
       <li class="row">

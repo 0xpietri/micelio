@@ -93,10 +93,27 @@ class VaultConfig(_Strict):
 
 
 class Category(_Strict):
+    """A project category.
+
+    ``label`` is optional: without it the name comes from the interface language
+    (``category.<key>`` in the locale files) or, failing that, from the key. It can be
+    one name for every language or a table such as ``{ en = "Art", es = "Arte" }``.
+    """
+
     key: str
-    label: str
+    label: str | dict[str, str] | None = None
     color: str
     species: str
+
+    def name(self, language: str, translated: str | None = None) -> str:
+        """The name to show for ``language``; ``translated`` is the locale's name, if any."""
+        if isinstance(self.label, str):
+            return self.label
+        if self.label:
+            own = self.label.get(language) or self.label.get("en")
+            if own:
+                return own
+        return translated or self.key.replace("-", " ").capitalize()
 
     @field_validator("key")
     @classmethod
@@ -122,10 +139,10 @@ class Category(_Strict):
 
 def _default_categories() -> list[Category]:
     return [
-        Category(key="science", label="Science", color="#ff2fa0", species="fly-agaric"),
-        Category(key="philosophy", label="Philosophy", color="#22d3ee", species="shaggy-inkcap"),
-        Category(key="study", label="Study", color="#ff8a1f", species="morel"),
-        Category(key="free", label="Free", color="#ffd23f", species="chanterelle"),
+        Category(key="science", color="#ff2fa0", species="fly-agaric"),
+        Category(key="philosophy", color="#22d3ee", species="shaggy-inkcap"),
+        Category(key="study", color="#ff8a1f", species="morel"),
+        Category(key="free", color="#ffd23f", species="chanterelle"),
     ]
 
 

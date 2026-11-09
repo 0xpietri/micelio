@@ -74,27 +74,25 @@ notes = "notes"
 journal = "journal"
 sources = "sources"
 
+# The default keys are named in the interface language (locales, `category.<key>`).
+# Own categories add `label = "Art"` or `label = { en = "Art", es = "Arte" }`.
 [[categories]]
 key = "science"
-label = "Science"
 color = "#ff2fa0"
 species = "fly-agaric"     # mushroom drawn on the landing (§7a)
 
 [[categories]]
 key = "philosophy"
-label = "Philosophy"
 color = "#22d3ee"
 species = "shaggy-inkcap"
 
 [[categories]]
 key = "study"
-label = "Study"
 color = "#ff8a1f"
 species = "morel"
 
 [[categories]]
 key = "free"
-label = "Free"
 color = "#ffd23f"
 species = "chanterelle"
 

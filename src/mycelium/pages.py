@@ -12,6 +12,7 @@ from fastapi.templating import Jinja2Templates
 
 from mycelium.config import STATUSES, Category, Config
 from mycelium.formatting import Dates
+from mycelium.i18n import category_names
 from mycelium.render import Renderer, href_for
 from mycelium.vault.index import Note, VaultIndex
 
@@ -53,6 +54,7 @@ class Pages:
             created=dates.created,
             updated=dates.updated,
             category_of=self.category_of,
+            category_name=self.category_name,
             excerpt=self.renderer.excerpt,
             is_bridge=index.is_bridge,
             categories_of=index.categories_of,
@@ -63,6 +65,10 @@ class Pages:
 
     def category_of(self, key: str | None) -> Category | None:
         return self.config.category(key)
+
+    def category_name(self, category: Category) -> str:
+        language = self.config.site.language
+        return category.name(language, category_names(language).get(category.key))
 
     def _note(self, slug: str) -> Note:
         self.index.refresh()

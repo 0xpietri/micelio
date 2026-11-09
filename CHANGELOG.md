@@ -12,7 +12,8 @@ All notable changes to this project are documented here. The format follows
   notes with backlinks and the projects they belong to, the journal and a health page.
 - Markdown rendered like Obsidian (wikilinks, ghost links, callouts, task lists, tables,
   footnotes) and sanitized with nh3.
-- Spanish interface; dates per language and in the configured time zone; light and dark
+- Spanish interface, including the names of the default categories; own categories take
+  `label = "Art"` or `label = { en = "Art", es = "Arte" }`; dates per language and in the configured time zone; light and dark
   themes that follow the system.
 - Sign-in for one person: argon2 password and TOTP code, server-side sessions in SQLite,
   lockout after repeated failures, `auth.mode = "none"` for gateways, and

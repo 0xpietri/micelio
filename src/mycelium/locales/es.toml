@@ -38,6 +38,12 @@ paused = "En pausa"
 closed = "Cerrado"
 unknown = "Desconocido"
 
+[category]
+science = "Ciencia"
+philosophy = "Filosofía"
+study = "Estudio"
+free = "Libre"
+
 [projects]
 title = "Proyectos"
 empty = "Todavía no hay proyectos. Agregá una nota a la carpeta de proyectos y aparece acá."

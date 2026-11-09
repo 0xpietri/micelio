@@ -132,8 +132,34 @@ def test_spanish_interface(tmp_path: Path) -> None:
     assert "Proyectos" in html
     assert "Última conversación: 9 nov 2026" in html
     assert "Borrador" in html
+    headings = [
+        h.split("</span>")[-1].strip() for h in re.findall(r"<h2>(.*?)</h2>", html, re.DOTALL)
+    ]
+    assert headings == ["Ciencia", "Filosofía", "Estudio", "Libre"]
     note = client.get("/notes/priors-are-beliefs-you-can-update").text
     assert "Puente entre categorías" in note
+
+
+def test_own_category_labels(tmp_path: Path) -> None:
+    config = Config.model_validate(
+        {
+            "site": {"language": "es"},
+            "vault": VaultConfig(root=EXAMPLE_VAULT),
+            "auth": {"mode": "none"},
+            "categories": [
+                {
+                    "key": "science",
+                    "label": {"en": "Lab", "es": "Laboratorio"},
+                    "color": "#ff2fa0",
+                    "species": "morel",
+                },
+                {"key": "philosophy", "label": "Pensar", "color": "#22d3ee", "species": "coral"},
+            ],
+        }
+    )
+    html = TestClient(create_app(config, environ={})).get("/projects").text
+    assert "Laboratorio" in html
+    assert "Pensar" in html
 
 
 def test_new_notes_show_up_on_reload(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

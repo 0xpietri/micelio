@@ -39,6 +39,12 @@ paused = "Paused"
 closed = "Closed"
 unknown = "Unknown"
 
+[category]
+science = "Science"
+philosophy = "Philosophy"
+study = "Study"
+free = "Free"
+
 [projects]
 title = "Projects"
 empty = "No projects yet. Add a note to the projects folder and it appears here."
