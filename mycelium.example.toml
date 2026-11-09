@@ -1,0 +1,50 @@
+# Copy to mycelium.toml and adjust. Every field is optional; these are the defaults
+# unless marked "example". Secrets never go here: see .env.example.
+
+[site]
+title = "Mycelium"
+owner = "Your Name"                  # example: shown on the landing page
+tagline = "A living notebook of ideas"
+language = "en"                      # interface language
+timezone = "UTC"                     # example: "America/Argentina/Buenos_Aires"
+
+[vault]
+root = "examples/vault"              # relative paths resolve against this file's folder
+projects = "projects"
+notes = "notes"
+journal = "journal"
+sources = "sources"
+
+# Projects carry one category. Each category has a color and a mushroom species
+# for the landing: fly-agaric, shaggy-inkcap, morel, chanterelle, liberty-caps,
+# coral, parasol, glowing-bonnets.
+
+[[categories]]
+key = "science"
+label = "Science"
+color = "#ff2fa0"
+species = "fly-agaric"
+
+[[categories]]
+key = "philosophy"
+label = "Philosophy"
+color = "#22d3ee"
+species = "shaggy-inkcap"
+
+[[categories]]
+key = "study"
+label = "Study"
+color = "#ff8a1f"
+species = "morel"
+
+[[categories]]
+key = "free"
+label = "Free"
+color = "#ffd23f"
+species = "chanterelle"
+
+[graph]
+hide_by_default = ["journal", "source"]
+
+[auth]
+mode = "local"                       # local | none (when a gateway in front handles sign-in)

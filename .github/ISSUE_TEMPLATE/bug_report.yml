@@ -1,0 +1,34 @@
+name: Bug report
+description: Something does not work as described.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected and what you saw instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How to reproduce
+      description: The smallest note or vault that shows the problem helps the most.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      placeholder: "mycelium --version"
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: How do you run it
+      options: [Docker, uvx or pipx, From source]
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
