@@ -1,0 +1,250 @@
+# Mycelium: specification v0.1
+
+Status: draft, 2026-11-09, for marcos's review.
+Repository: `0xpietri/mycelium` (public, MIT). Reference deployment: `mycelium.pietri.dev`.
+
+## 1. Purpose
+
+Mycelium is a small, self-hosted website that shows a folder of Markdown notes as a network of ideas: a list of projects by category, a graph per project and one graph of everything on the home page.
+
+The notes are written mostly by AI assistants through an MCP server (for example Claude or ChatGPT in a voice call) and by people in Obsidian. Mycelium never writes them. It is the window, not the pen.
+
+It is meant to be useful to anyone with an Obsidian-style vault, and to read as a portfolio piece: clean code, tests, docs and a five-minute install.
+
+## 2. Principles
+
+1. **The files are the truth.** Everything Mycelium shows is derived from the Markdown files at request time. Delete its data folder and nothing is lost.
+2. **Read only.** No editor, no uploads, no Git operations. The vault is mounted read-only.
+3. **Model-agnostic.** Nothing depends on a particular LLM or MCP server. Any tool that writes the documented frontmatter works.
+4. **Configuration, not code.** Categories, colors, folder names, titles and texts live in `mycelium.toml`. Nothing personal is hard-coded.
+5. **No build step.** Server-rendered pages (FastAPI + Jinja), plain CSS and JavaScript modules, vendored libraries. No inline `<script>` or `<style>`, so a strict CSP works.
+6. **Small.** One container, one process, SQLite for its own state, under 100 MB of RAM for a vault of a few thousand notes.
+
+## 3. The vault model
+
+### 3.1 Folders (defaults, configurable)
+
+| Folder | Holds |
+| --- | --- |
+| `projects/` | One index note per project |
+| `notes/` | Atomic notes, one idea each |
+| `journal/` | One note per conversation |
+| `sources/` | Papers, articles, transcripts |
+
+`vault_root` in the config points at the notebook folder, which may be a subfolder of a larger vault (marcos's: `ideas/` inside his Obsidian vault). Files outside it are ignored, and so are hidden paths, `.trash/` and Syncthing conflict copies (`*.sync-conflict-*`).
+
+### 3.2 Frontmatter
+
+```yaml
+---
+type: project        # project | note | journal | source
+category: science    # projects only; values come from the config
+status: draft        # draft | active | paused | closed
+tags: [astronomy, gravity]
+created: 2026-11-09
+updated: 2026-11-09
+public: false
+---
+```
+
+- A note without `type` is inferred from its folder.
+- An unknown `category` or `status` value is shown as "unknown" and listed on a `/health` page, never a crash.
+- `public` defaults to `false`.
+
+### 3.3 Links and membership
+
+- Wikilinks are resolved the way Obsidian does: `[[name]]`, `[[name|label]]`, `[[name#heading]]`, `![[embed]]`, by file name first, then by `aliases` in frontmatter, case-insensitive; ambiguity goes to the shortest path.
+- A note **belongs to a project** when the project's index note links to it. Membership is never stored in the note itself.
+- A link to a missing note is drawn as a "ghost" node (dashed) and listed on `/health`.
+
+## 4. Configuration (`mycelium.toml`)
+
+```toml
+[site]
+title = "Mycelium"
+owner = "Marcos Pietri"    # shown on the landing: "Marcos Pietri's mycelium"
+tagline = "A living notebook of ideas"
+language = "en"            # UI language (see §5a); note content is shown as written
+timezone = "America/Argentina/Buenos_Aires"
+
+[vault]
+root = "/vault/ideas"
+projects = "projects"
+notes = "notes"
+journal = "journal"
+sources = "sources"
+
+[[categories]]
+key = "science"
+label = "Science"
+color = "#ff2fa0"
+species = "fly-agaric"     # mushroom drawn on the landing (§7a)
+
+[[categories]]
+key = "philosophy"
+label = "Philosophy"
+color = "#22d3ee"
+species = "shaggy-inkcap"
+
+[[categories]]
+key = "study"
+label = "Study"
+color = "#ff8a1f"
+species = "morel"
+
+[[categories]]
+key = "free"
+label = "Free"
+color = "#ffd23f"
+species = "chanterelle"
+
+[graph]
+hide_by_default = ["journal", "source"]
+
+[auth]
+mode = "local"             # local | none (when an external gateway handles it)
+```
+
+Secrets (password hash, TOTP secret, session key) come only from environment variables. The repo ships `mycelium.example.toml` and `.env.example` with placeholders.
+
+## 5. Sign-in
+
+- One user. argon2 password hash and a TOTP code (30-second steps, one step of drift, a used code is refused).
+- Signed session cookie, `HttpOnly`, `Secure`, `SameSite=Strict`, 12 h, stored server-side in SQLite so sign-out revokes it.
+- 5 failures per IP in 15 minutes lock that IP for the window.
+- `auth.mode = "none"` turns sign-in off for people who put Cloudflare Access or another gateway in front. The README says so plainly.
+- A `mycelium user set-password` and `mycelium user totp` command set the secrets and print a QR code in the terminal.
+
+## 5a. Interface languages
+
+- English is the default and the reference. Every UI string has a key; templates call `t("projects.empty")`, never a literal.
+- Translations live in one flat file per language: `mycelium/locales/en.toml`, `es.toml`, … No compile step (unlike gettext `.po`/`.mo`).
+- Strings the browser needs (graph tooltips, filters) are served from `/static/locales/<lang>.json`, generated from the same file at start.
+- A missing key falls back to English; a test fails if a locale has keys English lacks or misses any key, so a partial translation is visible in CI.
+- Adding a language = copy `en.toml`, translate, open a PR. `CONTRIBUTING.md` explains it in five lines.
+- v0.1 ships `en` and `es`. Dates and numbers are formatted per language (Babel).
+
+## 6. Pages and API
+
+| Route | Shows |
+| --- | --- |
+| `/` | The landing: the owner's ideas drawn as a living forest floor (§7a) |
+| `/explore` | The graph of everything, full screen; side panel with search, filters (category, status, type) and the 5 latest journal notes |
+| `/projects` | Projects grouped by category: title, status, number of notes, last conversation |
+| `/projects/<slug>` | Thesis, open questions, the project's graph, its notes |
+| `/notes/<slug>` | The rendered note, backlinks, the projects it belongs to, its 1-hop neighborhood graph |
+| `/journal` | Conversations, newest first |
+| `/health` | Unknown frontmatter values, broken links, orphans (signed-in only) |
+| `/login`, `/logout` | Sign-in |
+| `/api/graph?scope=all\|project:<slug>\|note:<slug>` | Nodes and edges as JSON |
+| `/healthz` | Liveness for the container and monitoring |
+
+Markdown is rendered with markdown-it-py and sanitized with nh3. Wikilinks become links to `/notes/<slug>`. Callouts (`> [!warning]`) and task lists render like Obsidian. Times are shown in the configured time zone.
+
+## 7. The graph
+
+- **Library**: Cytoscape.js, vendored with its version pinned, served from `/static`. 2D.
+- **`/api/graph` is renderer-agnostic**: plain nodes and edges with `type`, `category`, `status`, `degree`, `public`. A 3D view (3d-force-graph) can be added later as one more page without touching the API.
+- **Color**: a project takes its category color. An atomic note takes the color of the project that links it; linked from projects of different categories, it is a **bridge**: neutral fill, double border.
+- **Shape**: project = large circle, note = small circle, journal = square, source = triangle. Size grows with links.
+- **Project graph**: the index, its notes, the links among them, and the bridges to other projects faded.
+- **Defaults**: journal and source nodes hidden on the global graph, with a toggle.
+- **Click** opens the note. Hover shows its title and status.
+- Accessible: every graph page also lists its nodes as text links; colors meet WCAG contrast in light and dark themes.
+
+## 7a. The landing: above and below the ground
+
+The home page is the project's signature: a generative illustration drawn from the vault's real data, not a stock image. The soil line splits the screen.
+
+**Look (sketch v2, 2026-11-09).** Illustrated, psychedelic palette (neon green, magenta, cyan, electric blue, orange, gold) with dark outlines. A dusk sky, two layers of distant mountains, grass with yellow flowers on the soil line, one tree whose black roots run among the mycelium. Underground: a dark stained-glass mosaic, white branching hyphae and notes as fuzzy clouds of spores.
+
+**Above ground: what has surfaced.**
+- Each **project** is a mushroom. v0.1 ships eight species with distinct silhouettes (fly agaric, shaggy inkcap, morel, chanterelle, liberty caps, coral fungus, parasol, glowing bonnets); each category picks one species in `mycelium.toml`. Size = its number of notes.
+- **Two layers** (decided 2026-11-09): a painted background image (sky, sun, mountains, grass, underground mosaic; no mushrooms or mycelium) generated once and shipped as a static asset, and the live layer drawn in code from the vault on top of it.
+- Its status is its growth: `draft` = a small button, `active` = a full open cap, `paused` = faded, `closed` = dried and bent.
+- Hover shows the title; click opens the project.
+
+**Below ground: where ideas connect.**
+- **Atomic notes** are knots in the mycelium, under the mushroom of their project.
+- **Links** are hyphae: thin, softly glowing threads. A **bridge** note sends a thicker hypha across to another mushroom's network.
+- **Sources** are mineral stones the hyphae reach for (nutrients).
+- **Journal notes** are spores on the surface: the latest 5 drift near the mushrooms they touched.
+
+**Movement.** On load the hyphae grow out from each mushroom; then a faint pulse travels along random links. Everything stops under `prefers-reduced-motion`.
+
+**Text.** Top left: `site.owner`'s name and the tagline, e.g. "Marcos Pietri's mycelium". Two buttons: *Explore the graph* (`/explore`) and *Projects* (`/projects`).
+
+**Technique.** Canvas 2D drawn by our own module, positions from a vendored `d3-force` (underground nodes kept below the soil line, each project's notes pulled under its mushroom). Mushroom shapes are parameterized SVG paths, drawn procedurally, no image files. Seeded by the vault's content, so the same vault always draws the same forest. Over about 300 notes, only the most connected are drawn underground and a counter says how many more there are.
+
+**Visitors.** Anonymous visitors see the same landing built from public notes only (§9). With nothing public it shows the soil, one sprout and the sign-in button.
+
+**Accessibility.** A visually hidden list under the canvas names every mushroom and note with links; keyboard focus moves through the mushrooms.
+
+## 8. Reading the vault
+
+- On start, walk `vault.root`, parse every note and keep an in-memory index (notes, links, backlinks, membership).
+- On each request, re-check modification times (cheap `stat`, throttled to once every 2 s) and re-parse only changed files. A note written during a voice call shows up on reload.
+- Paths are resolved under the vault root only; symlinks leaving it are refused.
+
+## 9. Public notes
+
+- `public: true` makes a note readable without signing in, at the same URL.
+- A public project shows only its public notes, and its graph only public nodes.
+- Links from a public note to a private one render as plain text, never as a link or a node, so a private title never leaks.
+- An anonymous visitor sees only public notes everywhere: the landing (§7a), `/explore`, `/projects`. Private notes do not exist for them, not even as counts.
+
+## 10. Packaging
+
+- Docker image built from a multi-stage Dockerfile: Python 3.12 slim, `uv` with a lockfile, non-root user, read-only root filesystem, the vault mounted read-only, one data volume for SQLite.
+- Published to `ghcr.io/0xpietri/mycelium` for `linux/amd64` on merges to `main` and on tags; `linux/arm64` only on release tags.
+- `compose.example.yml` runs it against the bundled sample vault in one command.
+- **Two ways to install, both first-class:**
+  - *Server*: the Docker image (Linux, or Docker Desktop on macOS and Windows). Release images are `amd64` + `arm64`, so Apple Silicon and a Raspberry Pi work.
+  - *Personal computer, no Docker*: a Python package on PyPI. `uvx mycelium serve --vault ~/Obsidian` (or `pipx`) opens it on `http://localhost:8765`. Bound to localhost, sign-in is off by default there; it turns on when bound to another address.
+- **Supported systems**: Linux, macOS and Windows. CI runs the tests on all three (cheap on a public repo). Paths go through `pathlib`; file names with accents, spaces and Windows reserved names are covered by tests on the sample vault.
+
+## 11. Quality
+
+- `ruff` (lint and format), `mypy --strict`, `pytest` with coverage reported; target 90 %.
+- Tests run on the sample vault. Every behaviour change comes with tests.
+- CI on pull requests: lint, types, tests, under 2 minutes; superseded runs are cancelled; the image builds only on `main` and tags.
+- Semantic versioning, `CHANGELOG.md` (Keep a Changelog), GitHub releases.
+- `README.md` (GIF of the graph, what it is in two lines, quick start, configuration, architecture diagram, security notes), `LICENSE` (MIT), `SECURITY.md`, `CONTRIBUTING.md`, issue and PR templates, Dependabot for pip, Actions and Docker.
+- Each step ends with a short report in `docs/reports/`.
+
+## 12. Sample vault
+
+`examples/vault/`: about 30 notes in English across the four categories, with a few bridges, one ghost link, two journal notes, one source and some public notes. It drives the tests, the screenshots and the demo.
+
+## 12a. Roadmap after v0.1
+
+1. **Static export (v0.2).** `mycelium export --public out/` writes a static site of the public notes only (landing, explore, projects, notes). It can be uploaded to GitHub Pages, Cloudflare Pages or Netlify for free, or zipped and sent. This is how someone without a server shares ideas. The landing and graph are already plain JS over `/api/graph`, so the export writes that JSON as a file.
+2. **Obsidian plugin (v0.3).** The easiest path for non-technical people: install "Mycelium" from Obsidian's community plugins, one click, on Windows, macOS, Linux and mobile. It shows the landing and the graph inside Obsidian and has an "Export public site" command. It reuses the same front-end modules (forest renderer, graph styles); only the data loading differs.
+3. Self-hosting guides for technical users, in `docs/guides/`: Mycelium plus a notes MCP server on their own computer (Linux, macOS, Windows, with a tunnel) or on a VPS. Each person runs their own stack.
+4. Not planned: native installers (`.exe`, `.dmg`). They need paid code signing to avoid security warnings, and the plugin reaches the same people better.
+
+## 13. Out of scope for v0.1
+
+- Writing notes, Git operations, the MCP server itself, embeddings or semantic search.
+- More than one user.
+- Hosting other people's notes: there is no shared service; everyone self-hosts (decided 2026-11-09).
+- The 3D view (§7 keeps the door open).
+
+## 14. Steps
+
+Each step ends with tests, a report and a stop for marcos's review.
+
+1. **Skeleton.** Repo hygiene files, CI, config loading and validation, the sample vault, the vault parser and the in-memory index, `/healthz`.
+2. **Sign-in.** Local auth with TOTP, sessions, lockout, CLI for secrets, `auth.mode = "none"`.
+3. **Pages and languages.** `/projects`, `/projects/<slug>`, `/notes/<slug>`, `/journal`, `/health`; Markdown rendering and sanitizing; light and dark themes; `en` and `es` (§5a).
+4. **Graph.** `/api/graph`, `/explore`, the project and note graphs, filters, search.
+5. **The landing.** The forest floor of §7a. Starts with a static mockup for marcos's approval before the real code.
+6. **Public notes.** §9, with tests that no private title appears in any anonymous response.
+7. **Release v0.1.0.** Docker image, compose example, README with GIF and diagram, CHANGELOG, tag.
+
+The deployment on factory (Caddy site, the notes MCP, the vault's Git timer, backups, monitoring) is tracked outside this repository.
+
+## 15. Decisions
+
+- 2026-11-09 (marcos): UI in English, easy to add languages (§5a); anonymous visitors see public notes only (§9); the owner's name in the config and an artistic landing with mushrooms above ground and mycelium below (§7a).
+- 2026-11-09 (marcos): no hosted service for other people's notes. Technical users self-host, guided by `docs/guides/` (own computer with a tunnel, or a VPS); non-technical users get the Obsidian plugin (v0.3).
