@@ -38,6 +38,13 @@ uv run mycelium serve --vault examples/vault     # http://127.0.0.1:8765/healthz
 Once v0.1 is on PyPI and GHCR this becomes `uvx mycelium serve --vault ~/Notes` on a personal
 computer, or a Docker image on a server.
 
+## Talking to your notes
+
+Mycelium shows notes; an MCP server writes them when you talk to an assistant, from a desktop
+app or from your phone in voice mode. The [self-hosting guides](docs/guides/README.md) set up
+both, either [on your own computer](docs/guides/self-hosting-computer.md) (Linux, macOS,
+Windows) or [on a server](docs/guides/self-hosting-server.md).
+
 ## How a vault is read
 
 ```

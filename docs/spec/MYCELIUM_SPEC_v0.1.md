@@ -220,12 +220,14 @@ The home page is the project's signature: a generative illustration drawn from t
 
 1. **Static export (v0.2).** `mycelium export --public out/` writes a static site of the public notes only (landing, explore, projects, notes). It can be uploaded to GitHub Pages, Cloudflare Pages or Netlify for free, or zipped and sent. This is how someone without a server shares ideas. The landing and graph are already plain JS over `/api/graph`, so the export writes that JSON as a file.
 2. **Obsidian plugin (v0.3).** The easiest path for non-technical people: install "Mycelium" from Obsidian's community plugins, one click, on Windows, macOS, Linux and mobile. It shows the landing and the graph inside Obsidian and has an "Export public site" command. It reuses the same front-end modules (forest renderer, graph styles); only the data loading differs.
-3. Not planned: native installers (`.exe`, `.dmg`). They need paid code signing to avoid security warnings, and the plugin reaches the same people better.
+3. Self-hosting guides for technical users, in `docs/guides/`: Mycelium plus a notes MCP server on their own computer (Linux, macOS, Windows, with a tunnel) or on a VPS. Each person runs their own stack.
+4. Not planned: native installers (`.exe`, `.dmg`). They need paid code signing to avoid security warnings, and the plugin reaches the same people better.
 
 ## 13. Out of scope for v0.1
 
 - Writing notes, Git operations, the MCP server itself, embeddings or semantic search.
 - More than one user.
+- Hosting other people's notes: there is no shared service; everyone self-hosts (decided 2026-11-09).
 - The 3D view (§7 keeps the door open).
 
 ## 14. Steps
@@ -245,3 +247,4 @@ The deployment on factory (Caddy site, the notes MCP, the vault's Git timer, bac
 ## 15. Decisions
 
 - 2026-11-09 (marcos): UI in English, easy to add languages (§5a); anonymous visitors see public notes only (§9); the owner's name in the config and an artistic landing with mushrooms above ground and mycelium below (§7a).
+- 2026-11-09 (marcos): no hosted service for other people's notes. Technical users self-host, guided by `docs/guides/` (own computer with a tunnel, or a VPS); non-technical users get the Obsidian plugin (v0.3).

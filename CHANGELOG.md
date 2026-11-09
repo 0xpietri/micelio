@@ -16,3 +16,4 @@ All notable changes to this project are documented here. The format follows
 - `mycelium check` lists problems in a vault; `mycelium serve` runs the site.
 - `/healthz` for containers and monitoring.
 - A sample vault in `examples/vault`.
+- Self-hosting guides for Mycelium plus a notes MCP server, on your own computer or a server.
