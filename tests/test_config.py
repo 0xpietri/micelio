@@ -52,6 +52,20 @@ def test_custom_categories_and_lowercased_color(tmp_path: Path) -> None:
     assert art.color == "#aabbcc"
     assert config.category("science") is None
     assert config.category(None) is None
+    assert art.name("es") == "Art"
+
+
+def test_category_names() -> None:
+    from mycelium.config import Category
+
+    plain = Category(key="deep-sea", color="#000000", species="morel")
+    assert plain.name("es") == "Deep sea"
+    assert plain.name("es", "Mar profundo") == "Mar profundo"
+    both = Category(key="art", label={"en": "Art", "es": "Arte"}, color="#000000", species="morel")
+    assert both.name("es") == "Arte"
+    assert both.name("fr") == "Art"
+    only_es = Category(key="art", label={"es": "Arte"}, color="#000000", species="morel")
+    assert only_es.name("fr", "Artes") == "Artes"
 
 
 @pytest.mark.parametrize(
@@ -79,6 +93,8 @@ def test_custom_categories_and_lowercased_color(tmp_path: Path) -> None:
         ("categories = []\n", "at least one category"),
         ('[auth]\nmode = "oauth"\n', "mode"),
         ('[graph]\nhide_by_default = ["diary"]\n', "hide_by_default"),
+        ('[site]\ntimezone = "Mars/Olympus"\n', "unknown time zone"),
+        ('[site]\nlanguage = "zz-not"\n', "unknown language"),
     ],
 )
 def test_invalid_configs_raise_config_error(tmp_path: Path, text: str, message: str) -> None:

@@ -25,7 +25,7 @@ SESSION_COOKIE = "mycelium_session"
 CSRF_COOKIE = "mycelium_csrf"
 
 # Paths anyone may reach. Everything else needs a session while sign-in is on.
-OPEN_PATHS = frozenset({"/login", "/healthz", "/favicon.ico"})
+OPEN_PATHS = frozenset({"/login", "/healthz", "/favicon.ico", "/theme.css"})
 OPEN_PREFIXES = ("/static/",)
 
 CSP = (

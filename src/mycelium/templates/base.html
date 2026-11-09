@@ -3,12 +3,21 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
   <title>{% block title %}{{ site.title }}{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', path='css/mycelium.css') }}">
+  <link rel="stylesheet" href="/theme.css">
 </head>
 <body>
   <header class="top">
     <a class="brand" href="/">{{ site.title }}</a>
+    {% if request.state.signed_in is not defined or request.state.signed_in %}
+    <nav aria-label="{{ t('nav.main') }}">
+      <a href="/projects"{% if nav == "projects" %} aria-current="page"{% endif %}>{{ t("nav.projects") }}</a>
+      <a href="/journal"{% if nav == "journal" %} aria-current="page"{% endif %}>{{ t("nav.journal") }}</a>
+      <a href="/health"{% if nav == "health" %} aria-current="page"{% endif %}>{{ t("nav.health") }}</a>
+    </nav>
+    {% endif %}
     {% if sign_in.enabled and request.state.signed_in %}
     <form method="post" action="/logout" class="inline">
       <input type="hidden" name="csrf" value="{{ sign_in.logout_token(request) }}">

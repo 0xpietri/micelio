@@ -1,0 +1,12 @@
+{% macro status_badge(status) -%}
+{% if status %}<span class="badge status-{{ status }}">{{ t("status." ~ status) }}</span>{% endif %}
+{%- endmacro %}
+
+{% macro category_dot(key) -%}
+{% set category = category_of(key) %}
+{% if category %}<span class="dot cat-{{ category.key }}" aria-hidden="true"></span>{% endif %}
+{%- endmacro %}
+
+{% macro note_link(note) -%}
+<a href="{{ href(note) }}">{{ note.title }}</a>
+{%- endmacro %}

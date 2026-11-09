@@ -35,3 +35,11 @@ CI runs the same commands on Linux, macOS and Windows.
 - Code, comments, docs and commit messages are in English. Interface strings go in
   `locales/*.toml`, never in templates.
 - One topic per pull request, with a short description of what and why.
+
+## Adding a language
+
+1. Copy `src/mycelium/locales/en.toml` to `src/mycelium/locales/<code>.toml` (for example `pt.toml`).
+2. Translate the values. Keep the keys and the `{placeholders}` exactly as they are.
+3. Run `uv run pytest tests/test_i18n.py`: it fails if a key is missing or extra.
+4. Try it with `language = "<code>"` in `mycelium.toml`. Dates follow the language on their own.
+5. Open a pull request. Thank you!

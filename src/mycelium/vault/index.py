@@ -8,6 +8,7 @@ up on the next page load.
 from __future__ import annotations
 
 import os
+import re
 import threading
 import time
 from collections.abc import Iterator
@@ -78,6 +79,7 @@ class VaultIndex:
         self._last_check = 0.0
         self.notes: dict[str, Note] = {}
         self.issues: list[Issue] = []
+        self.generation = 0
         self.edges: list[Edge] = []
         self.ghosts: dict[str, set[str]] = {}
         self.backlinks: dict[str, set[str]] = {}
@@ -177,6 +179,7 @@ class VaultIndex:
         self._index_names()
         self._link(issues)
         self.issues = issues
+        self.generation += 1
 
     def _make_note(
         self,
@@ -271,7 +274,8 @@ class VaultIndex:
             for link in note.links:
                 target = self.resolve(link.target)
                 if target is None:
-                    ghosts.setdefault(link.target, set()).add(slug)
+                    if not is_attachment(link.target):
+                        ghosts.setdefault(link.target, set()).add(slug)
                     continue
                 if target == slug or (slug, target) in seen:
                     continue
@@ -327,6 +331,15 @@ class VaultIndex:
         return sorted(
             (n for n in self.notes.values() if n.type == "project"), key=lambda n: n.title.lower()
         )
+
+
+_ATTACHMENT_SUFFIX = re.compile(r"\.[A-Za-z0-9]{1,5}$")
+
+
+def is_attachment(target: str) -> bool:
+    """``![[diagram.png]]`` and friends: files that are not notes, never ghosts."""
+    name = target.strip()
+    return not name.lower().endswith(".md") and bool(_ATTACHMENT_SUFFIX.search(name))
 
 
 def _str_tuple(value: object) -> tuple[str, ...]:

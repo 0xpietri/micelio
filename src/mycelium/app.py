@@ -10,16 +10,20 @@ from importlib.resources import files
 from pathlib import Path
 
 from fastapi import FastAPI, Request
+from fastapi.exception_handlers import http_exception_handler
 from fastapi.responses import HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from mycelium import __version__
 from mycelium.auth import resolve_auth
 from mycelium.auth.store import AuthStore
 from mycelium.auth.web import Clock, SignIn, install_security_headers
 from mycelium.config import Config
+from mycelium.formatting import Dates
 from mycelium.i18n import translator
+from mycelium.pages import Pages
 from mycelium.vault import VaultIndex
 
 PACKAGE = Path(str(files("mycelium")))
@@ -72,6 +76,15 @@ def create_app(
     app.mount("/static", StaticFiles(directory=PACKAGE / "static"), name="static")
     sign_in.install(app)
     install_security_headers(app)
+
+    dates = Dates(language, config.site.timezone)
+    app.include_router(Pages(config, vault, templates, dates).router())
+
+    @app.exception_handler(StarletteHTTPException)
+    async def not_found(request: Request, exc: StarletteHTTPException) -> Response:
+        if exc.status_code != 404:
+            return await http_exception_handler(request, exc)
+        return templates.TemplateResponse(request, "not_found.html", {}, status_code=404)
 
     @app.get("/healthz", include_in_schema=False)
     def healthz() -> dict[str, object]:

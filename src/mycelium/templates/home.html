@@ -4,6 +4,6 @@
   <h1>{% if site.owner %}{{ t("site.owners_mycelium", owner=site.owner) }}{% else %}{{ site.title }}{% endif %}</h1>
   {% if site.tagline %}<p class="muted">{{ site.tagline }}</p>{% endif %}
   <p>{{ t("home.notes", count=note_count) }}</p>
-  <p class="muted">{{ t("home.coming") }}</p>
+  <p class="muted">{{ t("home.coming") }} <a href="/projects">{{ t("nav.projects") }} →</a></p>
 </section>
 {% endblock %}

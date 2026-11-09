@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge, category_dot %}
+{% block title %}{{ note.title }} · {{ site.title }}{% endblock %}
+{% block content %}
+<article class="page">
+  <p class="eyebrow">
+    {{ t("type." ~ note.type) }} {{ status_badge(note.status) }}
+    {% if is_bridge(note.slug) %}<span class="badge bridge">⇄ {{ t("note.bridge") }}</span>{% endif %}
+  </p>
+  <h1>{{ note.title }}</h1>
+  <p class="muted small">
+    {{ t("note.created", date=show_date(created(note))) }} · {{ t("note.updated", date=show_date(updated(note))) }}
+  </p>
+  {% if note.tags %}
+  <p class="tags" aria-label="{{ t('note.tags') }}">{% for tag in note.tags %}<span class="tag">#{{ tag }}</span> {% endfor %}</p>
+  {% endif %}
+
+  <div class="prose">{{ body }}</div>
+
+  <aside class="related">
+    {% if note.type != "journal" %}
+    <section>
+      <h2>{{ t("note.projects") }}</h2>
+      {% if projects %}
+      <ul class="rows">
+        {% for project in projects %}
+        <li class="row">{{ category_dot(project.category) }} <a href="{{ href(project) }}">{{ project.title }}</a></li>
+        {% endfor %}
+      </ul>
+      {% else %}<p class="muted">{{ t("note.no_projects") }}</p>{% endif %}
+    </section>
+    {% endif %}
+    <section>
+      <h2>{{ t("note.backlinks") }}</h2>
+      {% if backlinks %}
+      <ul class="rows">
+        {% for other in backlinks %}
+        <li class="row"><a href="{{ href(other) }}">{{ other.title }}</a>{% if other.type != "note" %} <span class="badge">{{ t("type." ~ other.type) }}</span>{% endif %}</li>
+        {% endfor %}
+      </ul>
+      {% else %}<p class="muted">{{ t("note.no_backlinks") }}</p>{% endif %}
+    </section>
+  </aside>
+</article>
+{% endblock %}
