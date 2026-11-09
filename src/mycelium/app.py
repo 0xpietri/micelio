@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import os
 import time
-from collections.abc import Mapping
+from collections.abc import AsyncIterator, Mapping
+from contextlib import asynccontextmanager
 from importlib.resources import files
 from pathlib import Path
 
@@ -37,7 +38,19 @@ def create_app(
     vault = index or VaultIndex(config)
     vault.refresh(force=True)
 
+    @asynccontextmanager
+    async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+        yield
+        if store is not None:
+            store.close()
+
+    settings = resolve_auth(
+        config, os.environ if environ is None else environ, local_only=local_only
+    )
+    store = AuthStore(config.data.dir / AUTH_DB) if settings.enabled else None
+
     app = FastAPI(
+        lifespan=lifespan,
         title=config.site.title,
         version=__version__,
         docs_url=None,
@@ -52,10 +65,6 @@ def create_app(
     templates = Jinja2Templates(directory=PACKAGE / "templates")
     templates.env.globals.update(t=t, site=config.site, language=language)
 
-    settings = resolve_auth(
-        config, os.environ if environ is None else environ, local_only=local_only
-    )
-    store = AuthStore(config.data.dir / AUTH_DB) if settings.enabled else None
     sign_in = SignIn(config, settings, store, templates, t, clock)
     app.state.sign_in = sign_in
     templates.env.globals["sign_in"] = sign_in

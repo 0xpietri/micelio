@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import ExitStack
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -57,14 +58,17 @@ SiteFactory = Callable[..., Site]
 
 
 @pytest.fixture
-def make_site(tmp_path: Path) -> SiteFactory:
-    def factory(base_url: str = "https://mycelium.example") -> Site:
-        now = [START]
-        config = config_for(EXAMPLE_VAULT, data=tmp_path / "data")
-        app = create_app(config, environ=ENV, clock=lambda: now[0])
-        return Site(TestClient(app, base_url=base_url), now)
+def make_site(tmp_path: Path) -> Iterator[SiteFactory]:
+    with ExitStack() as stack:
 
-    return factory
+        def factory(base_url: str = "https://mycelium.example") -> Site:
+            now = [START]
+            config = config_for(EXAMPLE_VAULT, data=tmp_path / "data")
+            app = create_app(config, environ=ENV, clock=lambda: now[0])
+            client = stack.enter_context(TestClient(app, base_url=base_url))
+            return Site(client, now)
+
+        yield factory
 
 
 @pytest.fixture
