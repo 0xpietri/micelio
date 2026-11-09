@@ -9,6 +9,7 @@ projects = "Projects"
 journal = "Journal"
 health = "Health"
 main = "Main"
+explore = "Explore"
 
 [login]
 title = "Sign in"
@@ -31,6 +32,7 @@ project = "Project"
 note = "Note"
 journal = "Journal"
 source = "Source"
+ghost = "Missing note"
 
 [status]
 draft = "Draft"
@@ -58,6 +60,8 @@ notes = "Notes in this project"
 no_notes = "This project does not link to any note yet."
 journal = "Conversations"
 bridge = "Also in another category"
+graph = "Map of the project"
+graph_label = "Graph of this project and its notes. The same notes are listed below as links."
 
 [note]
 created = "Created {date}"
@@ -68,6 +72,8 @@ backlinks = "Linked from"
 no_backlinks = "Nothing links here yet."
 tags = "Tags"
 bridge = "Bridge between categories"
+graph = "Neighborhood"
+graph_label = "Graph of this note and the notes one link away. They are linked from this page too."
 
 [journal]
 title = "Journal"
@@ -98,3 +104,28 @@ unreadable = "File could not be read"
 not_found = "Not found"
 not_found_help = "There is no note here. It may have been renamed or moved."
 back = "Back to the projects"
+
+[explore]
+title = "Explore"
+search = "Search"
+search_placeholder = "Part of a title"
+types = "Type"
+categories = "Category"
+statuses = "Status"
+no_category = "No category"
+no_status = "No status"
+latest = "Latest conversations"
+no_journal = "No conversations yet."
+list = "All notes as a list ({count})"
+graph_label = "Graph of every note. The same notes are listed as links in the side panel."
+
+[graph]
+loading = "Loading the graph…"
+failed = "The graph could not be loaded."
+empty = "Nothing to draw here yet."
+hint = "Click a node to open it. Drag to move it, scroll to zoom."
+match_one = "1 match"
+matches = "{count} matches"
+no_match = "No note matches."
+bridge = "Bridge between categories"
+ghost = "Missing note"

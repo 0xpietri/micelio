@@ -8,6 +8,7 @@ projects = "Proyectos"
 journal = "Diario"
 health = "Salud"
 main = "Principal"
+explore = "Explorar"
 
 [login]
 title = "Iniciar sesión"
@@ -30,6 +31,7 @@ project = "Proyecto"
 note = "Nota"
 journal = "Diario"
 source = "Fuente"
+ghost = "Nota faltante"
 
 [status]
 draft = "Borrador"
@@ -57,6 +59,8 @@ notes = "Notas de este proyecto"
 no_notes = "Este proyecto todavía no enlaza ninguna nota."
 journal = "Conversaciones"
 bridge = "También en otra categoría"
+graph = "Mapa del proyecto"
+graph_label = "Grafo de este proyecto y sus notas. Las mismas notas están abajo como enlaces."
 
 [note]
 created = "Creación: {date}"
@@ -67,6 +71,8 @@ backlinks = "Enlazada desde"
 no_backlinks = "Nada enlaza acá todavía."
 tags = "Etiquetas"
 bridge = "Puente entre categorías"
+graph = "Vecindario"
+graph_label = "Grafo de esta nota y de las notas a un enlace de distancia. También están enlazadas en esta página."
 
 [journal]
 title = "Diario"
@@ -97,3 +103,28 @@ unreadable = "No se pudo leer el archivo"
 not_found = "No encontrada"
 not_found_help = "Acá no hay ninguna nota. Puede que la hayan renombrado o movido."
 back = "Volver a los proyectos"
+
+[explore]
+title = "Explorar"
+search = "Buscar"
+search_placeholder = "Parte de un título"
+types = "Tipo"
+categories = "Categoría"
+statuses = "Estado"
+no_category = "Sin categoría"
+no_status = "Sin estado"
+latest = "Últimas conversaciones"
+no_journal = "Todavía no hay conversaciones."
+list = "Todas las notas en una lista ({count})"
+graph_label = "Grafo de todas las notas. Las mismas notas están como enlaces en el panel lateral."
+
+[graph]
+loading = "Cargando el grafo…"
+failed = "No se pudo cargar el grafo."
+empty = "Todavía no hay nada para dibujar acá."
+hint = "Hacé clic en un nodo para abrirlo. Arrastralo para moverlo, usá la rueda para el zoom."
+match_one = "1 coincidencia"
+matches = "{count} coincidencias"
+no_match = "Ninguna nota coincide."
+bridge = "Puente entre categorías"
+ghost = "Nota faltante"

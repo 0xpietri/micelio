@@ -68,3 +68,15 @@ def category_names(language: str) -> dict[str, str]:
         if key.startswith("category.")
     )
     return names
+
+
+# Locale tables the browser needs (graph tooltips, legends, search feedback).
+BROWSER_TABLES = ("graph", "type", "status", "category")
+
+
+def browser_strings(language: str) -> dict[str, str]:
+    """The strings served as ``/static/locales/<lang>.json``, English fallback included."""
+    merged = {**load_strings(DEFAULT_LANGUAGE), **load_strings(language)}
+    return {
+        key: text for key, text in sorted(merged.items()) if key.split(".", 1)[0] in BROWSER_TABLES
+    }

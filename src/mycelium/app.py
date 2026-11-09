@@ -11,7 +11,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.exception_handlers import http_exception_handler
-from fastapi.responses import HTMLResponse, Response
+from fastapi.responses import HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -22,7 +22,7 @@ from mycelium.auth.store import AuthStore
 from mycelium.auth.web import Clock, SignIn, install_security_headers
 from mycelium.config import Config
 from mycelium.formatting import Dates
-from mycelium.i18n import translator
+from mycelium.i18n import available_languages, browser_strings, translator
 from mycelium.pages import Pages
 from mycelium.vault import VaultIndex
 
@@ -72,6 +72,18 @@ def create_app(
     sign_in = SignIn(config, settings, store, templates, t, clock)
     app.state.sign_in = sign_in
     templates.env.globals["sign_in"] = sign_in
+
+    browser_locales = {lang: browser_strings(lang) for lang in available_languages()}
+
+    # Registered before the static mount, which would otherwise answer first.
+    @app.get("/static/locales/{name}", include_in_schema=False)
+    def browser_locale(name: str) -> Response:
+        """Browser strings, generated at start from ``locales/<lang>.toml`` (§5a)."""
+        language, dot, extension = name.rpartition(".")
+        strings = browser_locales.get(language) if dot and extension == "json" else None
+        if strings is None:
+            raise StarletteHTTPException(status_code=404)
+        return JSONResponse(strings, headers={"Cache-Control": "no-cache"})
 
     app.mount("/static", StaticFiles(directory=PACKAGE / "static"), name="static")
     sign_in.install(app)

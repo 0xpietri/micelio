@@ -8,6 +8,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- The graph: `/api/graph` for the whole vault, a project or a note's neighborhood;
+  `/explore` with search and filters; graphs on project and note pages, drawn with a
+  vendored Cytoscape.js; browser strings served as `/static/locales/<lang>.json`.
 - Reading pages: projects by category, each project with its notes and conversations,
   notes with backlinks and the projects they belong to, the journal and a health page.
 - Markdown rendered like Obsidian (wikilinks, ghost links, callouts, task lists, tables,
