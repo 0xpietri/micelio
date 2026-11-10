@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ t("appearance.title") }} · {{ site.title }}{% endblock %}
+{% block title %}{{ t("appearance.title") }} · {{ site_name() }}{% endblock %}
 {% block head %}
   <link rel="stylesheet" href="/static/css/appearance.css">
   <script type="module" src="/static/js/appearance.js"></script>
@@ -58,6 +58,75 @@
         </span>
         <span class="muted small" id="soil-help">{{ t("appearance.soil_help") }}</span>
       </label>
+    </fieldset>
+
+    <fieldset>
+      <legend><h2>{{ t("appearance.typography") }}</h2></legend>
+      <p class="muted small">{{ t("appearance.typography_help") }}</p>
+
+      <label>{{ t("appearance.site_name") }}
+        <input type="text" name="site_name" id="site-name" maxlength="{{ max_name }}" value="{{ appearance.site_name }}" placeholder="{{ site.title }}">
+        <span class="muted small">{{ t("appearance.site_name_help", default=site.title) }}</span>
+      </label>
+
+      <h3>{{ t("appearance.title_font") }}</h3>
+      <p class="muted small">{{ t("appearance.title_font_help") }}</p>
+      <div class="choices fonts">
+        {% for font in title_fonts %}
+        <label class="choice">
+          <input type="radio" name="title_font" value="{{ font }}"{% if font == appearance.title_font %} checked{% endif %}>
+          <span class="sample title-sample font-{{ font }}">{{ site_name() }}</span>
+          <span class="choice-name">{{ t("font." ~ font) }}</span>
+          <span class="muted small">{{ t("font." ~ font ~ "_help") }}</span>
+        </label>
+        {% endfor %}
+      </div>
+
+      <h3>{{ t("appearance.title_effect") }}</h3>
+      <div class="choices">
+        {% for effect in title_effects %}
+        <label class="choice">
+          <input type="radio" name="title_effect" value="{{ effect }}"{% if effect == appearance.title_effect %} checked{% endif %}>
+          <span class="choice-name">{{ t("appearance.effect_" ~ effect) }}</span>
+          <span class="muted small">{{ t("appearance.effect_" ~ effect ~ "_help") }}</span>
+        </label>
+        {% endfor %}
+      </div>
+
+      <h3>{{ t("appearance.text_font") }}</h3>
+      <p class="muted small">{{ t("appearance.text_font_help") }}</p>
+      <div class="choices fonts">
+        {% for font in text_fonts %}
+        <label class="choice">
+          <input type="radio" name="text_font" value="{{ font }}"{% if font == appearance.text_font %} checked{% endif %}>
+          <span class="sample font-{{ font }}">{{ t("appearance.text_sample") }}</span>
+          <span class="choice-name">{{ t("font." ~ font) }}</span>
+          <span class="muted small">{{ t("font." ~ font ~ "_help") }}</span>
+        </label>
+        {% endfor %}
+      </div>
+
+      <h3>{{ t("appearance.sizes") }}</h3>
+      {% for name, (low, high, step, unit) in sizes.items() %}
+      <label class="range">{{ t("appearance." ~ name) }}
+        <span class="range-row">
+          <input type="range" name="{{ name }}" id="{{ name }}" min="{{ low }}" max="{{ high }}" step="{{ step }}" value="{{ appearance[name] }}" data-unit="{{ unit }}">
+          <output for="{{ name }}" id="{{ name }}-value">{{ appearance[name] }} {{ unit }}</output>
+        </span>
+      </label>
+      {% endfor %}
+
+      <details class="toml">
+        <summary>{{ t("appearance.toml") }}</summary>
+        <p class="muted small">{{ t("appearance.toml_help") }}</p>
+        <pre id="toml-preview">[typography]
+title_font = "{{ appearance.title_font }}"
+text_font = "{{ appearance.text_font }}"
+title_size = {{ appearance.title_size }}
+text_size = {{ appearance.text_size }}
+graph_labels = {{ appearance.graph_labels }}
+title_effect = "{{ appearance.title_effect }}"</pre>
+      </details>
     </fieldset>
 
     <fieldset>

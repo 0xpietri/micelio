@@ -5,17 +5,14 @@ Served from `/static/vendor`, never from a CDN, so the Content Security Policy c
 
 | Library | Version | File | Source |
 | --- | --- | --- | --- |
-| [Cytoscape.js](https://js.cytoscape.org/) (MIT) | 3.34.4 | `cytoscape/cytoscape.esm.min.js` | `dist/cytoscape.esm.min.mjs` from the npm tarball `cytoscape-3.34.4.tgz` |
 | [d3-force](https://d3js.org/d3-force) (ISC) with d3-dispatch 3.0.1, d3-quadtree 3.0.1 and d3-timer 3.0.1 | 3.0.0 | `d3-force/d3-force.bundle.min.js` | the four `dist/*.min.js` files, concatenated in that order (dispatch, quadtree, timer, force) |
 | [Shrikhand](https://fonts.google.com/specimen/Shrikhand) by Jonny Pinhorn (SIL OFL 1.1) | v17 | `fonts/shrikhand/shrikhand-latin.woff2` | the Latin subset served by Google Fonts |
-
-The npm tarball was checked against the registry's integrity hash
-`sha512-msY99tMY8iWTg+sIPGfSqDcPNOt4xcj+v/K/7qUFaCUxxlqnMkUYLBjRUzn9W5CU/R2hrmtJa5+UtovrEM2ctg==`.
-The file is renamed from `.mjs` to `.js` so every server sends it as JavaScript.
-
-To update: download the new tarball from `https://registry.npmjs.org/cytoscape/-/cytoscape-<version>.tgz`,
-check its `dist.integrity`, copy the same file and `LICENSE`, and update this table and
-`tests/test_graph_page.py`, which pins the version.
+| [Righteous](https://fonts.google.com/specimen/Righteous) by Astigmatic (SIL OFL 1.1) | @fontsource 5.1.0 | `fonts/righteous/righteous-latin-400.woff2` | `files/righteous-latin-400-normal.woff2` from `@fontsource/righteous` |
+| [Bagel Fat One](https://fonts.google.com/specimen/Bagel+Fat+One) by JAMO (SIL OFL 1.1) | @fontsource 5.1.0 | `fonts/bagel-fat-one/bagel-fat-one-latin-400.woff2` | `files/bagel-fat-one-latin-400-normal.woff2` from `@fontsource/bagel-fat-one` |
+| [Fraunces](https://fonts.google.com/specimen/Fraunces) by Undercase Type (SIL OFL 1.1) | @fontsource 5.1.0 | `fonts/fraunces/fraunces-latin-900.woff2` | `files/fraunces-latin-900-normal.woff2` from `@fontsource/fraunces` |
+| [Atkinson Hyperlegible](https://fonts.google.com/specimen/Atkinson+Hyperlegible) by the Braille Institute (SIL OFL 1.1) | @fontsource 5.1.0 | `fonts/atkinson-hyperlegible/atkinson-hyperlegible-latin-{400,700}.woff2` | `files/atkinson-hyperlegible-latin-{400,700}-normal.woff2` from `@fontsource/atkinson-hyperlegible` |
+| [Literata](https://fonts.google.com/specimen/Literata) by TypeTogether (SIL OFL 1.1) | @fontsource 5.1.0 | `fonts/literata/literata-latin-{400,700}.woff2` | `files/literata-latin-{400,700}-normal.woff2` from `@fontsource/literata` |
+| [Space Grotesk](https://fonts.google.com/specimen/Space+Grotesk) by Florian Karsten (SIL OFL 1.1) | @fontsource 5.1.0 | `fonts/space-grotesk/space-grotesk-latin-{400,700}.woff2` | `files/space-grotesk-latin-{400,700}-normal.woff2` from `@fontsource/space-grotesk` |
 
 The d3 tarballs were checked against the registry's integrity hashes:
 
@@ -24,8 +21,11 @@ The d3 tarballs were checked against the registry's integrity hashes:
 - `d3-quadtree-3.0.1.tgz`: `sha512-04xDrxQTDTCFwP5H6hRhsRcb9xxv2RzkcsygFzmkSIOJy3PeRJP7sNk3VRIbKXcog561P9oU0/rVH6vDROAgUw==`
 - `d3-timer-3.0.1.tgz`: `sha512-ndfJ/JxxMd3nw31uyKoY2naivF+r29V+Lc0svZxe1JvvIRmi8hUsrMvdOwgS1o6uBHmiz91geQ0ylPP0aj1VUA==`
 
-All four share the same ISC license text, kept once as `d3-force/LICENSE`. The font's
-license is `fonts/shrikhand/OFL.txt`. `tests/test_landing.py` pins these versions.
+All four share the same ISC license text, kept once as `d3-force/LICENSE`. Each font keeps
+its license as `OFL.txt` in its folder. `tests/test_landing.py` pins these versions.
+
+The graphs used Cytoscape.js until the step that drew them as mycelium; it was removed
+then, and the landing's d3-force draws every graph now.
 
 The landing's included background, `../img/psychedelic-dusk.webp`, was painted for this
 project with an image generator from the prompt in `docs/reports/step-5.md` and is

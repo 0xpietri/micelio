@@ -11,12 +11,13 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
-from mycelium.appearance import AppearanceStore, Palette, category_colors
+from mycelium.appearance import Appearance, AppearanceStore, category_colors
 from mycelium.auth.web import SignIn
 from mycelium.config import NOTE_TYPES, STATUSES, Category, Config
 from mycelium.formatting import Dates
 from mycelium.graph import GraphBuilder, ScopeError, UnknownNodeError, parse_scope
 from mycelium.i18n import category_names
+from mycelium.landing import background_url
 from mycelium.render import Renderer, href_for
 from mycelium.vault.index import IndexView, Note, VaultIndex
 from mycelium.vault.public import PublicView
@@ -47,9 +48,10 @@ class Reader:
     graphs: GraphBuilder
 
 
-def theme_css(colors: dict[str, str], palette: Palette) -> str:
-    """Category colors as CSS classes and the palette as custom properties, so pages
-    need no inline styles (CSP)."""
+def theme_css(colors: dict[str, str], appearance: Appearance) -> str:
+    """The palette, the type settings and the category colors as CSS custom properties,
+    so pages need no inline styles (CSP). Font stacks live in ``static/css/fonts.css``."""
+    palette = appearance.colors
     tokens = {
         "sun": palette.sun,
         "accent": palette.accent,
@@ -57,8 +59,23 @@ def theme_css(colors: dict[str, str], palette: Palette) -> str:
         "button-alt": palette.button_alt,
         "ink": palette.ink,
         "thread": palette.thread,
+        "stem": palette.stem,
+        "spore": palette.spore,
+        "crystal": palette.crystals[0],
+        "crystal-alt": palette.crystals[1],
+    }
+    poster = appearance.title_effect == "poster"
+    look = {
+        "title-font": f"var(--font-{appearance.title_font})",
+        "text-font": f"var(--font-{appearance.text_font})",
+        "title-scale": f"{appearance.title_size / 100:g}",
+        "text-size": f"{appearance.text_size}px",
+        "label-scale": f"{appearance.graph_labels / 100:g}",
+        "title-stroke": "0.08em" if poster else "0",
+        "title-shadow": "0.05em 0.06em 0 var(--pal-accent)" if poster else "none",
     }
     rules = [":root { " + " ".join(f"--pal-{k}: {v};" for k, v in tokens.items()) + " }"]
+    rules += [":root { " + " ".join(f"--{k}: {v};" for k, v in look.items()) + " }"]
     rules += [f".cat-{key} {{ --cat: {color}; }}" for key, color in colors.items()]
     return "\n".join(rules) + "\n"
 
@@ -92,6 +109,7 @@ class Pages:
             category_of=self.category_of,
             category_name=self.category_name,
             excerpt=self.everything.renderer.excerpt,
+            backdrop=self.backdrop,
         )
 
     # -- helpers ---------------------------------------------------------------------
@@ -99,6 +117,17 @@ class Pages:
     def colors(self) -> dict[str, str]:
         """Category colors from the palette chosen on the Appearance page (§7b)."""
         return category_colors(self.config, self.looks.current().colors)
+
+    def backdrop(self) -> dict[str, object]:
+        """The painted background behind every page (§7c): the image, its soil line and,
+        when it is recolored, the palette's ramp for the browser's SVG filter."""
+        look = self.looks.current()
+        ramp = look.colors.ramp if look.recolors else None
+        return {
+            "url": background_url(look),
+            "soil": look.soil,
+            "ramp": " ".join(ramp) if ramp else "",
+        }
 
     def category_of(self, key: str | None) -> Category | None:
         return self.config.category(key)
@@ -163,7 +192,7 @@ class Pages:
         @router.get("/theme.css", include_in_schema=False)
         def theme() -> Response:
             return PlainTextResponse(
-                theme_css(self.colors(), self.looks.current().colors),
+                theme_css(self.colors(), self.looks.current()),
                 media_type="text/css",
                 headers={"Cache-Control": "no-cache"},
             )
@@ -260,6 +289,7 @@ class Pages:
                 "hidden_types": set(self.config.graph.hide_by_default),
                 "statuses": STATUSES,
                 "site_categories": self.config.categories,
+                "max_nodes": self.config.graph.max_nodes,
                 "nav": "explore",
             }
             return render(request, "explore.html", context, reader)

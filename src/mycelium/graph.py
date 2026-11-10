@@ -1,6 +1,6 @@
 """Nodes and edges for ``/api/graph``, independent of any renderer.
 
-The payload is plain data: a 2D page draws it with Cytoscape.js today and a 3D view
+The payload is plain data: a 2D page draws it as mycelium in SVG today and a 3D view
 can read the same JSON later. Colors, shapes and fading are decided by the page; the
 API only says what a node is (``type``, ``category``, ``status``, ``degree``, ...).
 """
@@ -51,6 +51,7 @@ class CategoryData(TypedDict):
     key: str
     name: str
     color: str
+    species: str
 
 
 class GraphData(TypedDict):
@@ -149,7 +150,12 @@ class GraphBuilder:
         names = category_names(language)
         colors = self.colors()
         return [
-            {"key": c.key, "name": c.name(language, names.get(c.key)), "color": colors[c.key]}
+            {
+                "key": c.key,
+                "name": c.name(language, names.get(c.key)),
+                "color": colors[c.key],
+                "species": c.species,
+            }
             for c in self.config.categories
         ]
 

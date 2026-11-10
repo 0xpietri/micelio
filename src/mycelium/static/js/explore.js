@@ -1,5 +1,5 @@
 // /explore: the graph of everything, with search and filters in the side panel.
-import { fold, mountGraph, relayout, tr } from "./graph.js";
+import { fold, legendIcon, mountGraph, tr } from "./graph.js";
 
 const graphEl = document.querySelector("[data-graph][data-explore]");
 const panel = document.getElementById("explore-panel");
@@ -10,84 +10,87 @@ function checked(name) {
   );
 }
 
-function applyFilters(cy) {
+function filterFn() {
   const types = checked("type");
   const categories = checked("category");
   const statuses = checked("status");
-  cy.batch(() => {
-    cy.nodes().forEach((node) => {
-      const d = node.data();
-      const nodeCategories = d.categories.length ? d.categories : ["none"];
-      const visible =
-        types.has(d.type) &&
-        nodeCategories.some((c) => categories.has(c)) &&
-        (d.ghost || statuses.has(d.status || "none"));
-      node.toggleClass("hidden", !visible);
-    });
-  });
-}
-
-function search(cy, strings, query, result) {
-  const q = fold(query.trim());
-  cy.batch(() => {
-    cy.elements().removeClass("dim match");
-    if (!q) return;
-    const visible = cy.nodes().not(".hidden");
-    const matches = visible.filter((n) => fold(n.data("title")).includes(q));
-    cy.elements().not(matches).addClass("dim");
-    matches.addClass("match");
-  });
-  if (!q) {
-    result.textContent = "";
-    return cy.collection();
-  }
-  const matches = cy.nodes(".match");
-  const count = matches.length;
-  result.textContent =
-    count === 0
-      ? tr(strings, "graph.no_match")
-      : count === 1
-        ? tr(strings, "graph.match_one")
-        : tr(strings, "graph.matches", { count });
-  return matches;
+  return (n) => {
+    const type = n.ghost ? "ghost" : n.type;
+    const nodeCategories = n.categories && n.categories.length ? n.categories : ["none"];
+    return (
+      types.has(type) &&
+      (n.ghost || nodeCategories.some((c) => categories.has(c))) &&
+      (n.ghost || statuses.has(n.status || "none"))
+    );
+  };
 }
 
 async function start() {
   if (!graphEl || !panel) return;
-  const cy = await mountGraph(graphEl);
-  if (!cy) return;
-  const { strings } = cy.scratch("mycelium");
+  const graph = await mountGraph(graphEl);
+  if (!graph || !graph.filter) return;
+  const { strings, data } = graph;
+
+  for (const slot of panel.querySelectorAll("[data-legend-icon]")) {
+    slot.replaceChildren(legendIcon(slot.dataset.legendIcon, data));
+  }
 
   const input = panel.querySelector("#graph-search");
   const result = panel.querySelector("#graph-search-result");
   const form = panel.querySelector("form.explore-search");
+  let visible = filterFn();
 
-  applyFilters(cy);
+  const search = () => {
+    const q = fold(input.value.trim());
+    if (!q) {
+      graph.highlight(null);
+      result.textContent = "";
+      return [];
+    }
+    const matches = graph.nodes.filter((n) => visible(n) && fold(n.title).includes(q));
+    const ids = new Set(matches.map((n) => n.id));
+    graph.highlight((n) => ids.has(n.id));
+    const count = matches.length;
+    result.textContent =
+      count === 0
+        ? tr(strings, "graph.no_match")
+        : count === 1
+          ? tr(strings, "graph.match_one")
+          : tr(strings, "graph.matches", { count });
+    return matches;
+  };
+
+  graph.filter(visible);
   panel.querySelectorAll("fieldset.filter input").forEach((box) => {
     box.addEventListener("change", () => {
-      applyFilters(cy);
-      search(cy, strings, input.value, result);
-      relayout(cy);
+      visible = filterFn();
+      graph.filter(visible);
+      search();
     });
   });
 
-  input.addEventListener("input", () => search(cy, strings, input.value, result));
+  input.addEventListener("input", search);
   input.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
       input.value = "";
-      search(cy, strings, "", result);
+      search();
+      graph.fit();
     }
   });
   form.addEventListener("submit", (event) => {
     event.preventDefault();
-    const matches = search(cy, strings, input.value, result);
-    if (matches.length === 1 && matches.data("href")) {
-      window.location.assign(matches.data("href"));
-    } else if (matches.length) {
-      const duration = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 300;
-      cy.animate({ fit: { eles: matches, padding: 80 } }, { duration });
-    }
+    const matches = search();
+    if (matches.length === 1 && matches[0].href) window.location.assign(matches[0].href);
+    else if (matches.length) graph.fit(matches);
   });
+
+  const zoom = document.querySelector(".graph-zoom");
+  if (zoom) {
+    zoom.hidden = false;
+    zoom.querySelector("[data-zoom=in]").addEventListener("click", () => graph.zoom(1 / 1.3));
+    zoom.querySelector("[data-zoom=out]").addEventListener("click", () => graph.zoom(1.3));
+    zoom.querySelector("[data-zoom=fit]").addEventListener("click", () => graph.fit());
+  }
 }
 
 start();

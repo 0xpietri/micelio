@@ -1,21 +1,27 @@
 {% extends "base.html" %}
-{% from "_macros.html" import status_badge, category_dot %}
-{% block title %}{{ t("projects.title") }} · {{ site.title }}{% endblock %}
+{% from "_macros.html" import status_badge, category_dot, mushroom %}
+{% block title %}{{ t("projects.title") }} · {{ site_name() }}{% endblock %}
 {% block content %}
-<div class="page">
+<div class="page wide">
   <h1>{{ t("projects.title") }}</h1>
+  <p class="muted">{{ t("projects.lead") }}</p>
+  <div class="groups">
   {% for group in groups %}
   <section class="group{% if group.category %} cat-{{ group.category.key }}{% endif %}">
     <h2>{% if group.category %}{{ category_dot(group.category.key) }} {{ category_name(group.category) }}{% else %}{{ t("projects.uncategorized") }}{% endif %}</h2>
-    <ul class="rows">
+    <ul class="field rows">
       {% for row in group.projects %}
-      <li class="row">
-        <a class="row-title" href="{{ href(row.note) }}">{{ row.note.title }}</a>
-        {{ status_badge(row.note.status) }}
-        <span class="muted">{{ t("projects.notes", count=row.members) }}</span>
-        <span class="muted small">
-          {% if row.last_journal %}{{ t("projects.last", date=show_date(row.last_date)) }}{% else %}{{ t("projects.never") }}{% endif %}
-        </span>
+      <li>
+        <a class="specimen" href="{{ href(row.note) }}">
+          {{ mushroom(row.note, scene=True, notes=row.members) }}
+          <span class="specimen-body">
+            <strong class="row-title">{{ row.note.title }}</strong>
+            <span class="eyebrow">{{ status_badge(row.note.status) }} {{ t("projects.notes", count=row.members) }}</span>
+            <span class="muted small">
+              {% if row.last_journal %}{{ t("projects.last", date=show_date(row.last_date)) }}{% else %}{{ t("projects.never") }}{% endif %}
+            </span>
+          </span>
+        </a>
       </li>
       {% endfor %}
     </ul>
@@ -23,5 +29,7 @@
   {% else %}
   <p class="muted">{{ t("projects.empty") }}</p>
   {% endfor %}
+  </div>
 </div>
+<script type="module" src="/static/js/specimens.js"></script>
 {% endblock %}

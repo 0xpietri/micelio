@@ -12,6 +12,7 @@ from fastapi.templating import Jinja2Templates
 from starlette.exceptions import HTTPException
 
 from mycelium.appearance import (
+    MAX_NAME,
     MAX_UPLOAD_BYTES,
     MEDIA_TYPES,
     PALETTES,
@@ -19,10 +20,28 @@ from mycelium.appearance import (
     AppearanceStore,
     ImageError,
     clean_text,
+    in_range,
     palette_named,
+    text_font_named,
+    title_effect_named,
+    title_font_named,
 )
 from mycelium.auth.web import SignIn
-from mycelium.config import PALETTE_NAMES, SOIL_MAX, SOIL_MIN, Config
+from mycelium.config import (
+    LABEL_SIZE_MAX,
+    LABEL_SIZE_MIN,
+    PALETTE_NAMES,
+    SOIL_MAX,
+    SOIL_MIN,
+    TEXT_FONTS,
+    TEXT_SIZE_MAX,
+    TEXT_SIZE_MIN,
+    TITLE_EFFECTS,
+    TITLE_FONTS,
+    TITLE_SIZE_MAX,
+    TITLE_SIZE_MIN,
+    Config,
+)
 from mycelium.i18n import Translate
 from mycelium.landing import LandingBuilder, background_url
 from mycelium.vault import PublicView, VaultIndex
@@ -51,6 +70,7 @@ class LandingPages:
         self.t = t
         self.everything = LandingBuilder(config, index)
         self.public = LandingBuilder(config, public)
+        templates.env.globals["site_name"] = self.site_name
 
     # -- texts ------------------------------------------------------------------------
 
@@ -61,7 +81,11 @@ class LandingPages:
             return configured
         if site.owner:
             return self.t("site.owners_mycelium", owner=site.owner)
-        return site.title
+        return self.site_name()
+
+    def site_name(self) -> str:
+        """The site's name: the Appearance page's, else the config's ``site.title``."""
+        return self.store.current().site_name or self.config.site.title
 
     def default_tagline(self) -> str:
         return self.config.site.tagline_for(self.config.site.language) or self.t("landing.tagline")
@@ -137,11 +161,20 @@ class LandingPages:
                 "background": background_url(appearance),
                 "default_headline": self.default_headline(),
                 "default_tagline": self.default_tagline(),
+                "max_name": MAX_NAME,
                 "form_token": self.sign_in.form_token(request, "appearance"),
                 "done": done if done in _MESSAGES else "",
                 "error": error if error in _ERRORS else "",
                 "soil_min": SOIL_MIN,
                 "soil_max": SOIL_MAX,
+                "title_fonts": TITLE_FONTS,
+                "text_fonts": TEXT_FONTS,
+                "title_effects": TITLE_EFFECTS,
+                "sizes": {
+                    "title_size": (TITLE_SIZE_MIN, TITLE_SIZE_MAX, 5, "%"),
+                    "text_size": (TEXT_SIZE_MIN, TEXT_SIZE_MAX, 1, "px"),
+                    "graph_labels": (LABEL_SIZE_MIN, LABEL_SIZE_MAX, 5, "%"),
+                },
                 "max_mb": MAX_UPLOAD_BYTES // (1024 * 1024),
                 "prompt_fields": PROMPT_FIELDS,
                 "prompt_values": prompt_values,
@@ -164,6 +197,13 @@ class LandingPages:
             soil: Annotated[int, Form()] = 0,
             headline: Annotated[str, Form()] = "",
             tagline: Annotated[str, Form()] = "",
+            site_name: Annotated[str, Form()] = "",
+            title_font: Annotated[str, Form()] = "",
+            text_font: Annotated[str, Form()] = "",
+            title_size: Annotated[int, Form()] = 0,
+            text_size: Annotated[int, Form()] = 0,
+            graph_labels: Annotated[int, Form()] = 0,
+            title_effect: Annotated[str, Form()] = "",
         ) -> Response:
             if not self._form_ok(request, csrf):
                 return _back(error="form")
@@ -176,6 +216,15 @@ class LandingPages:
                 soil=soil if SOIL_MIN <= soil <= SOIL_MAX else now.soil,
                 headline=clean_text(headline),
                 tagline=clean_text(tagline),
+                site_name=clean_text(site_name)[:MAX_NAME],
+                title_font=title_font_named(title_font, now.title_font),
+                text_font=text_font_named(text_font, now.text_font),
+                title_size=in_range(title_size, TITLE_SIZE_MIN, TITLE_SIZE_MAX, now.title_size),
+                text_size=in_range(text_size, TEXT_SIZE_MIN, TEXT_SIZE_MAX, now.text_size),
+                graph_labels=in_range(
+                    graph_labels, LABEL_SIZE_MIN, LABEL_SIZE_MAX, now.graph_labels
+                ),
+                title_effect=title_effect_named(title_effect, now.title_effect),
             )
             self.store.save(chosen)
             return _back(done="saved")

@@ -1,6 +1,6 @@
 /* The Appearance page (§7b). */
 
-.page.wide { max-width: 64rem; }
+.page.wide.look { max-width: 64rem; }
 .look fieldset { margin: 0 0 1.5rem; padding: 0; border: 0; min-width: 0; }
 .look legend { padding: 0; }
 .look legend h2 { margin: 1.5rem 0 0.25rem; }
@@ -56,3 +56,21 @@
 .prompt textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 #prompt-output { font: 0.82rem/1.5 ui-monospace, Menlo, Consolas, monospace; }
 .fixed { margin: 0 0 0.75rem; padding: 0.6rem 0.75rem; border: 2px dashed var(--line); border-radius: 8px; color: var(--muted); font-size: 0.875rem; }
+
+/* Names and lettering */
+.look h3 { margin: 1.25rem 0 0.25rem; font-size: 1rem; }
+.look .sample { font-size: 1.05rem; line-height: 1.3; color: var(--text); }
+.look .title-sample {
+  font-size: 1.6rem;
+  line-height: 1.2;
+  color: var(--sun);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-text-stroke: var(--title-stroke, 0.08em) var(--ink);
+  paint-order: stroke fill;
+  text-shadow: var(--title-shadow, none);
+}
+.look .range output { min-width: 4.5rem; font-variant-numeric: tabular-nums; color: var(--muted); }
+.look details.toml summary { cursor: pointer; color: var(--muted); }
+.look details.toml pre { overflow-x: auto; padding: 0.8rem 1rem; border: 2px solid var(--ink); border-radius: 10px; background: var(--surface); font: 0.82rem/1.5 ui-monospace, Menlo, Consolas, monospace; color: var(--muted); }
