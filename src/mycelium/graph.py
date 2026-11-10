@@ -16,7 +16,7 @@ from mycelium.appearance import PALETTES, category_colors
 from mycelium.config import Config
 from mycelium.i18n import category_names
 from mycelium.render import href_for
-from mycelium.vault.index import Note, VaultIndex
+from mycelium.vault.index import IndexView, Note
 from mycelium.vault.parser import link_key
 
 GHOST_PREFIX = "ghost:"
@@ -96,7 +96,7 @@ class GraphBuilder:
     def __init__(
         self,
         config: Config,
-        index: VaultIndex,
+        index: IndexView,
         colors: Callable[[], dict[str, str]] | None = None,
     ) -> None:
         self.config = config

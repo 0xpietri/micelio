@@ -29,7 +29,7 @@
         <a class="row-title" href="{{ href(member) }}">{{ member.title }}</a>
         {% if member.type != "note" %}<span class="badge">{{ t("type." ~ member.type) }}</span>{% endif %}
         {{ status_badge(member.status) }}
-        {% if is_bridge(member.slug) %}<span class="badge bridge" title="{{ t('project.bridge') }}">⇄</span>{% endif %}
+        {% if vault.is_bridge(member.slug) %}<span class="badge bridge" title="{{ t('project.bridge') }}">⇄</span>{% endif %}
         <span class="muted small excerpt">{{ excerpt(member) }}</span>
       </li>
       {% endfor %}

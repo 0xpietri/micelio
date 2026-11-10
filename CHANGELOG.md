@@ -8,6 +8,10 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Public notes (§9): anonymous visitors see the landing, `/explore`, `/projects`, the
+  journal, `/api/graph` and `/api/landing` built from `public: true` notes only. Private
+  notes do not exist for them: no titles, links, nodes, ghosts or counts; links to them
+  render as plain text and their URLs answer 404. Health and Appearance stay signed-in.
 - The landing: the vault drawn as a forest over a painted background, projects as
   mushrooms (eight species, grown by status, sized by notes), notes as spore clouds in
   the mycelium, links as hyphae, sources as crystals and the latest journal notes as

@@ -26,7 +26,7 @@ from mycelium.formatting import Dates
 from mycelium.i18n import available_languages, browser_strings, translator
 from mycelium.landing_web import LandingPages
 from mycelium.pages import Pages
-from mycelium.vault import VaultIndex
+from mycelium.vault import PublicView, VaultIndex
 
 PACKAGE = Path(str(files("mycelium")))
 AUTH_DB = "auth.sqlite3"
@@ -94,8 +94,9 @@ def create_app(
     install_security_headers(app)
 
     dates = Dates(language, config.site.timezone)
-    app.include_router(Pages(config, vault, templates, dates, looks).router())
-    app.include_router(LandingPages(config, vault, looks, templates, sign_in, t).router())
+    public = PublicView(vault)
+    app.include_router(Pages(config, vault, templates, dates, looks, sign_in, public).router())
+    app.include_router(LandingPages(config, vault, looks, templates, sign_in, t, public).router())
 
     @app.exception_handler(StarletteHTTPException)
     async def not_found(request: Request, exc: StarletteHTTPException) -> Response:
@@ -104,13 +105,16 @@ def create_app(
         return templates.TemplateResponse(request, "not_found.html", {}, status_code=404)
 
     @app.get("/healthz", include_in_schema=False)
-    def healthz() -> dict[str, object]:
-        """Liveness for containers and monitoring. Reveals counts only, never titles."""
+    def healthz(request: Request) -> dict[str, object]:
+        """Liveness for containers and monitoring. Never titles; the number of notes
+        only when signed in, since private notes are not even counts for visitors (§9)."""
         vault.refresh()
-        return {
+        body: dict[str, object] = {
             "status": "ok" if config.vault.root.is_dir() else "vault-missing",
             "version": __version__,
-            "notes": len(vault.notes),
         }
+        if sign_in.sees_everything(request):
+            body["notes"] = len(vault.notes)
+        return body
 
     return app

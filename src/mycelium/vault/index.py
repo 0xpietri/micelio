@@ -67,7 +67,55 @@ def _is_skipped(name: str) -> bool:
     return name.startswith(".") or ".sync-conflict-" in name
 
 
-class VaultIndex:
+class IndexView:
+    """What pages ask of a vault. ``VaultIndex`` is the whole vault; ``PublicView``
+    (``mycelium.vault.public``) is the part anonymous visitors may see (§9)."""
+
+    notes: dict[str, Note]
+    edges: list[Edge]
+    ghosts: dict[str, set[str]]
+    backlinks: dict[str, set[str]]
+    outlinks: dict[str, set[str]]
+    members: dict[str, set[str]]
+    projects_of: dict[str, set[str]]
+    issues: list[Issue]
+    generation: int
+
+    def refresh(self, *, force: bool = False) -> bool:  # pragma: no cover - interface
+        raise NotImplementedError
+
+    def resolve(self, target: str) -> str | None:  # pragma: no cover - interface
+        raise NotImplementedError
+
+    def categories_of(self, slug: str) -> set[str]:
+        """The categories a note takes its color from (through its projects)."""
+        note = self.notes[slug]
+        if note.type == "project":
+            return {note.category} if note.category else set()
+        return {
+            category
+            for project in self.projects_of.get(slug, ())
+            if (category := self.notes[project].category)
+        }
+
+    def is_bridge(self, slug: str) -> bool:
+        """A note linked from projects of more than one category."""
+        return len(self.categories_of(slug)) > 1
+
+    def orphans(self) -> list[str]:
+        return sorted(
+            slug
+            for slug in self.notes
+            if not self.backlinks.get(slug) and not self.outlinks.get(slug)
+        )
+
+    def projects(self) -> list[Note]:
+        return sorted(
+            (n for n in self.notes.values() if n.type == "project"), key=lambda n: n.title.lower()
+        )
+
+
+class VaultIndex(IndexView):
     """Thread-safe index over one vault root."""
 
     def __init__(self, config: Config) -> None:
@@ -302,35 +350,6 @@ class VaultIndex:
         self.outlinks = outlinks
         self.members = members
         self.projects_of = projects_of
-
-    # -- questions ------------------------------------------------------------
-
-    def categories_of(self, slug: str) -> set[str]:
-        """The categories a note takes its color from (through its projects)."""
-        note = self.notes[slug]
-        if note.type == "project":
-            return {note.category} if note.category else set()
-        return {
-            category
-            for project in self.projects_of.get(slug, ())
-            if (category := self.notes[project].category)
-        }
-
-    def is_bridge(self, slug: str) -> bool:
-        """A note linked from projects of more than one category."""
-        return len(self.categories_of(slug)) > 1
-
-    def orphans(self) -> list[str]:
-        return sorted(
-            slug
-            for slug in self.notes
-            if not self.backlinks.get(slug) and not self.outlinks.get(slug)
-        )
-
-    def projects(self) -> list[Note]:
-        return sorted(
-            (n for n in self.notes.values() if n.type == "project"), key=lambda n: n.title.lower()
-        )
 
 
 _ATTACHMENT_SUFFIX = re.compile(r"\.[A-Za-z0-9]{1,5}$")

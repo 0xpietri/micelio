@@ -8,7 +8,8 @@ or an AI assistant write.
 > **Status: early development.** The first release (v0.1) is being built step by step; see
 > the [roadmap](#roadmap). What works today: sign-in, the landing (your projects as mushrooms
 > over a forest of notes), the graphs, and reading your projects, notes, journal and the health
-> of the vault, in English or Spanish. Public notes for visitors come next.
+> of the vault, in English or Spanish, and public notes for anonymous visitors. The release
+> comes next.
 
 ## Why
 
@@ -130,8 +131,8 @@ uv run mycelium user session-key     # prints MYCELIUM_SESSION_KEY
 | 3 | Pages and languages: projects, notes, journal, health; English and Spanish | done |
 | 4 | Graphs: whole vault, per project, per note | done |
 | 5 | The landing: mushrooms above ground, mycelium below; the Appearance page | done |
-| 6 | Public notes for anonymous visitors | next |
-| 7 | Release v0.1.0: Docker image (amd64 + arm64), PyPI package | |
+| 6 | Public notes for anonymous visitors | done |
+| 7 | Release v0.1.0: Docker image (amd64 + arm64), PyPI package | next |
 
 Later: a static export to share public notes without a server (v0.2) and an Obsidian plugin
 (v0.3). The full specification is in [`docs/spec`](docs/spec/MYCELIUM_SPEC_v0.1.md).

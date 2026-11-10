@@ -11,17 +11,24 @@
   <div class="hero">
     <h1 class="headline" id="headline">{{ headline }}</h1>
     <p class="tagline">{{ tagline }}</p>
-    {% if not data.projects %}<p class="tagline empty">{{ t("landing.empty") }}</p>{% endif %}
+    {% set everything = request.state.signed_in is not defined or request.state.signed_in %}
+    {% set bare = not data.projects and not data.notes and not data.sources and not data.journal %}
+    {% if everything and not data.projects %}<p class="tagline empty">{{ t("landing.empty") }}</p>
+    {% elif bare %}<p class="tagline empty">{{ t("landing.empty_public") }}</p>{% endif %}
     <div class="actions">
+      {% if everything or not bare %}
       <a class="btn btn-main" href="/explore">{{ t("landing.explore") }}</a>
       <a class="btn btn-alt" href="/projects">{{ t("landing.projects") }}</a>
+      {% else %}
+      <a class="btn btn-main" href="/login">{{ t("login.title") }}</a>
+      {% endif %}
     </div>
   </div>
   <svg class="forest" id="forest" role="group" aria-labelledby="forest-label" xmlns="http://www.w3.org/2000/svg">
     <title id="forest-label">{{ t("landing.label") }}</title>
     <image href="{{ background }}" x="0" y="0" width="1536" height="1024" preserveAspectRatio="xMidYMid slice"></image>
   </svg>
-  {% if request.state.signed_in is not defined or request.state.signed_in %}
+  {% if everything %}
   <nav class="corner" aria-label="{{ t('nav.main') }}">
     <a href="/appearance">{{ t("nav.appearance") }}</a>
     {% if sign_in.enabled %}
@@ -30,6 +37,10 @@
       <button type="submit">{{ t("logout.submit") }}</button>
     </form>
     {% endif %}
+  </nav>
+  {% elif sign_in.enabled and not bare %}
+  <nav class="corner" aria-label="{{ t('nav.main') }}">
+    <a href="/login">{{ t("login.title") }}</a>
   </nav>
   {% endif %}
   <dl class="legend" aria-label="{{ t('landing.legend') }}">

@@ -13,20 +13,23 @@
   {% block header %}
   <header class="top">
     <a class="brand" href="/">{{ site.title }}</a>
-    {% if request.state.signed_in is not defined or request.state.signed_in %}
+    {% set everything = request.state.signed_in is not defined or request.state.signed_in %}
     <nav aria-label="{{ t('nav.main') }}">
       <a href="/explore"{% if nav == "explore" %} aria-current="page"{% endif %}>{{ t("nav.explore") }}</a>
       <a href="/projects"{% if nav == "projects" %} aria-current="page"{% endif %}>{{ t("nav.projects") }}</a>
       <a href="/journal"{% if nav == "journal" %} aria-current="page"{% endif %}>{{ t("nav.journal") }}</a>
+      {% if everything %}
       <a href="/health"{% if nav == "health" %} aria-current="page"{% endif %}>{{ t("nav.health") }}</a>
       <a href="/appearance"{% if nav == "appearance" %} aria-current="page"{% endif %}>{{ t("nav.appearance") }}</a>
+      {% endif %}
     </nav>
-    {% endif %}
-    {% if sign_in.enabled and request.state.signed_in %}
+    {% if sign_in.enabled and everything %}
     <form method="post" action="/logout" class="inline">
       <input type="hidden" name="csrf" value="{{ sign_in.logout_token(request) }}">
       <button type="submit" class="link">{{ t("logout.submit") }}</button>
     </form>
+    {% elif sign_in.enabled and nav != "login" %}
+    <a class="sign-in" href="/login?next={{ request.url.path|urlencode }}">{{ t("login.title") }}</a>
     {% endif %}
   </header>
   {% endblock %}
