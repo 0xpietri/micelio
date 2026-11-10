@@ -102,6 +102,7 @@ def test_config_typography_is_the_default_and_saved_values_win(tmp_path: Path) -
     store.save(Appearance(title_font="righteous", text_font="literata", graph_labels=130))
     look = store.current()
     assert (look.title_font, look.text_font, look.graph_labels) == ("righteous", "literata", 130)
+    store.close()
 
 
 def test_store_ignores_bad_type_values(tmp_path: Path) -> None:
