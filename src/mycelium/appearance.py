@@ -15,7 +15,25 @@ from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Literal
 
-from mycelium.config import PALETTE_NAMES, SOIL_MAX, SOIL_MIN, Config, PaletteName
+from mycelium.config import (
+    LABEL_SIZE_MAX,
+    LABEL_SIZE_MIN,
+    PALETTE_NAMES,
+    SOIL_MAX,
+    SOIL_MIN,
+    TEXT_FONTS,
+    TEXT_SIZE_MAX,
+    TEXT_SIZE_MIN,
+    TITLE_EFFECTS,
+    TITLE_FONTS,
+    TITLE_SIZE_MAX,
+    TITLE_SIZE_MIN,
+    Config,
+    PaletteName,
+    TextFont,
+    TitleEffect,
+    TitleFont,
+)
 
 SITE_DB = "site.sqlite3"
 BACKGROUNDS = "backgrounds"
@@ -25,6 +43,7 @@ BUILTIN_SOIL = 52
 MAX_UPLOAD_BYTES = 8 * 1024 * 1024
 MIN_WIDTH, MIN_HEIGHT = 1200, 800
 MAX_TEXT = 120
+MAX_NAME = 40
 
 ImageType = Literal["png", "jpeg", "webp"]
 MEDIA_TYPES: dict[ImageType, str] = {"png": "image/png", "jpeg": "image/jpeg", "webp": "image/webp"}
@@ -175,6 +194,13 @@ class Appearance:
     soil: int = BUILTIN_SOIL
     headline: str = ""
     tagline: str = ""
+    site_name: str = ""  # empty: the config's site.title
+    title_font: TitleFont = "shrikhand"
+    text_font: TextFont = "system"
+    title_size: int = 100  # percent
+    text_size: int = 16  # px
+    graph_labels: int = 100  # percent
+    title_effect: TitleEffect = "poster"
 
     @property
     def uses_own(self) -> bool:
@@ -194,6 +220,25 @@ class Appearance:
 def palette_named(value: object, fallback: PaletteName) -> PaletteName:
     """``value`` if it names a palette, else ``fallback``."""
     return next((k for k in PALETTE_NAMES if k == value), fallback)
+
+
+def in_range(value: object, low: int, high: int, fallback: int) -> int:
+    """``value`` if it is a whole number from ``low`` to ``high``, else ``fallback``."""
+    if isinstance(value, int) and not isinstance(value, bool) and low <= value <= high:
+        return value
+    return fallback
+
+
+def title_font_named(value: object, fallback: TitleFont) -> TitleFont:
+    return next((k for k in TITLE_FONTS if k == value), fallback)
+
+
+def text_font_named(value: object, fallback: TextFont) -> TextFont:
+    return next((k for k in TEXT_FONTS if k == value), fallback)
+
+
+def title_effect_named(value: object, fallback: TitleEffect) -> TitleEffect:
+    return next((k for k in TITLE_EFFECTS if k == value), fallback)
 
 
 def category_colors(config: Config, palette: Palette) -> dict[str, str]:
@@ -336,6 +381,7 @@ class AppearanceStore:
 
     def current(self) -> Appearance:
         defaults = self.config.landing
+        type_defaults = self.config.typography
         saved = self._saved()
         palette = palette_named(saved.get("palette"), defaults.palette)
         own_type = next((k for k in MEDIA_TYPES if k == saved.get("own_type")), None)
@@ -356,6 +402,22 @@ class AppearanceStore:
             soil=soil if isinstance(soil, int) and SOIL_MIN <= soil <= SOIL_MAX else defaults.soil,
             headline=clean_text(str(saved.get("headline", ""))),
             tagline=clean_text(str(saved.get("tagline", ""))),
+            site_name=clean_text(str(saved.get("site_name", "")))[:MAX_NAME],
+            title_font=title_font_named(saved.get("title_font"), type_defaults.title_font),
+            text_font=text_font_named(saved.get("text_font"), type_defaults.text_font),
+            title_size=in_range(
+                saved.get("title_size"), TITLE_SIZE_MIN, TITLE_SIZE_MAX, type_defaults.title_size
+            ),
+            text_size=in_range(
+                saved.get("text_size"), TEXT_SIZE_MIN, TEXT_SIZE_MAX, type_defaults.text_size
+            ),
+            graph_labels=in_range(
+                saved.get("graph_labels"),
+                LABEL_SIZE_MIN,
+                LABEL_SIZE_MAX,
+                type_defaults.graph_labels,
+            ),
+            title_effect=title_effect_named(saved.get("title_effect"), type_defaults.title_effect),
         )
 
     def save(self, appearance: Appearance) -> None:

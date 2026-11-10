@@ -1,24 +1,26 @@
 {% extends "base.html" %}
-{% from "_macros.html" import status_badge, category_dot, graph_head, graph_box %}
-{% block title %}{{ note.title }} · {{ site.title }}{% endblock %}
+{% from "_macros.html" import status_badge, category_dot, graph_head, graph_box, mushroom %}
+{% block title %}{{ note.title }} · {{ site_name() }}{% endblock %}
 {% block head %}{{ graph_head("graph-embed.js") }}{% endblock %}
 {% block content %}
 {% set category = category_of(note.category) %}
+<section class="hero-scene" aria-labelledby="project-map">
+  <h2 class="visually-hidden" id="project-map">{{ t("project.graph") }}</h2>
+  {{ graph_box("project:" ~ note.slug, t("project.graph_label"), mode="forest") }}
+  <div class="hero-heading">
+    <p class="eyebrow">
+      {% if category %}{{ category_dot(category.key) }} {{ category_name(category) }} ·{% endif %} {{ t("type.project") }}
+      {{ status_badge(note.status) }}
+    </p>
+    <h1>{{ note.title }}</h1>
+  </div>
+</section>
+<div class="project-page">
 <article class="page{% if category %} cat-{{ category.key }}{% endif %}">
-  <p class="eyebrow">
-    {% if category %}{{ category_dot(category.key) }} {{ category_name(category) }}{% else %}{{ t("type.project") }}{% endif %}
-    {{ status_badge(note.status) }}
-  </p>
-  <h1>{{ note.title }}</h1>
   <p class="muted small">
     {{ t("note.created", date=show_date(created(note))) }} · {{ t("note.updated", date=show_date(updated(note))) }}
   </p>
   <div class="prose">{{ body }}</div>
-
-  <section>
-    <h2>{{ t("project.graph") }}</h2>
-    {{ graph_box("project:" ~ note.slug, t("project.graph_label")) }}
-  </section>
 
   <section>
     <h2>{{ t("project.notes") }}</h2>
@@ -26,6 +28,7 @@
     <ul class="rows">
       {% for member in members %}
       <li class="row">
+        <span class="spore-icon{% if member.type == 'source' %} crystal{% endif %}" aria-hidden="true"></span>
         <a class="row-title" href="{{ href(member) }}">{{ member.title }}</a>
         {% if member.type != "note" %}<span class="badge">{{ t("type." ~ member.type) }}</span>{% endif %}
         {{ status_badge(member.status) }}
@@ -50,4 +53,6 @@
   </section>
   {% endif %}
 </article>
+</div>
+<script type="module" src="/static/js/specimens.js"></script>
 {% endblock %}

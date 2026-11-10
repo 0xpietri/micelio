@@ -8,6 +8,16 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- The landing's look on every page (§7c): the painted background (recolored by the
+  palette when chosen) stays behind every page, text sits on ink glass, navigation is
+  pill buttons, and every graph is drawn as mycelium like the landing: mushrooms,
+  spore clouds, hyphae with sparks, crystals and golden spores. The project page opens
+  with its own little forest; projects are cards with their mushroom.
+- Names and lettering on the Appearance page and in a new `[typography]` config
+  section: the site's name, the title font and effect, the text font and the sizes of
+  titles, text and the names on the graphs. Seven more fonts ship with Mycelium (SIL OFL).
+- `graph.max_nodes`: over it, `/explore` draws only the most connected notes.
+
 - Public notes (§9): anonymous visitors see the landing, `/explore`, `/projects`, the
   journal, `/api/graph` and `/api/landing` built from `public: true` notes only. Private
   notes do not exist for them: no titles, links, nodes, ghosts or counts; links to them
@@ -48,3 +58,10 @@ All notable changes to this project are documented here. The format follows
 - `/healthz` for containers and monitoring.
 - A sample vault in `examples/vault`.
 - Self-hosting guides for Mycelium plus a notes MCP server, on your own computer or a server.
+
+### Changed
+
+- One dark look built from the palette; the light theme is gone.
+- The graphs no longer use Cytoscape.js: the landing's engine (`static/js/draw.js` over
+  the vendored d3-force) draws them, with a seeded layout. Nodes can no longer be
+  dragged one by one; the view pans and zooms.

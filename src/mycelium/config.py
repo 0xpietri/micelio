@@ -41,6 +41,16 @@ PaletteName = Literal["psychedelic", "tokyo-night", "catppuccin", "rose-pine"]
 PALETTE_NAMES: tuple[PaletteName, ...] = ("psychedelic", "tokyo-night", "catppuccin", "rose-pine")
 SOIL_MIN, SOIL_MAX = 30, 70
 
+TitleFont = Literal["shrikhand", "righteous", "bagel-fat-one", "fraunces"]
+TITLE_FONTS: tuple[TitleFont, ...] = ("shrikhand", "righteous", "bagel-fat-one", "fraunces")
+TextFont = Literal["system", "atkinson-hyperlegible", "literata", "space-grotesk"]
+TEXT_FONTS: tuple[TextFont, ...] = ("system", "atkinson-hyperlegible", "literata", "space-grotesk")
+TitleEffect = Literal["poster", "plain"]
+TITLE_EFFECTS: tuple[TitleEffect, ...] = ("poster", "plain")
+TITLE_SIZE_MIN, TITLE_SIZE_MAX = 70, 140  # percent
+TEXT_SIZE_MIN, TEXT_SIZE_MAX = 14, 20  # px
+LABEL_SIZE_MIN, LABEL_SIZE_MAX = 80, 150  # percent
+
 _HEX_COLOR = re.compile(r"^#[0-9a-fA-F]{6}$")
 _KEY = re.compile(r"^[a-z][a-z0-9-]{0,31}$")
 
@@ -171,6 +181,19 @@ def _default_hidden() -> list[NoteType]:
 
 class GraphConfig(_Strict):
     hide_by_default: list[NoteType] = Field(default_factory=_default_hidden)
+    max_nodes: int = Field(default=400, ge=20, le=5000)
+
+
+class TypographyConfig(_Strict):
+    """Defaults for titles and text on every page (§7b). The Appearance page can
+    override them."""
+
+    title_font: TitleFont = "shrikhand"
+    text_font: TextFont = "system"
+    title_size: int = Field(default=100, ge=TITLE_SIZE_MIN, le=TITLE_SIZE_MAX)
+    text_size: int = Field(default=16, ge=TEXT_SIZE_MIN, le=TEXT_SIZE_MAX)
+    graph_labels: int = Field(default=100, ge=LABEL_SIZE_MIN, le=LABEL_SIZE_MAX)
+    title_effect: TitleEffect = "poster"
 
 
 class LandingConfig(_Strict):
@@ -201,6 +224,7 @@ class Config(_Strict):
     categories: list[Category] = Field(default_factory=_default_categories)
     graph: GraphConfig = Field(default_factory=GraphConfig)
     landing: LandingConfig = Field(default_factory=LandingConfig)
+    typography: TypographyConfig = Field(default_factory=TypographyConfig)
     auth: AuthConfig = Field(default_factory=AuthConfig)
     data: DataConfig = Field(default_factory=DataConfig)
 

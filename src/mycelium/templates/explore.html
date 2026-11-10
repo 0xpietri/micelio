@@ -1,11 +1,12 @@
 {% extends "base.html" %}
 {% from "_macros.html" import status_badge, category_dot, graph_head, graph_box %}
-{% block title %}{{ t("explore.title") }} · {{ site.title }}{% endblock %}
+{% block title %}{{ t("explore.title") }} · {{ site_name() }}{% endblock %}
 {% block head %}{{ graph_head("explore.js") }}{% endblock %}
-{% block body_class %} class="full"{% endblock %}
+{% set backdrop_view = "underground" %}
+{% block body_class %} class="full underground"{% endblock %}
 {% block content %}
 <div class="explore">
-  <aside class="explore-panel" id="explore-panel">
+  <aside class="explore-panel glass" id="explore-panel">
     <h1>{{ t("explore.title") }}</h1>
     <form class="explore-search" role="search">
       <label>{{ t("explore.search") }}
@@ -16,26 +17,43 @@
 
     <fieldset class="filter">
       <legend>{{ t("explore.types") }}</legend>
+      <div class="chips">
       {% for type in types %}
-      <label class="check"><input type="checkbox" name="type" value="{{ type }}"{% if type not in hidden_types %} checked{% endif %}> <span class="shape shape-{{ type }}" aria-hidden="true"></span> {{ t("type." ~ type) }}</label>
+      <label class="check"><input type="checkbox" name="type" value="{{ type }}"{% if type not in hidden_types %} checked{% endif %}> <span class="legend-slot" data-legend-icon="{{ type }}" aria-hidden="true"></span> {{ t("type." ~ type) }}</label>
       {% endfor %}
+      </div>
     </fieldset>
 
     <fieldset class="filter">
       <legend>{{ t("explore.categories") }}</legend>
+      <div class="chips">
       {% for category in site_categories %}
       <label class="check"><input type="checkbox" name="category" value="{{ category.key }}" checked> {{ category_dot(category.key) }} {{ category_name(category) }}</label>
       {% endfor %}
       <label class="check"><input type="checkbox" name="category" value="none" checked> <span class="dot dot-none" aria-hidden="true"></span> {{ t("explore.no_category") }}</label>
+      </div>
     </fieldset>
 
     <fieldset class="filter">
       <legend>{{ t("explore.statuses") }}</legend>
+      <div class="chips">
       {% for status in statuses %}
       <label class="check"><input type="checkbox" name="status" value="{{ status }}" checked> {{ t("status." ~ status) }}</label>
       {% endfor %}
       <label class="check"><input type="checkbox" name="status" value="none" checked> {{ t("explore.no_status") }}</label>
+      </div>
     </fieldset>
+
+    <section>
+      <h2>{{ t("explore.legend") }}</h2>
+      <dl class="legend">
+        <dt data-legend-icon="project"></dt><dd>{{ t("explore.legend_project") }}</dd>
+        <dt data-legend-icon="note"></dt><dd>{{ t("explore.legend_note") }}</dd>
+        <dt data-legend-icon="journal"></dt><dd>{{ t("explore.legend_journal") }}</dd>
+        <dt data-legend-icon="source"></dt><dd>{{ t("explore.legend_source") }}</dd>
+      </dl>
+      <p class="muted small">{{ t("explore.legend_thread") }}</p>
+    </section>
 
     <section>
       <h2>{{ t("explore.latest") }}</h2>
@@ -57,6 +75,13 @@
       </ul>
     </details>
   </aside>
-  {{ graph_box("all", t("explore.graph_label"), "graph-full", manual=True) }}
+  <div class="explore-stage">
+    {{ graph_box("all", t("explore.graph_label"), "graph-full", manual=True, max=max_nodes) }}
+    <div class="graph-zoom" hidden>
+      <button type="button" data-zoom="in" aria-label="{{ t('graph.zoom_in') }}">+</button>
+      <button type="button" data-zoom="out" aria-label="{{ t('graph.zoom_out') }}">−</button>
+      <button type="button" data-zoom="fit">{{ t("graph.fit") }}</button>
+    </div>
+  </div>
 </div>
 {% endblock %}

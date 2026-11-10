@@ -99,8 +99,18 @@ species = "chanterelle"
 palette = "psychedelic"    # psychedelic | tokyo-night | catppuccin | rose-pine
 soil = 52                  # soil line, % of the background's height
 
+# Fonts and sizes on every page (§7b); what is saved on the Appearance page wins.
+[typography]
+title_font = "shrikhand"   # shrikhand | righteous | bagel-fat-one | fraunces
+text_font = "system"       # system | atkinson-hyperlegible | literata | space-grotesk
+title_size = 100           # % (70-140)
+text_size = 16             # px (14-20)
+graph_labels = 100         # % (80-150)
+title_effect = "poster"    # poster | plain
+
 [graph]
 hide_by_default = ["journal", "source"]
+max_nodes = 400            # over this, /explore draws only the most connected notes
 
 [auth]
 mode = "local"             # local | none (when an external gateway handles it)
@@ -144,18 +154,19 @@ Secrets (password hash, TOTP secret, session key) come only from environment var
 | `/appearance` | Palette, background, title and the background prompt guide (§7b, signed-in only) |
 | `/api/landing` | What the landing draws, as JSON (§7a) |
 
-Markdown is rendered with markdown-it-py and sanitized with nh3. Wikilinks become links to `/notes/<slug>`. Callouts (`> [!warning]`) and task lists render like Obsidian. Times are shown in the configured time zone. Links to projects go to `/projects/<slug>` (and `/notes/<project>` redirects there); links to missing notes render as dashed ghost text; `![[file.png]]` and other non-note embeds render as their name (attachments are not served in v0.1). Category colors come from a generated `/theme.css`, so pages need no inline styles. Light and dark themes follow the system setting.
+Markdown is rendered with markdown-it-py and sanitized with nh3. Wikilinks become links to `/notes/<slug>`. Callouts (`> [!warning]`) and task lists render like Obsidian. Times are shown in the configured time zone. Links to projects go to `/projects/<slug>` (and `/notes/<project>` redirects there); links to missing notes render as dashed ghost text; `![[file.png]]` and other non-note embeds render as their name (attachments are not served in v0.1). Category colors, the palette and the type settings come from a generated `/theme.css`, so pages need no inline styles. There is one dark look built from the palette (§7c); the light theme of step 3 was dropped on 2026-11-10.
 
 ## 7. The graph
 
-- **Library**: Cytoscape.js, vendored with its version pinned, served from `/static`. 2D.
+- **Drawing**: since 2026-11-10 the graphs are drawn as mycelium with the landing's own engine (§7c): SVG over the vendored `d3-force`, served from `/static`. 2D. (Steps 4–6 used Cytoscape.js; it was removed.)
 - **`/api/graph` is renderer-agnostic**: plain nodes and edges with `type`, `category`, `status`, `degree`, `public`. A 3D view (3d-force-graph) can be added later as one more page without touching the API.
 - **Color**: a project takes its category color. An atomic note takes the color of the project that links it; linked from projects of different categories, it is a **bridge**: neutral fill, double border.
-- **Shape**: project = large circle, note = small circle, journal = square, source = triangle. Size grows with links.
+- **Shape** (§7c): project = its category's mushroom, grown by status; note = a spore cloud glowing in its category's color, with a dashed ring when it is a bridge; journal = golden spores; source = a crystal; missing note = a faint dashed ring. Links are glowing hyphae. Size grows with links.
 - **Project graph**: the index, its notes, the links among them, and the bridges to other projects faded.
 - **Defaults**: journal and source nodes hidden on the global graph, with a toggle.
 - **Click** opens the note. Hover shows its title and status.
-- Accessible: every graph page also lists its nodes as text links; colors meet WCAG contrast in light and dark themes.
+- **Layout**: seeded, so the same vault always draws the same map. The global graph pans and zooms (drag, wheel, buttons); over `graph.max_nodes` only the most connected notes are drawn and the page says how many more there are.
+- Accessible: every graph page also lists its nodes as text links; every mark is a real link with a name, and the keyboard reaches the projects (on small graphs, every node).
 
 ## 7a. The landing: above and below the ground
 
@@ -195,7 +206,20 @@ A signed-in page, `/appearance`, decided by marcos on 2026-11-10. What it saves 
 - **Soil line**: where the ground starts, 30–70 % of the image's height (52 % for the included painting).
 - **Title and tagline**: optional text that replaces `site.headline` and `site.tagline`.
 - **Prompt guide**: a form that builds a prompt for any image generator (ChatGPT, Gemini, Midjourney, Stable Diffusion). The format rules are fixed and shown as such: 1536 x 1024 (3:2), the horizon at the soil line, a calm top-left corner for the title, a dark low-contrast underground, nothing tall on the horizon, no mushrooms, trees, threads or text. The owner writes the creative parts: style, sky, horizon, underground, colors (prefilled from the palette) and mood. A button copies the result. The prompt is in the interface language.
+- **Names and lettering** (added 2026-11-10): the site's name (empty: `site.title`), the title font (Shrikhand, Righteous, Bagel Fat One, Fraunces Black), the title effect (*poster*: dark outline and colored shadow, or *plain*), the text font (the system's, Atkinson Hyperlegible, Literata, Space Grotesk), and three sizes: titles 70–140 %, text 14–20 px, names on the graphs 80–150 %. Every font ships with Mycelium (SIL OFL, Latin subsets); nothing loads from another site. The page previews a change before it is saved and shows the matching `[typography]` lines of `mycelium.toml`, whose values are the defaults.
 - Saving needs the sign-in form token (HMAC, like sign-out). With `auth.mode = "none"` the page is as open as the rest of the site, so the gateway in front must protect it.
+
+## 7c. The look on every page
+
+Decided by marcos on 2026-11-10: the landing's painting is part of the whole interface, and every graph is drawn as mycelium.
+
+- **Background**: the painting (or the uploaded image, recolored when chosen) stays fixed behind every page. Reading pages show the horizon at the top and scroll into the underground; `/explore` shows only the underground. The landing keeps its own scene.
+- **Glass**: text sits on ink-colored glass panels with the palette's dark outline; navigation is pill buttons; titles use the title font and effect of §7b.
+- **One dark look**: no light theme; the palette sets every color.
+- **Project page**: a scene at the top, the project's mushroom on the soil line, its notes as spore clouds below, the other projects its bridge notes reach standing faded at the sides; the title over the sky.
+- **Note page**: the neighborhood drawn as mycelium over the underground of the painting.
+- **Projects**: one card per project with its mushroom on a strip of the painting, grouped by category. **Journal**: a timeline of golden spores.
+- **Engine**: one shared module (`static/js/draw.js`) draws the mushrooms, clouds, hyphae and crystals for the landing (`landing.js`), the graphs (`graph.js`) and the small mushrooms in lists (`specimens.js`). Vault text never enters markup; titles and links are set as attributes.
 
 ## 8. Reading the vault
 
@@ -259,7 +283,8 @@ Each step ends with tests, a report and a stop for marcos's review.
 4. **Graph.** `/api/graph`, `/explore`, the project and note graphs, filters, search.
 5. **The landing.** The forest floor of §7a and the Appearance page of §7b. Starts with a static mockup for marcos's approval before the real code (approved 2026-11-10).
 6. **Public notes.** §9, with tests that no private title appears in any anonymous response.
-7. **Release v0.1.0.** Docker image, compose example, README with GIF and diagram, CHANGELOG, tag.
+7. **The look on every page.** §7c and the names and lettering of §7b: the painted background and glass on every page, the graphs drawn as mycelium (Cytoscape.js removed), one dark look, fonts and sizes on the Appearance page and in `[typography]`. Started with a static mockup approved by marcos (2026-11-10).
+8. **Release v0.1.0.** Docker image, compose example, README with GIF and diagram, CHANGELOG, tag.
 
 The deployment on factory (Caddy site, the notes MCP, the vault's Git timer, backups, monitoring) is tracked outside this repository.
 
@@ -267,4 +292,5 @@ The deployment on factory (Caddy site, the notes MCP, the vault's Git timer, bac
 
 - 2026-11-09 (marcos): UI in English, easy to add languages (§5a); anonymous visitors see public notes only (§9); the owner's name in the config and an artistic landing with mushrooms above ground and mycelium below (§7a).
 - 2026-11-10 (marcos): landing mockup approved. The title stays on one line and its text is editable; no tree. Four palettes (Psychedelic, Tokyo Night, Catppuccin Mocha, Rosé Pine) recolor the mushrooms and the background; the owner can upload a background, guided by a prompt builder; all chosen on a signed-in Appearance page that saves to the data folder (§7b). This relaxes principle 2 for that one image.
+- 2026-11-10 (marcos): the landing's painting becomes part of the whole interface and every graph is drawn as mycelium (§7c), as a new step before the release. The light theme is dropped and Cytoscape.js is replaced by the landing's engine. The owner also chooses the site's name, the fonts and the sizes, on the Appearance page or in `mycelium.toml` (§7b).
 - 2026-11-09 (marcos): no hosted service for other people's notes. Technical users self-host, guided by `docs/guides/` (own computer with a tunnel, or a VPS); non-technical users get the Obsidian plugin (v0.3).
