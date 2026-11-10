@@ -47,8 +47,18 @@ max_notes = 300                      # over this, only the most connected notes 
 # The Appearance page (/appearance, signed in) can change palette, background and texts;
 # what it saves lives in the data folder and wins over these defaults.
 
+[typography]
+title_font = "shrikhand"             # shrikhand | righteous | bagel-fat-one | fraunces
+text_font = "system"                 # system | atkinson-hyperlegible | literata | space-grotesk
+title_size = 100                     # titles, % of the normal size (70-140)
+text_size = 16                       # text, in px (14-20)
+graph_labels = 100                   # names on the graphs, % of the normal size (80-150)
+title_effect = "poster"              # poster (dark outline and colored shadow) | plain
+# The Appearance page can change all of these too; what it saves wins.
+
 [graph]
 hide_by_default = ["journal", "source"]
+max_nodes = 400                      # over this, /explore draws only the most connected notes
 
 [auth]
 mode = "local"                       # local | none (when a gateway in front handles sign-in)

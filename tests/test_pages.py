@@ -37,7 +37,10 @@ def test_projects_grouped_by_category_in_config_order(client: TestClient) -> Non
     keys = ("science", "philosophy", "study", "free")
     order = [html.index(f'class="group cat-{key}"') for key in keys]
     assert order == sorted(order)
-    assert titles(html)[-2:] == ["Cities as living organisms", "An abandoned idea"]
+    cards = re.findall(r'<strong class="row-title">([^<]+)</strong>', html)
+    assert cards[-2:] == ["Cities as living organisms", "An abandoned idea"]
+    # Each project is a card with its mushroom: species from the category, growth the status.
+    assert 'data-species="chanterelle" data-status="closed"' in html
     assert "Last conversation Nov 9, 2026" in html
     assert 'class="group cat-science"' in html
 
@@ -63,7 +66,7 @@ def test_note_page(client: TestClient) -> None:
     assert "Bridge between categories" in html
     assert "Free will in a determined world" in html
     assert "Learning Bayesian statistics" in html
-    assert 'class="dot cat-study"' in html
+    assert 'class="mushroom-icon cat-study"' in html
 
 
 def test_note_page_shows_ghost_and_backlinks(client: TestClient) -> None:

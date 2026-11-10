@@ -1,14 +1,6 @@
 /* The landing (§7a): the painted background, the live SVG layer and the title.
    Colors come from the palette as custom properties set on .scene. */
 
-@font-face {
-  font-family: "Shrikhand";
-  src: url("../vendor/fonts/shrikhand/shrikhand-latin.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
 body.landing { background: var(--pal-ink, #12051f); }
 body.landing main { padding: 0; max-width: none; margin: 0; }
 
@@ -19,7 +11,7 @@ body.landing main { padding: 0; max-width: none; margin: 0; }
   --button-alt: var(--pal-button-alt, #22d3ee);
   --ink: var(--pal-ink, #12051f);
   --thread: var(--pal-thread, #ffffff);
-  --display: "Shrikhand", "Cooper Black", Georgia, serif;
+  --display: var(--title-font, "Shrikhand", "Cooper Black", Georgia, serif);
   position: relative;
   height: 100vh;
   height: 100dvh;
@@ -47,13 +39,13 @@ body.landing main { padding: 0; max-width: none; margin: 0; }
   margin: 0;
   font-family: var(--display);
   font-weight: 400;
-  font-size: 4.2rem;
+  font-size: calc(4.2rem * var(--title-scale, 1));
   line-height: 1.1;
   white-space: nowrap;
   color: var(--sun);
-  -webkit-text-stroke: 0.09em var(--ink);
+  -webkit-text-stroke: var(--title-stroke, 0.09em) var(--ink);
   paint-order: stroke fill;
-  text-shadow: 0.06em 0.07em 0 var(--accent);
+  text-shadow: var(--title-shadow, 0.06em 0.07em 0 var(--accent));
 }
 
 .tagline {

@@ -141,7 +141,12 @@ def test_edges_reference_existing_nodes(builder: GraphBuilder) -> None:
 
 def test_categories_carry_names_and_colors(builder: GraphBuilder) -> None:
     categories = builder.build(Scope("all"))["categories"]
-    assert categories[0] == {"key": "science", "name": "Science", "color": "#ff2fa0"}
+    assert categories[0] == {
+        "key": "science",
+        "name": "Science",
+        "color": "#ff2fa0",
+        "species": "fly-agaric",
+    }
     assert [c["key"] for c in categories] == ["science", "philosophy", "study", "free"]
 
 
@@ -296,7 +301,7 @@ def test_api_graph_shows_visitors_public_notes_only(tmp_path: Path) -> None:
 
 def test_browser_strings_cover_the_graph_tables() -> None:
     strings = browser_strings("en")
-    assert strings["graph.hint"].startswith("Click a node")
+    assert strings["graph.hint"].startswith("Click a mushroom")
     assert strings["type.ghost"] == "Missing note"
     assert strings["status.active"] == "Active"
     assert strings["category.science"] == "Science"
@@ -336,7 +341,11 @@ def test_explore_page(client: TestClient, example_index: VaultIndex) -> None:
     assert '<a href="/explore" aria-current="page">Explore</a>' in html
     assert 'data-graph="/api/graph?scope=all"' in html
     assert '<script type="module" src="/static/js/explore.js"></script>' in html
-    assert 'id="__________cytoscape_stylesheet"' in html
+    assert '<script src="/static/vendor/d3-force/d3-force.bundle.min.js"></script>' in html
+    assert 'href="/static/css/graph.css"' in html
+    assert 'data-max="400"' in html
+    # The page shows the underground of the painted background (§7c).
+    assert 'class="full underground"' in html
     # Hidden by default: journal and source start unchecked.
     assert re.search(r'name="type" value="journal">', html)
     assert re.search(r'name="type" value="source">', html)
@@ -364,11 +373,13 @@ def test_explore_without_ghosts_has_no_ghost_filter(tmp_path: Path) -> None:
 def test_project_and_note_pages_embed_their_graphs(client: TestClient) -> None:
     project = client.get(f"/projects/{BAYES}").text
     assert f'data-graph="/api/graph?scope=project%3A{BAYES}"' in project
+    assert 'data-mode="forest"' in project
     assert "Map of the project" in project
     assert '<script type="module" src="/static/js/graph-embed.js"></script>' in project
     note = client.get(f"/notes/{PRIORS}").text
     assert f'data-graph="/api/graph?scope=note%3A{PRIORS}"' in note
     assert "Neighborhood" in note
+    assert 'data-mode="box"' in note
     # The graph's own address works.
     assert client.get(f"/api/graph?scope=project%3A{BAYES}").status_code == 200
 
@@ -376,7 +387,8 @@ def test_project_and_note_pages_embed_their_graphs(client: TestClient) -> None:
 def test_pages_without_graphs_load_no_graph_code(client: TestClient) -> None:
     for path in ("/projects", "/journal", "/health"):
         html = client.get(path).text
-        assert "<script" not in html
+        assert "graph.js" not in html
+        assert "d3-force" not in html
         assert "cytoscape" not in html
 
 
@@ -404,14 +416,11 @@ def test_spanish_graph_pages_have_no_english_interface() -> None:
     assert "Cargando el grafo…" in explore
 
 
-def test_vendored_cytoscape_is_pinned() -> None:
-    vendor = STATIC / "vendor" / "cytoscape"
-    source = (vendor / "cytoscape.esm.min.js").read_text(encoding="utf-8")
-    assert '.version="3.34.4"' in source
-    assert "export{" in source
-    assert (vendor / "LICENSE").is_file()
-    readme = (STATIC / "vendor" / "README.md").read_text(encoding="utf-8")
-    assert "3.34.4" in readme
+def test_graphs_need_no_cytoscape() -> None:
+    # The graphs are drawn as mycelium by the landing's d3-force (§7c).
+    assert not (STATIC / "vendor" / "cytoscape").exists()
+    for script in (STATIC / "js").glob("*.js"):
+        assert "cytoscape" not in script.read_text(encoding="utf-8").lower(), script.name
 
 
 def test_browser_code_uses_only_local_modules() -> None:

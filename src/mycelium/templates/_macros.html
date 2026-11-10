@@ -11,15 +11,21 @@
 <a href="{{ href(note) }}">{{ note.title }}</a>
 {%- endmacro %}
 
-{# The stylesheet's id tells Cytoscape.js its container rule is already loaded, so it does
-   not inject a <style> element, which the Content Security Policy would block. #}
+{# Graphs are drawn as mycelium by static/js/graph.js over the vendored d3-force (§7c). #}
 {% macro graph_head(script) -%}
-<link rel="stylesheet" id="__________cytoscape_stylesheet" href="/static/css/graph.css">
+<link rel="stylesheet" href="/static/css/graph.css">
+<script src="/static/vendor/d3-force/d3-force.bundle.min.js"></script>
 <script type="module" src="/static/js/{{ script }}"></script>
 {%- endmacro %}
 
-{% macro graph_box(scope, label, extra_class="", manual=False) -%}
-<div class="graph{% if extra_class %} {{ extra_class }}{% endif %}" data-graph="/api/graph?scope={{ scope|urlencode }}"{% if manual %} data-graph-manual data-explore{% endif %} role="img" aria-label="{{ label }}">
+{% macro graph_box(scope, label, extra_class="", manual=False, mode="free", max=0) -%}
+<div class="graph{% if extra_class %} {{ extra_class }}{% endif %}" data-graph="/api/graph?scope={{ scope|urlencode }}" data-mode="{{ mode }}"{% if max %} data-max="{{ max }}"{% endif %}{% if manual %} data-graph-manual data-explore{% endif %} role="img" aria-label="{{ label }}">
   <p class="graph-status muted small" aria-live="polite">{{ t("graph.loading") }}</p>
 </div>
+{%- endmacro %}
+
+{# A project's mushroom, drawn by static/js/specimens.js; its color comes from the category. #}
+{% macro mushroom(project, scene=False, notes=0) -%}
+{% set category = category_of(project.category) %}
+<span class="{{ 'specimen-scene' if scene else 'mushroom-icon' }}{% if category %} cat-{{ category.key }}{% endif %}" data-mushroom data-species="{{ category.species if category else 'glowing-bonnets' }}" data-status="{{ project.status or 'active' }}"{% if scene %} data-scene="card" data-seed="{{ project.slug }}" data-notes="{{ notes }}"{% endif %} aria-hidden="true"></span>
 {%- endmacro %}

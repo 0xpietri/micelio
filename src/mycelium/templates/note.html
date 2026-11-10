@@ -1,6 +1,6 @@
 {% extends "base.html" %}
-{% from "_macros.html" import status_badge, category_dot, graph_head, graph_box %}
-{% block title %}{{ note.title }} · {{ site.title }}{% endblock %}
+{% from "_macros.html" import status_badge, category_dot, graph_head, graph_box, mushroom %}
+{% block title %}{{ note.title }} · {{ site_name() }}{% endblock %}
 {% block head %}{{ graph_head("graph-embed.js") }}{% endblock %}
 {% block content %}
 <article class="page">
@@ -21,7 +21,7 @@
   <aside class="related">
     <section>
       <h2>{{ t("note.graph") }}</h2>
-      {{ graph_box("note:" ~ note.slug, t("note.graph_label"), "graph-small") }}
+      {{ graph_box("note:" ~ note.slug, t("note.graph_label"), "graph-small", mode="box") }}
     </section>
     {% if note.type != "journal" %}
     <section>
@@ -29,7 +29,7 @@
       {% if projects %}
       <ul class="rows">
         {% for project in projects %}
-        <li class="row">{{ category_dot(project.category) }} <a href="{{ href(project) }}">{{ project.title }}</a></li>
+        <li class="row">{{ mushroom(project) }} <a href="{{ href(project) }}">{{ project.title }}</a> {{ status_badge(project.status) }}</li>
         {% endfor %}
       </ul>
       {% else %}<p class="muted">{{ t("note.no_projects") }}</p>{% endif %}
@@ -40,11 +40,12 @@
       {% if backlinks %}
       <ul class="rows">
         {% for other in backlinks %}
-        <li class="row"><a href="{{ href(other) }}">{{ other.title }}</a>{% if other.type != "note" %} <span class="badge">{{ t("type." ~ other.type) }}</span>{% endif %}</li>
+        <li class="row"><span class="spore-icon{% if other.type == 'source' %} crystal{% elif other.type == 'journal' %} golden{% endif %}" aria-hidden="true"></span> <a href="{{ href(other) }}">{{ other.title }}</a>{% if other.type != "note" %} <span class="badge">{{ t("type." ~ other.type) }}</span>{% endif %}</li>
         {% endfor %}
       </ul>
       {% else %}<p class="muted">{{ t("note.no_backlinks") }}</p>{% endif %}
     </section>
   </aside>
 </article>
+<script type="module" src="/static/js/specimens.js"></script>
 {% endblock %}
