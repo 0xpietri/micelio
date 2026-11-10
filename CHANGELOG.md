@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- A settings panel (⚙) on every graph: space between nodes, size of the names, and
+  shortened long names that show whole while their node is pointed at or focused. The
+  choices and the zoom are remembered in the browser (`localStorage`).
+- Every graph pans and zooms, with + / − / Fit buttons, including the note's neighborhood
+  and the project's scene; inside a reading page the wheel zooms only with Ctrl or ⌘.
+
 ## [0.1.0] - 2026-11-10
 
 The first release: a folder of Markdown notes shown as a forest of ideas, read-only and

@@ -293,8 +293,10 @@ def test_spanish_appearance_has_no_english_type_settings(tmp_path: Path) -> None
             assert english not in html
         explore = client.get("/explore").text
         assert "Cómo leerlo" in explore
-        assert "Ver todo" in explore
         assert "How to read it" not in explore
+        # The zoom buttons and the graph settings are drawn by graph.js from these strings.
+        strings = client.get("/static/locales/es.json").json()
+        assert strings["graph.fit"] == "Ver todo"
 
 
 # -- the graph's code -------------------------------------------------------------------

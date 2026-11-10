@@ -7,6 +7,7 @@ import {
   DEFS, SVG_NS, cloud, el, f1, fold, fragment, hyphaPath, lighter, loadStrings, mix, painter,
   paletteFromCss, rampFilter, reduced, seededRandom, tr,
 } from "./draw.js";
+import { LIMITS, labelText, load, save } from "./graph-settings.js";
 
 export { fold, loadStrings, tr };
 
@@ -86,8 +87,10 @@ function describe(node, strings) {
 
 /* ---------- layout ---------- */
 
-/** Seeded force layout in plain 2D. A focused graph keeps its focus in the middle. */
-function layoutFree(data) {
+/** Seeded force layout in plain 2D. A focused graph keeps its focus in the middle.
+ * ``spacing`` (percent) stretches the links, the push between nodes and their room. */
+function layoutFree(data, spacing = 100) {
+  const s = spacing / 100;
   const nodes = data.nodes.map((n) => ({ ...n }));
   const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
   const links = data.edges.filter((e) => byId[e.source] && byId[e.target]).map((e) => ({ ...e }));
@@ -100,11 +103,11 @@ function layoutFree(data) {
   const touchesProject = (l) => l.source.type === "project" || l.target.type === "project";
   const d3 = window.d3;
   const sim = d3.forceSimulation(nodes).randomSource(rand).stop()
-    .force("link", d3.forceLink(links).id((d) => d.id).distance((l) => (touchesProject(l) ? 95 : 70)).strength(0.35))
-    .force("charge", d3.forceManyBody().strength((d) => (d.type === "project" ? -520 : -190)))
-    .force("collide", d3.forceCollide((d) => (d.type === "project" ? 44 : 24)))
-    .force("x", d3.forceX(0).strength(0.04))
-    .force("y", d3.forceY(0).strength(0.05));
+    .force("link", d3.forceLink(links).id((d) => d.id).distance((l) => (touchesProject(l) ? 95 : 70) * s).strength(0.35))
+    .force("charge", d3.forceManyBody().strength((d) => (d.type === "project" ? -520 : -190) * s))
+    .force("collide", d3.forceCollide((d) => (d.type === "project" ? 44 : 24) * Math.sqrt(s)))
+    .force("x", d3.forceX(0).strength(0.04 / s))
+    .force("y", d3.forceY(0).strength(0.05 / s));
   const ticks = Math.min(320, 80 + Math.round(40000 / Math.max(1, nodes.length)));
   for (let i = 0; i < ticks; i++) sim.tick();
   return { nodes, links };
@@ -138,24 +141,42 @@ function fitTo(svg, box) {
 
 /* ---------- pan and zoom ---------- */
 
-function panZoom(svg, onChange) {
+/** Drag to pan, wheel and buttons to zoom. ``opt.maxOut`` is how far it zooms out past the
+ * home view (1: not at all), ``opt.clamp`` keeps the view inside home, ``opt.ctrlWheel``
+ * leaves the plain wheel to scroll the page (graphs inside a reading page), and
+ * ``opt.onZoom`` hears the zoom the viewer chose, as a ratio to the home view. */
+function panZoom(svg, onChange, opt = {}) {
+  const maxOut = opt.maxOut ?? 4;
   let vb = { x: 0, y: 0, w: 1, h: 1 };
   let home = vb;
   const rect = () => svg.getBoundingClientRect();
-  const apply = () => {
-    svg.setAttribute("viewBox", `${f1(vb.x)} ${f1(vb.y)} ${f1(vb.w)} ${f1(vb.h)}`);
-    onChange(rect().width / vb.w);
+  const ratio = () => home.w / vb.w;
+  const keepInside = () => {
+    if (!opt.clamp) return;
+    vb.x = Math.min(home.x + home.w - vb.w, Math.max(home.x, vb.x));
+    vb.y = Math.min(home.y + home.h - vb.h, Math.max(home.y, vb.y));
   };
-  const zoomAt = (cx, cy, f) => {
+  const apply = () => {
+    keepInside();
+    svg.setAttribute("viewBox", `${f1(vb.x)} ${f1(vb.y)} ${f1(vb.w)} ${f1(vb.h)}`);
+    onChange(rect().width / vb.w, ratio());
+  };
+  const zoomAt = (cx, cy, f, chosen = true) => {
     const r = rect();
-    const nw = Math.min(home.w * 4, Math.max(home.w / 8, vb.w * f));
+    const nw = Math.min(home.w * maxOut, Math.max(home.w / 8, vb.w * f));
     const k = nw / vb.w;
     const px = vb.x + ((cx - r.left) / r.width) * vb.w;
     const py = vb.y + ((cy - r.top) / r.height) * vb.h;
     vb = { x: px - (px - vb.x) * k, y: py - (py - vb.y) * k, w: vb.w * k, h: vb.h * k };
     apply();
+    if (chosen && opt.onZoom) opt.onZoom(ratio());
+  };
+  const center = (f, chosen) => {
+    const r = rect();
+    zoomAt(r.left + r.width / 2, r.top + r.height / 2, f, chosen);
   };
   svg.addEventListener("wheel", (e) => {
+    if (opt.ctrlWheel && !e.ctrlKey && !e.metaKey) return;
     e.preventDefault();
     zoomAt(e.clientX, e.clientY, e.deltaY > 0 ? 1.12 : 1 / 1.12);
   }, { passive: false });
@@ -191,8 +212,14 @@ function panZoom(svg, onChange) {
     if (svg.dataset.dragged) { e.preventDefault(); e.stopPropagation(); }
   }, true);
   return {
-    show(box) { home = fitTo(svg, box); vb = { ...home }; apply(); },
-    zoom(f) { const r = rect(); zoomAt(r.left + r.width / 2, r.top + r.height / 2, f); },
+    /** Fit ``box``, then zoom to ``zoom`` (the viewer's saved ratio) around its middle. */
+    show(box, zoom = 1) {
+      home = fitTo(svg, box);
+      vb = { ...home };
+      apply();
+      if (zoom !== 1) center(1 / zoom, false);
+    },
+    zoom: (f) => center(f, true),
   };
 }
 
@@ -240,6 +267,34 @@ function tooltips(host, svg, nodesById, strings) {
   svg.addEventListener("focusout", () => { tip.hidden = true; });
 }
 
+/** A shortened name shows whole, on top of the others, while its node is pointed at or
+ * focused (and a name hidden when zoomed far out shows too). */
+function openLabels(svg) {
+  let open = null;
+  const close = () => {
+    if (!open) return;
+    open.textContent = open.dataset.short;
+    open.classList.remove("open");
+    open = null;
+  };
+  const reveal = (a) => {
+    const text = a && svg.querySelector(`text.lbl[data-id="${CSS.escape(a.dataset.id)}"]`);
+    if (text === open) return;
+    close();
+    if (!text) return;
+    text.dataset.short = text.textContent;
+    text.textContent = text.dataset.full;
+    text.classList.add("open");
+    text.parentNode.appendChild(text);
+    open = text;
+  };
+  svg.addEventListener("mouseover", (e) => reveal(e.target.closest("a.node")));
+  svg.addEventListener("mouseleave", close);
+  svg.addEventListener("focusin", (e) => reveal(e.target.closest("a.node")));
+  svg.addEventListener("focusout", close);
+  return { close };
+}
+
 /* ---------- drawing ---------- */
 
 function nodeLink(node, strings, focusable) {
@@ -254,9 +309,11 @@ function nodeLink(node, strings, focusable) {
   return a;
 }
 
-function label(node, x, y, cls) {
+function label(node, x, y, cls, settings) {
   const text = el("text", { class: `lbl ${cls}`, x: f1(x), y: f1(y), "text-anchor": "middle" });
-  text.textContent = node.title.length > 34 && node.type !== "project" ? `${node.title.slice(0, 32)}…` : node.title;
+  text.setAttribute("data-id", node.id);
+  text.setAttribute("data-full", node.title);
+  text.textContent = labelText(node.title, settings);
   return text;
 }
 
@@ -323,7 +380,7 @@ function drawFree(layer, laid, L, strings, opts) {
     a.appendChild(fragment(`<g transform="translate(${f1(n.x)},${f1(n.y)})">${ring}${m.markup}</g>`));
     marks.appendChild(a);
     const y = n.type === "project" ? n.y + 18 : n.y + m.r * 1.35 + 11;
-    const text = label(n, n.x, y, n.type === "project" ? "project" : n.ghost ? "ghost minor" : "minor");
+    const text = label(n, n.x, y, n.type === "project" ? "project" : n.ghost ? "ghost minor" : "minor", opts.settings);
     if (dimmed(n)) text.classList.add("dim");
     labels.appendChild(text);
   }
@@ -334,7 +391,7 @@ function drawFree(layer, laid, L, strings, opts) {
 
 /** The project's own little forest: its mushroom on the soil line, its notes below, the
  * other projects its bridge notes reach standing faded at the sides. */
-function drawForest(svg, data, L, strings, state) {
+function drawForest(svg, data, L, strings, state, settings) {
   const bg = backdropInfo();
   const soil = bg.soil;
   const r = svg.getBoundingClientRect();
@@ -342,9 +399,9 @@ function drawForest(svg, data, L, strings, state) {
   const h = a < 1 ? 640 : Math.min(1024, 1536 / a);
   const w = h * a;
   const vb = { x: (1536 - w) / 2, y: Math.min(1024 - h, Math.max(0, soil - h * 0.36)), w, h };
-  svg.setAttribute("viewBox", `${f1(vb.x)} ${f1(vb.y)} ${f1(vb.w)} ${f1(vb.h)}`);
   svg.setAttribute("preserveAspectRatio", "xMidYMid slice");
   const k = Math.max(0.75, Math.min(1.6, vb.w / 900));
+  const s = settings.spacing / 100;
   const cx = vb.x + vb.w * (a > 1.3 ? 0.62 : 0.5);
 
   const focus = data.nodes.find((n) => n.focus);
@@ -359,15 +416,15 @@ function drawForest(svg, data, L, strings, state) {
   const links = data.edges.filter((e) => byId[e.source] && byId[e.target]).map((e) => ({ ...e }));
   const d3 = window.d3;
   const sim = d3.forceSimulation(nodes).randomSource(seededRandom(`${focus ? focus.id : ""}f`)).stop()
-    .force("link", d3.forceLink(links).id((d) => d.id).distance(130 * k).strength(0.3))
-    .force("charge", d3.forceManyBody().strength(-160))
-    .force("collide", d3.forceCollide(30 * k))
+    .force("link", d3.forceLink(links).id((d) => d.id).distance(130 * k * Math.sqrt(s)).strength(0.3))
+    .force("charge", d3.forceManyBody().strength(-160 * s))
+    .force("collide", d3.forceCollide(30 * k * Math.sqrt(s)))
     .force("y", d3.forceY(soil + (a < 1 ? 230 : 170) * k).strength(0.06));
   for (let i = 0; i < 260; i++) {
     sim.tick();
     for (const n of nodes) {
       if (n.fx != null) continue;
-      n.y = Math.max(soil + 70, Math.min(vb.y + vb.h - 40, n.y));
+      n.y = Math.max(soil + 70, Math.min(vb.y + vb.h - 64, n.y));
       n.x = Math.max(vb.x + 40, Math.min(vb.x + vb.w - 40, n.x));
     }
   }
@@ -396,11 +453,11 @@ function drawForest(svg, data, L, strings, state) {
       const s = (n.focus ? 1 : 0.62) * k;
       const body = L.paint.mushroom(L.species(n.category), L.color(n.category), n.status);
       link.appendChild(fragment(`<g transform="translate(${f1(n.x)},${soil + 4}) scale(${s.toFixed(2)})"><g class="grow"><g class="sway">${body}</g></g></g>`));
-      if (!n.focus) labels.appendChild(label(n, n.x, soil + 30, "project-small"));
+      if (!n.focus) labels.appendChild(label(n, n.x, soil + 30, "project-small", settings));
     } else {
       const m = mark(n, L, k);
       link.appendChild(fragment(`<g transform="translate(${f1(n.x)},${f1(n.y)})">${m.markup}</g>`));
-      labels.appendChild(label(n, n.x, n.y + m.r * 1.4 + 12, n.ghost ? "ghost minor" : "minor"));
+      labels.appendChild(label(n, n.x, n.y + m.r * 1.4 + 12, n.ghost ? "ghost minor" : "minor", settings));
     }
     marks.appendChild(link);
   }
@@ -414,9 +471,111 @@ function drawForest(svg, data, L, strings, state) {
   const twigLayer = el("g");
   twigLayer.appendChild(fragment(twigMarkup));
   svg.replaceChildren(el("defs", {}, L.defs(bg.ramp)), image, hyphae, twigLayer, plane, marks, labels);
-  // On a narrow screen the notes' names would overlap: the tooltip and the list below say them.
-  svg.classList.toggle("far", vb.w < 700);
   pulsing(plane, pulses, state, 1000);
+  return vb;
+}
+
+/* ---------- the viewer's settings panel ---------- */
+
+let panels = 0;
+
+function html(tag, attrs = {}, text = "") {
+  const node = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) if (v !== undefined && v !== null) node.setAttribute(k, String(v));
+  if (text) node.textContent = text;
+  return node;
+}
+
+/** Zoom buttons and a settings panel in the graph's corner. ``onChange(key)`` hears every
+ * change after ``settings`` is updated and saved. */
+function controls(host, strings, settings, { onChange, onZoom, onFit }) {
+  const id = `graph-settings-${++panels}`;
+  const bar = html("div", { class: "graph-tools" });
+  const button = (attrs, text) => {
+    const b = html("button", { type: "button", ...attrs }, text);
+    bar.appendChild(b);
+    return b;
+  };
+  button({ "data-zoom": "in", "aria-label": tr(strings, "graph.zoom_in"), title: tr(strings, "graph.zoom_in") }, "+")
+    .addEventListener("click", () => onZoom(1 / 1.3));
+  button({ "data-zoom": "out", "aria-label": tr(strings, "graph.zoom_out"), title: tr(strings, "graph.zoom_out") }, "−")
+    .addEventListener("click", () => onZoom(1.3));
+  button({ "data-zoom": "fit" }, tr(strings, "graph.fit")).addEventListener("click", onFit);
+  const gear = button({
+    class: "graph-gear", "aria-expanded": "false", "aria-controls": id,
+    "aria-label": tr(strings, "graph.settings"), title: tr(strings, "graph.settings"),
+  }, "⚙");
+
+  const panel = html("div", { class: "graph-settings glass", id, role: "group", "aria-label": tr(strings, "graph.settings") });
+  panel.hidden = true;
+  panel.appendChild(html("p", { class: "graph-settings-title" }, tr(strings, "graph.settings")));
+  const outputs = {};
+  const inputs = {};
+  const shown = (key, value) => (key === "length" ? tr(strings, "graph.chars", { count: value }) : `${value} %`);
+  const range = (key) => {
+    const [min, max, step] = LIMITS[key];
+    const row = html("label", { class: "graph-range" });
+    const head = html("span", { class: "graph-range-head" });
+    head.appendChild(html("span", {}, tr(strings, `graph.${key}`)));
+    const out = html("output", {}, shown(key, settings[key]));
+    head.appendChild(out);
+    const input = html("input", { type: "range", min, max, step, name: key });
+    input.value = String(settings[key]);
+    row.append(head, input);
+    // Spacing lays the graph out again, so it waits for the slider to be let go.
+    input.addEventListener("input", () => {
+      out.textContent = shown(key, Number(input.value));
+      if (key !== "spacing") set(key, Number(input.value));
+    });
+    input.addEventListener("change", () => set(key, Number(input.value)));
+    outputs[key] = out;
+    inputs[key] = input;
+    panel.appendChild(row);
+  };
+  const set = (key, value) => {
+    if (settings[key] === value) return;
+    settings[key] = value;
+    save(settings);
+    if (key === "shorten") inputs.length.disabled = !value;
+    onChange(key);
+  };
+  range("spacing");
+  range("labels");
+  const check = html("label", { class: "graph-check" });
+  const box = html("input", { type: "checkbox", name: "shorten" });
+  box.checked = settings.shorten;
+  box.addEventListener("change", () => set("shorten", box.checked));
+  check.append(box, document.createTextNode(` ${tr(strings, "graph.shorten")}`));
+  panel.appendChild(check);
+  range("length");
+  inputs.length.disabled = !settings.shorten;
+  panel.appendChild(html("p", { class: "graph-settings-note" }, tr(strings, "graph.settings_note")));
+  const reset = html("button", { type: "button", class: "link" }, tr(strings, "graph.reset"));
+  reset.addEventListener("click", () => {
+    for (const key of Object.keys(LIMITS)) {
+      const value = LIMITS[key][3];
+      inputs[key].value = String(value);
+      outputs[key].textContent = shown(key, value);
+      set(key, value);
+    }
+    box.checked = true;
+    set("shorten", true);
+  });
+  panel.appendChild(reset);
+
+  const toggle = (open) => {
+    panel.hidden = !open;
+    gear.setAttribute("aria-expanded", String(open));
+    if (open) panel.querySelector("input").focus();
+  };
+  gear.addEventListener("click", () => toggle(panel.hidden));
+  panel.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") { toggle(false); gear.focus(); }
+  });
+  document.addEventListener("pointerdown", (e) => {
+    if (!panel.hidden && !panel.contains(e.target) && !bar.contains(e.target)) toggle(false);
+  });
+  host.append(bar, panel);
 }
 
 /* ---------- mounting ---------- */
@@ -431,9 +590,24 @@ function trim(data, max) {
   return { data: { ...data, nodes: kept, edges: data.edges.filter((e) => ids.has(e.source) && ids.has(e.target)) }, hidden };
 }
 
+/** The underground of the painting behind a note's neighborhood, fixed while it pans. */
+function groundBehind(host, L, bg) {
+  if (!bg.url) return;
+  const top = bg.soil + 30;
+  host.prepend(el("svg", {
+    class: "graph-ground", "aria-hidden": "true", focusable: "false",
+    viewBox: `0 ${top} 1536 ${1024 - top}`, preserveAspectRatio: "xMidYMid slice",
+  },
+  el("defs", {}, bg.ramp ? rampFilter(bg.ramp) : ""),
+  el("image", { href: bg.url, x: 0, y: 0, width: 1536, height: 1024, preserveAspectRatio: "xMidYMid slice", filter: bg.ramp ? "url(#bgmap)" : null }),
+  el("rect", { class: "ground-shade", x: 0, y: top, width: 1536, height: 1024 - top })));
+}
+
 /** Draw the graph named by ``el.dataset.graph`` into ``el``. ``data-mode`` is ``free``
- * (pan and zoom, the default), ``box`` (a fixed picture over the underground) or
- * ``forest`` (a project's scene on the soil line). Resolves to a small controller. */
+ * (the whole vault on /explore, the default), ``box`` (a note's neighborhood over the
+ * underground) or ``forest`` (a project's scene on the soil line). Every mode pans and
+ * zooms and has the viewer's settings panel; inside a reading page the plain wheel keeps
+ * scrolling the page. Resolves to a small controller. */
 export async function mountGraph(host) {
   const status = host.querySelector(".graph-status");
   const strings = await loadStrings();
@@ -456,74 +630,93 @@ export async function mountGraph(host) {
   data = trimmed.data;
   const L = look(data);
   const state = { timer: null };
-  const svg = el("svg", { class: "graph-svg", role: "group", "aria-label": host.getAttribute("aria-label") || "" });
+  const settings = load();
+  const svg = el("svg", { class: "graph-svg pannable", role: "group", "aria-label": host.getAttribute("aria-label") || "" });
   host.removeAttribute("role");
   host.prepend(svg);
+  host.classList.add(`graph-${mode}`);
+  const labelZoom = () => host.style.setProperty("--label-zoom", String(settings.labels / 100));
+  labelZoom();
   const nodesById = Object.fromEntries(data.nodes.map((n) => [n.id, n]));
   tooltips(host, svg, nodesById, strings);
-
-  if (mode === "forest") {
-    if (status) status.textContent = tr(strings, "graph.hint_box");
-    const draw = () => drawForest(svg, data, L, strings, state);
-    draw();
-    let timer = null;
-    window.addEventListener("resize", () => { clearTimeout(timer); timer = setTimeout(draw, 150); });
-    return { data, strings, svg };
-  }
-
-  const laid = layoutFree(data);
-  const bg = backdropInfo();
-  svg.appendChild(el("defs", {}, L.defs(mode === "box" ? bg.ramp : null)));
-  const ground = el("g", { class: "ground-image" });
-  svg.appendChild(ground);
-  const layer = el("g", { class: "layer" });
-  svg.appendChild(layer);
-
-  let visible = () => true;
-  let dimmed = () => false;
-  const draw = () => drawFree(layer, laid, L, strings, { visible, dimmed, state, focusAll: mode === "box", pulseEvery: mode === "box" ? 1100 : 700 });
-  draw();
+  const labels = openLabels(svg);
 
   if (status) {
-    let hint = tr(strings, mode === "box" ? "graph.hint_box" : "graph.hint");
+    let hint = tr(strings, mode === "free" ? "graph.hint" : "graph.hint_box");
     if (trimmed.hidden) hint = `${trimmed.hidden === 1 ? tr(strings, "landing.more_one") : tr(strings, "landing.more", { count: trimmed.hidden })} ${hint}`;
     status.textContent = hint;
   }
 
-  if (mode === "box") {
-    // A fixed picture: the underground of the painting stretched over the graph's box.
-    const place = () => {
-      const vb = fitTo(svg, bounds(laid.nodes, 70));
-      svg.setAttribute("viewBox", `${f1(vb.x)} ${f1(vb.y)} ${f1(vb.w)} ${f1(vb.h)}`);
-      if (!bg.url) return;
-      ground.replaceChildren(el("svg", {
-        x: f1(vb.x), y: f1(vb.y), width: f1(vb.w), height: f1(vb.h),
-        viewBox: `0 ${bg.soil + 30} 1536 ${1024 - bg.soil - 30}`, preserveAspectRatio: "xMidYMid slice",
-      }, el("image", { href: bg.url, x: 0, y: 0, width: 1536, height: 1024, preserveAspectRatio: "xMidYMid slice", filter: bg.ramp ? "url(#bgmap)" : null })),
-      el("rect", { class: "ground-shade", x: f1(vb.x), y: f1(vb.y), width: f1(vb.w), height: f1(vb.h) }));
-    };
-    place();
-    let timer = null;
-    window.addEventListener("resize", () => { clearTimeout(timer); timer = setTimeout(place, 150); });
-    return { data, strings, svg };
-  }
+  const rememberZoom = (ratio) => {
+    settings.zoom[mode] = ratio;
+    save(settings);
+  };
+  const embedded = mode !== "free";
+  let home = null;
+  let narrow = false;
+  const view = panZoom(svg, (scale, ratio) => {
+    // Far out, or a narrow scene, the notes' names would be too small or overlap: the
+    // tooltip and the list on the page say them.
+    svg.classList.toggle("far", mode === "forest" ? narrow && ratio < 1.5 : scale < 0.75);
+  }, { onZoom: rememberZoom, ctrlWheel: embedded, maxOut: mode === "forest" ? 1 : mode === "box" ? 2 : 4, clamp: mode === "forest" });
 
-  svg.classList.add("pannable");
-  const view = panZoom(svg, (scale) => svg.classList.toggle("far", scale < 0.75));
-  const all = () => laid.nodes.filter((n) => visible(n));
-  view.show(bounds(all()));
+  let visible = () => true;
+  let dimmed = () => false;
+  let laid = null;
+  let redraw;
+  let fitBox;
+
+  if (mode === "forest") {
+    redraw = () => {
+      labels.close();
+      home = drawForest(svg, data, L, strings, state, settings);
+      narrow = home.w < 700;
+    };
+    fitBox = () => home;
+  } else {
+    if (mode === "box") groundBehind(host, L, backdropInfo());
+    svg.appendChild(el("defs", {}, L.defs(null)));
+    const layer = el("g", { class: "layer" });
+    svg.appendChild(layer);
+    laid = layoutFree(data, settings.spacing);
+    redraw = () => {
+      labels.close();
+      drawFree(layer, laid, L, strings, { visible, dimmed, state, settings, focusAll: mode === "box", pulseEvery: mode === "box" ? 1100 : 700 });
+    };
+    fitBox = () => bounds(laid.nodes.filter((n) => visible(n)), mode === "box" ? 70 : 60);
+  }
+  const all = () => (laid ? laid.nodes.filter((n) => visible(n)) : []);
+  const place = () => view.show(fitBox(), settings.zoom[mode]);
+  redraw();
+  place();
+
+  controls(host, strings, settings, {
+    onZoom: (f) => view.zoom(f),
+    onFit: () => { rememberZoom(1); place(); },
+    onChange: (key) => {
+      if (key === "labels") return labelZoom();
+      if (key === "spacing" && laid) laid = layoutFree(data, settings.spacing);
+      redraw();
+      if (key === "spacing") place();
+    },
+  });
+
   let timer = null;
-  window.addEventListener("resize", () => { clearTimeout(timer); timer = setTimeout(() => view.show(bounds(all())), 150); });
+  window.addEventListener("resize", () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => { if (mode === "forest") redraw(); place(); }, 150);
+  });
   return {
     data,
     strings,
     svg,
-    nodes: laid.nodes,
+    get nodes() { return laid ? laid.nodes : []; },
+    settings,
     /** Show only nodes for which ``fn`` is true; fit them. */
-    filter(fn) { visible = fn; draw(); view.show(bounds(all())); },
+    filter(fn) { visible = fn; redraw(); place(); },
     /** Dim everything except nodes for which ``fn`` is true (or nothing, with null). */
-    highlight(fn) { dimmed = fn ? (n) => !fn(n) : () => false; draw(); },
-    fit(nodes) { view.show(bounds(nodes && nodes.length ? nodes : all(), nodes && nodes.length ? 140 : 60)); },
+    highlight(fn) { dimmed = fn ? (n) => !fn(n) : () => false; redraw(); },
+    fit(nodes) { view.show(nodes && nodes.length ? bounds(nodes, 140) : bounds(all(), 60)); },
     zoom: (f) => view.zoom(f),
   };
 }
