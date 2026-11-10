@@ -83,6 +83,8 @@ class SignIn:
         self.templates = templates
         self.t = t
         self.clock = clock
+        # Without sign-in there is no session key; forms still need a token (§7b).
+        self._form_key = settings.session_key or secrets.token_urlsafe(32)
 
     @property
     def _store(self) -> AuthStore:
@@ -101,11 +103,15 @@ class SignIn:
         return bool(token) and self._store.session_valid(token or "", self.clock())
 
     def csrf_token(self, value: str) -> str:
-        key = self.settings.session_key.encode("utf-8")
+        key = self._form_key.encode("utf-8")
         return hmac.new(key, value.encode("utf-8"), hashlib.sha256).hexdigest()
 
     def logout_token(self, request: Request) -> str:
-        return self.csrf_token("logout:" + request.cookies.get(SESSION_COOKIE, ""))
+        return self.form_token(request, "logout")
+
+    def form_token(self, request: Request, purpose: str) -> str:
+        """A token tied to this session and to one purpose, for forms that change things."""
+        return self.csrf_token(f"{purpose}:" + request.cookies.get(SESSION_COOKIE, ""))
 
     def install(self, app: FastAPI) -> None:
         app.include_router(self._router())

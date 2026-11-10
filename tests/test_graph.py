@@ -414,7 +414,8 @@ def test_vendored_cytoscape_is_pinned() -> None:
 
 def test_browser_code_uses_only_local_modules() -> None:
     for path in (STATIC / "js").glob("*.js"):
-        source = path.read_text(encoding="utf-8")
+        # The SVG namespace is a name, not a request.
+        source = path.read_text(encoding="utf-8").replace("http://www.w3.org/2000/svg", "")
         for target in re.findall(r'from\s+"([^"]+)"', source):
             assert target.startswith("./") or target.startswith("../vendor/"), (path, target)
         assert "http://" not in source

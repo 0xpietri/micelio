@@ -115,6 +115,7 @@ def test_theme_css(client: TestClient) -> None:
     response = client.get("/theme.css")
     assert response.headers["content-type"].startswith("text/css")
     assert ".cat-science { --cat: #ff2fa0; }" in response.text
+    assert "--pal-sun: #ffd23f;" in response.text
 
 
 def test_no_inline_scripts_or_styles(client: TestClient) -> None:
@@ -126,6 +127,7 @@ def test_no_inline_scripts_or_styles(client: TestClient) -> None:
         "/explore",
         "/journal",
         "/health",
+        "/appearance",
     )
     for path in paths:
         html = client.get(path).text

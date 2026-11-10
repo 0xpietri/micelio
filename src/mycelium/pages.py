@@ -10,6 +10,7 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
+from mycelium.appearance import AppearanceStore, Palette, category_colors
 from mycelium.config import NOTE_TYPES, STATUSES, Category, Config
 from mycelium.formatting import Dates
 from mycelium.graph import GraphBuilder, ScopeError, UnknownNodeError, parse_scope
@@ -34,22 +35,38 @@ class CategoryGroup:
     projects: list[ProjectRow]
 
 
-def theme_css(config: Config) -> str:
-    """Category colors as CSS classes, so pages need no inline styles (CSP)."""
-    rules = [f".cat-{c.key} {{ --cat: {c.color}; }}" for c in config.categories]
+def theme_css(colors: dict[str, str], palette: Palette) -> str:
+    """Category colors as CSS classes and the palette as custom properties, so pages
+    need no inline styles (CSP)."""
+    tokens = {
+        "sun": palette.sun,
+        "accent": palette.accent,
+        "button": palette.button,
+        "button-alt": palette.button_alt,
+        "ink": palette.ink,
+        "thread": palette.thread,
+    }
+    rules = [":root { " + " ".join(f"--pal-{k}: {v};" for k, v in tokens.items()) + " }"]
+    rules += [f".cat-{key} {{ --cat: {color}; }}" for key, color in colors.items()]
     return "\n".join(rules) + "\n"
 
 
 class Pages:
     def __init__(
-        self, config: Config, index: VaultIndex, templates: Jinja2Templates, dates: Dates
+        self,
+        config: Config,
+        index: VaultIndex,
+        templates: Jinja2Templates,
+        dates: Dates,
+        looks: AppearanceStore,
     ) -> None:
         self.config = config
+        self.looks = looks
         self.index = index
         self.templates = templates
         self.dates = dates
         self.renderer = Renderer(index)
-        self.graphs = GraphBuilder(config, index)
+        self.graphs = GraphBuilder(config, index, self.colors)
         templates.env.globals.update(
             href=href_for,
             show_date=dates.show,
@@ -61,9 +78,12 @@ class Pages:
             is_bridge=index.is_bridge,
             categories_of=index.categories_of,
         )
-        self._theme = theme_css(config)
 
     # -- helpers ---------------------------------------------------------------------
+
+    def colors(self) -> dict[str, str]:
+        """Category colors from the palette chosen on the Appearance page (§7b)."""
+        return category_colors(self.config, self.looks.current().colors)
 
     def category_of(self, key: str | None) -> Category | None:
         return self.config.category(key)
@@ -117,7 +137,7 @@ class Pages:
         @router.get("/theme.css", include_in_schema=False)
         def theme() -> Response:
             return PlainTextResponse(
-                self._theme,
+                theme_css(self.colors(), self.looks.current().colors),
                 media_type="text/css",
                 headers={"Cache-Control": "no-cache"},
             )

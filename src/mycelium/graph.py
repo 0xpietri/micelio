@@ -7,10 +7,12 @@ API only says what a node is (``type``, ``category``, ``status``, ``degree``, ..
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from collections.abc import Set as AbstractSet
 from dataclasses import dataclass
 from typing import Literal, TypedDict
 
+from mycelium.appearance import PALETTES, category_colors
 from mycelium.config import Config
 from mycelium.i18n import category_names
 from mycelium.render import href_for
@@ -91,9 +93,15 @@ def ghost_id(target: str) -> str:
 
 
 class GraphBuilder:
-    def __init__(self, config: Config, index: VaultIndex) -> None:
+    def __init__(
+        self,
+        config: Config,
+        index: VaultIndex,
+        colors: Callable[[], dict[str, str]] | None = None,
+    ) -> None:
         self.config = config
         self.index = index
+        self.colors = colors or (lambda: category_colors(config, PALETTES[config.landing.palette]))
 
     # -- pieces --------------------------------------------------------------------
 
@@ -139,8 +147,9 @@ class GraphBuilder:
     def _categories(self) -> list[CategoryData]:
         language = self.config.site.language
         names = category_names(language)
+        colors = self.colors()
         return [
-            {"key": c.key, "name": c.name(language, names.get(c.key)), "color": c.color}
+            {"key": c.key, "name": c.name(language, names.get(c.key)), "color": colors[c.key]}
             for c in self.config.categories
         ]
 

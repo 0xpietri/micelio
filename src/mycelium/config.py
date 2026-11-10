@@ -37,6 +37,10 @@ NoteType = Literal["project", "note", "journal", "source"]
 NOTE_TYPES: tuple[NoteType, ...] = ("project", "note", "journal", "source")
 STATUSES: tuple[str, ...] = ("draft", "active", "paused", "closed")
 
+PaletteName = Literal["psychedelic", "tokyo-night", "catppuccin", "rose-pine"]
+PALETTE_NAMES: tuple[PaletteName, ...] = ("psychedelic", "tokyo-night", "catppuccin", "rose-pine")
+SOIL_MIN, SOIL_MAX = 30, 70
+
 _HEX_COLOR = re.compile(r"^#[0-9a-fA-F]{6}$")
 _KEY = re.compile(r"^[a-z][a-z0-9-]{0,31}$")
 
@@ -49,10 +53,29 @@ class _Strict(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
 
+def _pick(text: str | dict[str, str] | None, language: str) -> str | None:
+    """One text for every language, or a table such as ``{ en = "...", es = "..." }``."""
+    if isinstance(text, str):
+        return text
+    if text:
+        return text.get(language) or text.get("en")
+    return None
+
+
 class SiteConfig(_Strict):
     title: str = "Mycelium"
     owner: str = ""
-    tagline: str = "A living notebook of ideas"
+    headline: str | dict[str, str] | None = None
+    tagline: str | dict[str, str] | None = None
+
+    def headline_for(self, language: str) -> str | None:
+        """The landing's title from the config, if one is set."""
+        return _pick(self.headline, language)
+
+    def tagline_for(self, language: str) -> str | None:
+        """The landing's tagline from the config; ``None`` uses the translated default."""
+        return _pick(self.tagline, language)
+
     language: str = "en"
     timezone: str = "UTC"
 
@@ -102,18 +125,12 @@ class Category(_Strict):
 
     key: str
     label: str | dict[str, str] | None = None
-    color: str
+    color: str | None = None  # None: the palette's color for this position
     species: str
 
     def name(self, language: str, translated: str | None = None) -> str:
         """The name to show for ``language``; ``translated`` is the locale's name, if any."""
-        if isinstance(self.label, str):
-            return self.label
-        if self.label:
-            own = self.label.get(language) or self.label.get("en")
-            if own:
-                return own
-        return translated or self.key.replace("-", " ").capitalize()
+        return _pick(self.label, language) or translated or self.key.replace("-", " ").capitalize()
 
     @field_validator("key")
     @classmethod
@@ -124,7 +141,9 @@ class Category(_Strict):
 
     @field_validator("color")
     @classmethod
-    def _hex_color(cls, value: str) -> str:
+    def _hex_color(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
         if not _HEX_COLOR.match(value):
             raise ValueError("must be a hex color like #ff2fa0")
         return value.lower()
@@ -139,10 +158,10 @@ class Category(_Strict):
 
 def _default_categories() -> list[Category]:
     return [
-        Category(key="science", color="#ff2fa0", species="fly-agaric"),
-        Category(key="philosophy", color="#22d3ee", species="shaggy-inkcap"),
-        Category(key="study", color="#ff8a1f", species="morel"),
-        Category(key="free", color="#ffd23f", species="chanterelle"),
+        Category(key="science", species="fly-agaric"),
+        Category(key="philosophy", species="shaggy-inkcap"),
+        Category(key="study", species="morel"),
+        Category(key="free", species="chanterelle"),
     ]
 
 
@@ -154,6 +173,14 @@ class GraphConfig(_Strict):
     hide_by_default: list[NoteType] = Field(default_factory=_default_hidden)
 
 
+class LandingConfig(_Strict):
+    """Defaults for the landing (§7a, §7b). The Appearance page can override them."""
+
+    palette: PaletteName = "psychedelic"
+    soil: int = Field(default=52, ge=SOIL_MIN, le=SOIL_MAX)
+    max_notes: int = Field(default=300, ge=10, le=5000)
+
+
 class AuthConfig(_Strict):
     mode: Literal["local", "none"] = "local"
     session_hours: int = Field(default=12, ge=1, le=24 * 30)
@@ -162,7 +189,8 @@ class AuthConfig(_Strict):
 
 
 class DataConfig(_Strict):
-    """Mycelium's own small state (sign-in sessions). Safe to delete."""
+    """Mycelium's own small state: sign-in sessions and the Appearance page's choices
+    (§7b). Never the vault. Safe to delete."""
 
     dir: Path = Path("data")
 
@@ -172,6 +200,7 @@ class Config(_Strict):
     vault: VaultConfig = Field(default_factory=VaultConfig)
     categories: list[Category] = Field(default_factory=_default_categories)
     graph: GraphConfig = Field(default_factory=GraphConfig)
+    landing: LandingConfig = Field(default_factory=LandingConfig)
     auth: AuthConfig = Field(default_factory=AuthConfig)
     data: DataConfig = Field(default_factory=DataConfig)
 

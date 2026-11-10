@@ -103,7 +103,7 @@ def test_full_sign_in_and_out(site: Site) -> None:
 
     home = site.client.get("/")
     assert home.status_code == 200
-    assert "27 notes" in home.text
+    assert 'id="headline"' in home.text
     assert "Sign out" in home.text
 
     csrf = re.search(r'name="csrf" value="([^"]+)"', home.text)

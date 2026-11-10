@@ -71,7 +71,7 @@ def category_names(language: str) -> dict[str, str]:
 
 
 # Locale tables the browser needs (graph tooltips, legends, search feedback).
-BROWSER_TABLES = ("graph", "type", "status", "category")
+BROWSER_TABLES = ("graph", "type", "status", "category", "landing", "prompt")
 
 
 def browser_strings(language: str) -> dict[str, str]:

@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}{{ t("appearance.title") }} · {{ site.title }}{% endblock %}
+{% block head %}
+  <link rel="stylesheet" href="/static/css/appearance.css">
+  <script type="module" src="/static/js/appearance.js"></script>
+{% endblock %}
+{% block content %}
+<div class="page wide look">
+  <h1>{{ t("appearance.title") }}</h1>
+  <p class="muted">{{ t("appearance.lead") }} <a href="/">{{ t("appearance.see") }} →</a></p>
+  {% if done %}<p class="ok" role="status">{{ t("appearance." ~ done) }}</p>{% endif %}
+  {% if error %}<p class="error" role="alert">{{ t("appearance.error_" ~ error) }}</p>{% endif %}
+
+  <form method="post" action="/appearance" id="look-form">
+    <input type="hidden" name="csrf" value="{{ form_token }}">
+
+    <fieldset>
+      <legend><h2>{{ t("appearance.palette") }}</h2></legend>
+      <p class="muted small">{{ t("appearance.palette_help") }}</p>
+      <div class="choices">
+        {% for p in palettes %}
+        <label class="choice">
+          <input type="radio" name="palette" value="{{ p.key }}" data-swatch="{{ p.swatch | join(', ') }}"{% if p.key == appearance.palette %} checked{% endif %}>
+          <span class="choice-name">{{ t("palette." ~ p.key) }}</span>
+          <span class="muted small">{{ t("palette." ~ p.key ~ "_help") }}</span>
+          <svg class="swatch" viewBox="0 0 {{ p.swatch | length * 20 }} 20" preserveAspectRatio="none" aria-hidden="true">
+            {% for c in p.swatch %}<rect x="{{ loop.index0 * 20 }}" y="0" width="20" height="20" fill="{{ c }}"></rect>{% endfor %}
+          </svg>
+        </label>
+        {% endfor %}
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend><h2>{{ t("appearance.background") }}</h2></legend>
+      <p class="muted small">{{ t("appearance.background_help") }}</p>
+      <div class="choices">
+        <label class="choice">
+          <input type="radio" name="background" value="builtin"{% if not appearance.uses_own %} checked{% endif %}>
+          <img class="thumb" src="/static/img/psychedelic-dusk.webp" alt="" width="300" height="200">
+          <span class="choice-name">{{ t("appearance.builtin") }}</span>
+        </label>
+        <label class="choice">
+          <input type="radio" name="background" value="own"{% if appearance.uses_own %} checked{% endif %}{% if not appearance.own_type %} disabled{% endif %}>
+          {% if appearance.own_type %}
+          <img class="thumb" src="/appearance/background?v={{ appearance.own_version }}" alt="" width="300" height="200">
+          {% else %}
+          <span class="thumb empty">{{ t("appearance.own_none") }}</span>
+          {% endif %}
+          <span class="choice-name">{{ t("appearance.own") }}</span>
+        </label>
+      </div>
+      <label class="inline-check"><input type="checkbox" name="recolor"{% if appearance.recolors %} checked{% endif %}> {{ t("appearance.recolor") }}</label>
+      <label class="range">{{ t("appearance.soil") }}
+        <span class="range-row">
+          <input type="range" name="soil" id="soil" min="{{ soil_min }}" max="{{ soil_max }}" value="{{ appearance.soil }}" aria-describedby="soil-help">
+          <output for="soil" id="soil-value">{{ appearance.soil }}%</output>
+        </span>
+        <span class="muted small" id="soil-help">{{ t("appearance.soil_help") }}</span>
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend><h2>{{ t("appearance.texts") }}</h2></legend>
+      <label>{{ t("appearance.headline") }}
+        <input type="text" name="headline" maxlength="120" value="{{ appearance.headline }}" placeholder="{{ default_headline }}">
+        <span class="muted small">{{ t("appearance.headline_help", default=default_headline) }}</span>
+      </label>
+      <label>{{ t("appearance.tagline") }}
+        <input type="text" name="tagline" maxlength="120" value="{{ appearance.tagline }}" placeholder="{{ default_tagline }}">
+        <span class="muted small">{{ t("appearance.tagline_help", default=default_tagline) }}</span>
+      </label>
+    </fieldset>
+
+    <button type="submit">{{ t("appearance.submit") }}</button>
+  </form>
+
+  <section class="upload">
+    <h2>{{ t("appearance.upload") }}</h2>
+    <form method="post" action="/appearance/background" enctype="multipart/form-data" class="row">
+      <input type="hidden" name="csrf" value="{{ form_token }}">
+      <input type="file" name="image" accept="image/png,image/jpeg,image/webp" aria-label="{{ t('appearance.upload') }}">
+      <button type="submit">{{ t("appearance.upload_submit") }}</button>
+    </form>
+    {% if appearance.own_type %}
+    <form method="post" action="/appearance/background/remove">
+      <input type="hidden" name="csrf" value="{{ form_token }}">
+      <button type="submit" class="link">{{ t("appearance.remove") }}</button>
+    </form>
+    {% endif %}
+  </section>
+
+  <section class="prompt" id="prompt" data-soil="{{ appearance.soil }}">
+    <h2>{{ t("prompt.title") }}</h2>
+    <p class="muted small">{{ t("prompt.help") }}</p>
+    <div class="prompt-grid">
+      <div class="fields">
+        {% for name in prompt_fields %}
+        <label>{{ t("prompt." ~ name) }}
+          <span class="muted small">{{ t("prompt." ~ name ~ "_help") }}</span>
+          <textarea rows="2" data-field="{{ name }}">{{ prompt_values[name] }}</textarea>
+        </label>
+        {% endfor %}
+      </div>
+      <div class="out">
+        <p class="fixed" id="prompt-fixed">{{ t("prompt.fixed", soil=appearance.soil) }}</p>
+        <label>{{ t("prompt.output") }}
+          <textarea id="prompt-output" rows="18" readonly>{{ prompt }}</textarea>
+        </label>
+        <p class="row"><button type="button" id="prompt-copy">{{ t("prompt.copy") }}</button> <span id="prompt-status" class="ok small" aria-live="polite"></span></p>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

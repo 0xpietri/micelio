@@ -11,18 +11,20 @@ from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.exception_handlers import http_exception_handler
-from fastapi.responses import HTMLResponse, JSONResponse, Response
+from fastapi.responses import JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from mycelium import __version__
+from mycelium.appearance import AppearanceStore
 from mycelium.auth import resolve_auth
 from mycelium.auth.store import AuthStore
 from mycelium.auth.web import Clock, SignIn, install_security_headers
 from mycelium.config import Config
 from mycelium.formatting import Dates
 from mycelium.i18n import available_languages, browser_strings, translator
+from mycelium.landing_web import LandingPages
 from mycelium.pages import Pages
 from mycelium.vault import VaultIndex
 
@@ -47,11 +49,13 @@ def create_app(
         yield
         if store is not None:
             store.close()
+        looks.close()
 
     settings = resolve_auth(
         config, os.environ if environ is None else environ, local_only=local_only
     )
     store = AuthStore(config.data.dir / AUTH_DB) if settings.enabled else None
+    looks = AppearanceStore(config)
 
     app = FastAPI(
         lifespan=lifespan,
@@ -90,7 +94,8 @@ def create_app(
     install_security_headers(app)
 
     dates = Dates(language, config.site.timezone)
-    app.include_router(Pages(config, vault, templates, dates).router())
+    app.include_router(Pages(config, vault, templates, dates, looks).router())
+    app.include_router(LandingPages(config, vault, looks, templates, sign_in, t).router())
 
     @app.exception_handler(StarletteHTTPException)
     async def not_found(request: Request, exc: StarletteHTTPException) -> Response:
@@ -107,10 +112,5 @@ def create_app(
             "version": __version__,
             "notes": len(vault.notes),
         }
-
-    @app.get("/", response_class=HTMLResponse, include_in_schema=False)
-    def home(request: Request) -> Response:
-        vault.refresh()
-        return templates.TemplateResponse(request, "home.html", {"note_count": len(vault.notes)})
 
     return app

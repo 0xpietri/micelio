@@ -14,7 +14,7 @@ It is meant to be useful to anyone with an Obsidian-style vault, and to read as 
 ## 2. Principles
 
 1. **The files are the truth.** Everything Mycelium shows is derived from the Markdown files at request time. Delete its data folder and nothing is lost.
-2. **Read only.** No editor, no uploads, no Git operations. The vault is mounted read-only.
+2. **Read only.** No editor, no Git operations, nothing written to the vault, which is mounted read-only. The one exception to "no uploads" is the landing's background image (§7b), stored in Mycelium's own data folder, never in the vault.
 3. **Model-agnostic.** Nothing depends on a particular LLM or MCP server. Any tool that writes the documented frontmatter works.
 4. **Configuration, not code.** Categories, colors, folder names, titles and texts live in `mycelium.toml`. Nothing personal is hard-coded.
 5. **No build step.** Server-rendered pages (FastAPI + Jinja), plain CSS and JavaScript modules, vendored libraries. No inline `<script>` or `<style>`, so a strict CSP works.
@@ -63,6 +63,7 @@ public: false
 [site]
 title = "Mycelium"
 owner = "Marcos Pietri"    # shown on the landing: "Marcos Pietri's mycelium"
+headline = "The mycelium of Marcos"   # optional: replaces that title; or { en = "...", es = "..." }
 tagline = "A living notebook of ideas"
 language = "en"            # UI language (see §5a); note content is shown as written
 timezone = "America/Argentina/Buenos_Aires"
@@ -76,25 +77,27 @@ sources = "sources"
 
 # The default keys are named in the interface language (locales, `category.<key>`).
 # Own categories add `label = "Art"` or `label = { en = "Art", es = "Arte" }`.
+# `color` is optional: without it the category takes its color from the palette (§7b).
 [[categories]]
 key = "science"
-color = "#ff2fa0"
 species = "fly-agaric"     # mushroom drawn on the landing (§7a)
 
 [[categories]]
 key = "philosophy"
-color = "#22d3ee"
 species = "shaggy-inkcap"
 
 [[categories]]
 key = "study"
-color = "#ff8a1f"
 species = "morel"
 
 [[categories]]
 key = "free"
-color = "#ffd23f"
 species = "chanterelle"
+
+# Defaults for the Appearance page (§7b); what is saved there wins.
+[landing]
+palette = "psychedelic"    # psychedelic | tokyo-night | catppuccin | rose-pine
+soil = 52                  # soil line, % of the background's height
 
 [graph]
 hide_by_default = ["journal", "source"]
@@ -138,6 +141,8 @@ Secrets (password hash, TOTP secret, session key) come only from environment var
 | `/login`, `/logout` | Sign-in |
 | `/api/graph?scope=all\|project:<slug>\|note:<slug>` | Nodes and edges as JSON |
 | `/healthz` | Liveness for the container and monitoring |
+| `/appearance` | Palette, background, title and the background prompt guide (§7b, signed-in only) |
+| `/api/landing` | What the landing draws, as JSON (§7a) |
 
 Markdown is rendered with markdown-it-py and sanitized with nh3. Wikilinks become links to `/notes/<slug>`. Callouts (`> [!warning]`) and task lists render like Obsidian. Times are shown in the configured time zone. Links to projects go to `/projects/<slug>` (and `/notes/<project>` redirects there); links to missing notes render as dashed ghost text; `![[file.png]]` and other non-note embeds render as their name (attachments are not served in v0.1). Category colors come from a generated `/theme.css`, so pages need no inline styles. Light and dark themes follow the system setting.
 
@@ -156,7 +161,7 @@ Markdown is rendered with markdown-it-py and sanitized with nh3. Wikilinks becom
 
 The home page is the project's signature: a generative illustration drawn from the vault's real data, not a stock image. The soil line splits the screen.
 
-**Look (sketch v2, 2026-11-09).** Illustrated, psychedelic palette (neon green, magenta, cyan, electric blue, orange, gold) with dark outlines. A dusk sky, two layers of distant mountains, grass with yellow flowers on the soil line, one tree whose black roots run among the mycelium. Underground: a dark stained-glass mosaic, white branching hyphae and notes as fuzzy clouds of spores.
+**Look (mockup approved 2026-11-10).** Illustrated, psychedelic palette (neon green, magenta, cyan, electric blue, orange, gold) with dark outlines. A dusk sky, two layers of distant mountains, grass with small flowers on the soil line. No tree. Underground: a dark stained-glass mosaic, white branching hyphae and notes as fuzzy clouds of spores. The colors follow the chosen palette (§7b).
 
 **Above ground: what has surfaced.**
 - Each **project** is a mushroom. v0.1 ships eight species with distinct silhouettes (fly agaric, shaggy inkcap, morel, chanterelle, liberty caps, coral fungus, parasol, glowing bonnets); each category picks one species in `mycelium.toml`. Size = its number of notes.
@@ -167,18 +172,30 @@ The home page is the project's signature: a generative illustration drawn from t
 **Below ground: where ideas connect.**
 - **Atomic notes** are knots in the mycelium, under the mushroom of their project.
 - **Links** are hyphae: thin, softly glowing threads. A **bridge** note sends a thicker hypha across to another mushroom's network.
-- **Sources** are mineral stones the hyphae reach for (nutrients).
+- **Sources** are mineral crystals the hyphae reach for (nutrients). Crystals, not stones, so they never mix with stones painted in a background.
 - **Journal notes** are spores on the surface: the latest 5 drift near the mushrooms they touched.
 
 **Movement.** On load the hyphae grow out from each mushroom; then a faint pulse travels along random links. Everything stops under `prefers-reduced-motion`.
 
-**Text.** Top left: `site.owner`'s name and the tagline, e.g. "Marcos Pietri's mycelium". Two buttons: *Explore the graph* (`/explore`) and *Projects* (`/projects`).
+**Text.** Top left, always on one line (it shrinks to fit): the headline, by default `site.owner`'s name, e.g. "Marcos Pietri's mycelium". The text is editable: `site.headline` in the config or the Appearance page. Under it the tagline and two buttons: *Explore the graph* (`/explore`) and *Projects* (`/projects`).
 
-**Technique.** Canvas 2D drawn by our own module, positions from a vendored `d3-force` (underground nodes kept below the soil line, each project's notes pulled under its mushroom). Mushroom shapes are parameterized SVG paths, drawn procedurally, no image files. Seeded by the vault's content, so the same vault always draws the same forest. Over about 300 notes, only the most connected are drawn underground and a counter says how many more there are.
+**Technique.** SVG drawn by our own module (`static/js/landing.js`) over the background image; SVG rather than Canvas so every mushroom and note is a real link the keyboard can reach. Positions from a vendored `d3-force` (underground nodes kept below the soil line, each project's notes pulled under its mushroom). Mushroom shapes are parameterized SVG paths, drawn procedurally, no image files. The data comes from `/api/landing`. Seeded by the vault's content, so the same vault always draws the same forest. Over about 300 notes, only the most connected are drawn underground and a counter says how many more there are.
 
 **Visitors.** Anonymous visitors see the same landing built from public notes only (§9). With nothing public it shows the soil, one sprout and the sign-in button.
 
 **Accessibility.** A visually hidden list under the canvas names every mushroom and note with links; keyboard focus moves through the mushrooms.
+
+## 7b. Appearance
+
+A signed-in page, `/appearance`, decided by marcos on 2026-11-10. What it saves lives in the data folder (`data/site.sqlite3` and `data/backgrounds/`), never in the vault; deleting the data folder brings back the defaults of `mycelium.toml`.
+
+- **Palette**: four templates of analogous colors. *Psychedelic* (the original neon), *Tokyo Night*, *Catppuccin Mocha* and *Rosé Pine* (the last three follow those MIT-licensed themes). A palette sets the mushrooms (by category order; an explicit `color` in the config wins), the hyphae, the spores, the crystals and the landing's buttons, and the category colors on every page and graph.
+- **Background**: the included painting (*Psychedelic dusk*, 1536 x 1024 WebP) or an image the owner uploads. PNG, JPEG or WebP, at most 8 MB, at least 1200 x 800; the type is checked from the file's bytes, never its name. One uploaded image is kept; a new upload replaces it. Wider or taller images are cropped to fill the screen.
+- **Recolor**: on by default for the included painting, off for an upload. It maps the image's brightness onto the palette's ramp with an SVG filter in the browser; the file itself is never changed.
+- **Soil line**: where the ground starts, 30–70 % of the image's height (52 % for the included painting).
+- **Title and tagline**: optional text that replaces `site.headline` and `site.tagline`.
+- **Prompt guide**: a form that builds a prompt for any image generator (ChatGPT, Gemini, Midjourney, Stable Diffusion). The format rules are fixed and shown as such: 1536 x 1024 (3:2), the horizon at the soil line, a calm top-left corner for the title, a dark low-contrast underground, nothing tall on the horizon, no mushrooms, trees, threads or text. The owner writes the creative parts: style, sky, horizon, underground, colors (prefilled from the palette) and mood. A button copies the result. The prompt is in the interface language.
+- Saving needs the sign-in form token (HMAC, like sign-out). With `auth.mode = "none"` the page is as open as the rest of the site, so the gateway in front must protect it.
 
 ## 8. Reading the vault
 
@@ -238,7 +255,7 @@ Each step ends with tests, a report and a stop for marcos's review.
 2. **Sign-in.** Local auth with TOTP, sessions, lockout, CLI for secrets, `auth.mode = "none"`.
 3. **Pages and languages.** `/projects`, `/projects/<slug>`, `/notes/<slug>`, `/journal`, `/health`; Markdown rendering and sanitizing; light and dark themes; `en` and `es` (§5a).
 4. **Graph.** `/api/graph`, `/explore`, the project and note graphs, filters, search.
-5. **The landing.** The forest floor of §7a. Starts with a static mockup for marcos's approval before the real code.
+5. **The landing.** The forest floor of §7a and the Appearance page of §7b. Starts with a static mockup for marcos's approval before the real code (approved 2026-11-10).
 6. **Public notes.** §9, with tests that no private title appears in any anonymous response.
 7. **Release v0.1.0.** Docker image, compose example, README with GIF and diagram, CHANGELOG, tag.
 
@@ -247,4 +264,5 @@ The deployment on factory (Caddy site, the notes MCP, the vault's Git timer, bac
 ## 15. Decisions
 
 - 2026-11-09 (marcos): UI in English, easy to add languages (§5a); anonymous visitors see public notes only (§9); the owner's name in the config and an artistic landing with mushrooms above ground and mycelium below (§7a).
+- 2026-11-10 (marcos): landing mockup approved. The title stays on one line and its text is editable; no tree. Four palettes (Psychedelic, Tokyo Night, Catppuccin Mocha, Rosé Pine) recolor the mushrooms and the background; the owner can upload a background, guided by a prompt builder; all chosen on a signed-in Appearance page that saves to the data folder (§7b). This relaxes principle 2 for that one image.
 - 2026-11-09 (marcos): no hosted service for other people's notes. Technical users self-host, guided by `docs/guides/` (own computer with a tunnel, or a VPS); non-technical users get the Obsidian plugin (v0.3).
