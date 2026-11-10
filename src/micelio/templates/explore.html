@@ -77,11 +77,6 @@
   </aside>
   <div class="explore-stage">
     {{ graph_box("all", t("explore.graph_label"), "graph-full", manual=True, max=max_nodes) }}
-    <div class="graph-zoom" hidden>
-      <button type="button" data-zoom="in" aria-label="{{ t('graph.zoom_in') }}">+</button>
-      <button type="button" data-zoom="out" aria-label="{{ t('graph.zoom_out') }}">−</button>
-      <button type="button" data-zoom="fit">{{ t("graph.fit") }}</button>
-    </div>
   </div>
 </div>
 {% endblock %}

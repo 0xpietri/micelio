@@ -83,14 +83,6 @@ async function start() {
     if (matches.length === 1 && matches[0].href) window.location.assign(matches[0].href);
     else if (matches.length) graph.fit(matches);
   });
-
-  const zoom = document.querySelector(".graph-zoom");
-  if (zoom) {
-    zoom.hidden = false;
-    zoom.querySelector("[data-zoom=in]").addEventListener("click", () => graph.zoom(1 / 1.3));
-    zoom.querySelector("[data-zoom=out]").addEventListener("click", () => graph.zoom(1.3));
-    zoom.querySelector("[data-zoom=fit]").addEventListener("click", () => graph.fit());
-  }
 }
 
 start();
