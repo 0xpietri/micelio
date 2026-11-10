@@ -12,7 +12,7 @@ from typing import TypedDict
 from mycelium.appearance import BUILTIN_BACKGROUND, Appearance, category_colors
 from mycelium.config import Config
 from mycelium.render import href_for
-from mycelium.vault.index import Note, VaultIndex
+from mycelium.vault.index import IndexView, Note
 
 SPORES = 5
 UNCATEGORIZED_SPECIES = "glowing-bonnets"
@@ -68,7 +68,7 @@ def background_url(appearance: Appearance) -> str:
 
 
 class LandingBuilder:
-    def __init__(self, config: Config, index: VaultIndex) -> None:
+    def __init__(self, config: Config, index: IndexView) -> None:
         self.config = config
         self.index = index
 

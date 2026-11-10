@@ -28,6 +28,15 @@ CSRF_COOKIE = "mycelium_csrf"
 OPEN_PATHS = frozenset({"/login", "/healthz", "/favicon.ico", "/theme.css"})
 OPEN_PREFIXES = ("/static/",)
 
+# Pages anonymous visitors may read (GET and HEAD only). They are built from the public
+# notes alone (§9); the pages decide that through ``SignIn.sees_everything``.
+PUBLIC_PATHS = frozenset(
+    {"/", "/explore", "/projects", "/journal", "/api/graph", "/api/landing"}
+    # The landing's own background, when the owner uploaded one (§7b).
+    | {"/appearance/background"}
+)
+PUBLIC_PREFIXES = ("/projects/", "/notes/")
+
 CSP = (
     "default-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; "
     "frame-ancestors 'none'; form-action 'self'"
@@ -102,6 +111,11 @@ class SignIn:
         token = request.cookies.get(SESSION_COOKIE)
         return bool(token) and self._store.session_valid(token or "", self.clock())
 
+    def sees_everything(self, request: Request) -> bool:
+        """Signed in (or sign-in off): every note. Otherwise only the public ones (§9)."""
+        signed_in = getattr(request.state, "signed_in", None)
+        return self.is_signed_in(request) if signed_in is None else bool(signed_in)
+
     def csrf_token(self, value: str) -> str:
         key = self._form_key.encode("utf-8")
         return hmac.new(key, value.encode("utf-8"), hashlib.sha256).hexdigest()
@@ -124,6 +138,10 @@ class SignIn:
             request.state.signed_in = self.is_signed_in(request)
             if request.state.signed_in or path in OPEN_PATHS or path.startswith(OPEN_PREFIXES):
                 return await call_next(request)
+            if request.method in ("GET", "HEAD") and (
+                path in PUBLIC_PATHS or path.startswith(PUBLIC_PREFIXES)
+            ):
+                return await call_next(request)
             if request.method in ("GET", "HEAD"):
                 target = path + (f"?{request.url.query}" if request.url.query else "")
                 return RedirectResponse(f"/login?next={quote(target, safe='')}", status_code=303)
@@ -138,7 +156,12 @@ class SignIn:
         response = self.templates.TemplateResponse(
             request,
             "login.html",
-            {"next": next_path, "csrf": self.csrf_token("login:" + nonce), "error": error},
+            {
+                "next": next_path,
+                "csrf": self.csrf_token("login:" + nonce),
+                "error": error,
+                "nav": "login",
+            },
             status_code=status,
         )
         response.set_cookie(

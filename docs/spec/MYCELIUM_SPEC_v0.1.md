@@ -208,7 +208,9 @@ A signed-in page, `/appearance`, decided by marcos on 2026-11-10. What it saves 
 - `public: true` makes a note readable without signing in, at the same URL.
 - A public project shows only its public notes, and its graph only public nodes.
 - Links from a public note to a private one render as plain text, never as a link or a node, so a private title never leaks.
-- An anonymous visitor sees only public notes everywhere: the landing (§7a), `/explore`, `/projects`. Private notes do not exist for them, not even as counts.
+- An anonymous visitor sees only public notes everywhere: the landing (§7a), `/explore`, `/projects`, `/journal`, `/api/graph`, `/api/landing`. Private notes do not exist for them, not even as counts: a private note's URL answers 404, and `/healthz` leaves out the number of notes.
+- Links to missing notes also render as plain text for visitors, with no ghost node, so a missing note and a private one look the same.
+- A note is public only when its own frontmatter says `public: true`; being linked from a public project does not make it public.
 
 ## 10. Packaging
 

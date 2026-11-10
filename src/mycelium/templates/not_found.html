@@ -4,6 +4,9 @@
 <section class="card">
   <h1>{{ t("errors.not_found") }}</h1>
   <p class="muted">{{ t("errors.not_found_help") }}</p>
+  {% if sign_in.enabled and request.state.signed_in is defined and not request.state.signed_in %}
+  <p class="muted">{{ t("errors.sign_in_help") }} <a href="/login?next={{ request.url.path|urlencode }}">{{ t("login.title") }}</a></p>
+  {% endif %}
   <p><a href="/projects">{{ t("errors.back") }}</a></p>
 </section>
 {% endblock %}

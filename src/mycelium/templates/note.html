@@ -6,7 +6,7 @@
 <article class="page">
   <p class="eyebrow">
     {{ t("type." ~ note.type) }} {{ status_badge(note.status) }}
-    {% if is_bridge(note.slug) %}<span class="badge bridge">⇄ {{ t("note.bridge") }}</span>{% endif %}
+    {% if vault.is_bridge(note.slug) %}<span class="badge bridge">⇄ {{ t("note.bridge") }}</span>{% endif %}
   </p>
   <h1>{{ note.title }}</h1>
   <p class="muted small">

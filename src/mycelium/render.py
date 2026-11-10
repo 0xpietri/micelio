@@ -20,7 +20,7 @@ from markupsafe import Markup
 from mdit_py_plugins.footnote import footnote_plugin
 from mdit_py_plugins.tasklists import tasklists_plugin
 
-from mycelium.vault.index import Note, VaultIndex, is_attachment
+from mycelium.vault.index import IndexView, Note, is_attachment
 
 _WIKILINK = re.compile(r"(!?)\[\[([^\[\]|#\n]*)(#[^\[\]|\n]*)?(?:\|([^\[\]\n]*))?\]\]")
 _CALLOUT = re.compile(r"^\[!([A-Za-z][\w-]*)\][+-]?[ \t]*(.*)$")
@@ -102,10 +102,14 @@ def _callout_rule(state: StateCore) -> None:
 
 
 class Renderer:
-    """Renders notes of one vault; results are cached until the vault changes."""
+    """Renders notes of one vault; results are cached until the vault changes.
 
-    def __init__(self, index: VaultIndex) -> None:
+    With ``ghosts=False`` (the public view, §9) a link that resolves to nothing renders
+    as plain text, the same whether the note is missing or private."""
+
+    def __init__(self, index: IndexView, *, ghosts: bool = True) -> None:
         self.index = index
+        self.ghosts = ghosts
         self._cache: dict[str, Markup] = {}
         self._generation = -1
         self._lock = threading.Lock()
@@ -130,6 +134,8 @@ class Renderer:
         if slug is None:
             if is_attachment(target):
                 return f'<span class="attachment">{escape(text)}</span>'
+            if not self.ghosts:
+                return escape(text)
             return f'<span class="ghost" title="{escape(target)}">{escape(text)}</span>'
         note = self.index.notes[slug]
         if not label and not heading:

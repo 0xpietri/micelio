@@ -25,7 +25,7 @@ from mycelium.auth.web import SignIn
 from mycelium.config import PALETTE_NAMES, SOIL_MAX, SOIL_MIN, Config
 from mycelium.i18n import Translate
 from mycelium.landing import LandingBuilder, background_url
-from mycelium.vault import VaultIndex
+from mycelium.vault import PublicView, VaultIndex
 
 PROMPT_FIELDS = ("style", "sky", "horizon", "underground", "colors", "mood")
 _MESSAGES = frozenset({"saved", "uploaded", "removed"})
@@ -41,6 +41,7 @@ class LandingPages:
         templates: Jinja2Templates,
         sign_in: SignIn,
         t: Translate,
+        public: PublicView,
     ) -> None:
         self.config = config
         self.index = index
@@ -48,7 +49,8 @@ class LandingPages:
         self.templates = templates
         self.sign_in = sign_in
         self.t = t
-        self.builder = LandingBuilder(config, index)
+        self.everything = LandingBuilder(config, index)
+        self.public = LandingBuilder(config, public)
 
     # -- texts ------------------------------------------------------------------------
 
@@ -79,6 +81,12 @@ class LandingPages:
 
     # -- routes -----------------------------------------------------------------------
 
+    def builder(self, request: Request) -> LandingBuilder:
+        """The whole vault when signed in, the public notes otherwise (§9). Refreshed."""
+        builder = self.everything if self.sign_in.sees_everything(request) else self.public
+        builder.index.refresh()
+        return builder
+
     def _form_ok(self, request: Request, token: str) -> bool:
         return hmac.compare_digest(token, self.sign_in.form_token(request, "appearance"))
 
@@ -88,9 +96,8 @@ class LandingPages:
 
         @router.get("/", include_in_schema=False)
         def landing(request: Request) -> Response:
-            self.index.refresh()
             appearance = self.store.current()
-            data = self.builder.build(appearance)
+            data = self.builder(request).build(appearance)
             headline, tagline = self.texts(appearance)
             context = {
                 "headline": headline,
@@ -102,9 +109,8 @@ class LandingPages:
             return render(request, "landing.html", context)
 
         @router.get("/api/landing", include_in_schema=False)
-        def landing_data() -> Response:
-            self.index.refresh()
-            data = self.builder.build(self.store.current())
+        def landing_data(request: Request) -> Response:
+            data = self.builder(request).build(self.store.current())
             return JSONResponse(dict(data), headers={"Cache-Control": "no-store"})
 
         @router.get("/appearance/background", include_in_schema=False)
@@ -120,6 +126,8 @@ class LandingPages:
 
         @router.get("/appearance", include_in_schema=False)
         def appearance_page(request: Request, done: str = "", error: str = "") -> Response:
+            if not self.sign_in.sees_everything(request):  # signed-in only, never public
+                raise HTTPException(status_code=404)
             appearance = self.store.current()
             prompt_values = self.default_prompt(appearance)
             context = {

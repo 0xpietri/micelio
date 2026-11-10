@@ -77,9 +77,9 @@ def site(make_site: SiteFactory) -> Site:
 
 
 def test_pages_redirect_to_login(site: Site) -> None:
-    response = site.client.get("/?tab=all", follow_redirects=False)
+    response = site.client.get("/health?tab=all", follow_redirects=False)
     assert response.status_code == 303
-    assert response.headers["location"] == "/login?next=%2F%3Ftab%3Dall"
+    assert response.headers["location"] == "/login?next=%2Fhealth%3Ftab%3Dall"
 
 
 def test_open_paths_need_no_session(site: Site) -> None:
@@ -111,7 +111,7 @@ def test_full_sign_in_and_out(site: Site) -> None:
     out = site.client.post("/logout", data={"csrf": csrf.group(1)}, follow_redirects=False)
     assert out.status_code == 303
     assert out.headers["location"] == "/login"
-    assert site.client.get("/", follow_redirects=False).status_code == 303
+    assert site.client.get("/health", follow_redirects=False).status_code == 303
 
 
 def test_signed_out_cookie_no_longer_works(site: Site) -> None:
@@ -123,7 +123,7 @@ def test_signed_out_cookie_no_longer_works(site: Site) -> None:
     assert csrf
     site.client.post("/logout", data={"csrf": csrf.group(1)})
     site.client.cookies.set("mycelium_session", token, domain="mycelium.example")
-    assert site.client.get("/", follow_redirects=False).status_code == 303
+    assert site.client.get("/health", follow_redirects=False).status_code == 303
 
 
 def test_logout_needs_its_token(site: Site) -> None:
@@ -213,9 +213,9 @@ def test_success_clears_failures(site: Site) -> None:
 def test_session_expires_after_twelve_hours(site: Site) -> None:
     site.sign_in()
     site.advance(12 * 3600 - 1)
-    assert site.client.get("/", follow_redirects=False).status_code == 200
+    assert site.client.get("/health", follow_redirects=False).status_code == 200
     site.advance(2)
-    assert site.client.get("/", follow_redirects=False).status_code == 303
+    assert site.client.get("/health", follow_redirects=False).status_code == 303
 
 
 def test_login_page_when_signed_in_redirects(site: Site) -> None:

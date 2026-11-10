@@ -32,6 +32,7 @@ list = "Proyectos y notas del dibujo"
 more_one = "Queda 1 nota más sin dibujar."
 more = "Quedan {count} notas más sin dibujar."
 empty = "Todavía no brotó nada. Agregá un proyecto al vault y acá crece su hongo."
+empty_public = "Todavía no hay nada público acá."
 notes_one = "1 nota"
 notes = "{count} notas"
 bridge = "Puente entre proyectos"
@@ -206,6 +207,7 @@ unreadable = "No se pudo leer el archivo"
 [errors]
 not_found = "No encontrada"
 not_found_help = "Acá no hay ninguna nota. Puede que la hayan renombrado o movido."
+sign_in_help = "Si este cuaderno es tuyo, iniciá sesión para ver todas las notas."
 back = "Volver a los proyectos"
 
 [explore]

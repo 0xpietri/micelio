@@ -401,10 +401,11 @@ def test_rejected_uploads_say_why(client: TestClient, data: bytes, code: str) ->
 
 def test_appearance_needs_sign_in(make_site: SiteFactory) -> None:
     site: Site = make_site()
-    for path in ("/appearance", "/api/landing", "/appearance/background"):
-        response = site.client.get(path, follow_redirects=False)
-        assert response.status_code == 303
-        assert response.headers["location"].startswith("/login")
+    response = site.client.get("/appearance", follow_redirects=False)
+    assert response.status_code == 303
+    assert response.headers["location"].startswith("/login")
+    # The landing and its background are public; without an upload there is none.
+    assert site.client.get("/appearance/background").status_code == 404
     response = site.client.post(
         "/appearance", data={"palette": "rose-pine"}, follow_redirects=False
     )

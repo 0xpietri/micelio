@@ -275,16 +275,18 @@ def test_api_graph_sees_new_notes(tmp_path: Path) -> None:
     assert [(e["source"], e["target"]) for e in data["edges"]] == [("b", "a")]
 
 
-def test_api_graph_needs_sign_in(tmp_path: Path) -> None:
+def test_api_graph_shows_visitors_public_notes_only(tmp_path: Path) -> None:
     config = Config.model_validate(
         {"vault": VaultConfig(root=EXAMPLE_VAULT), "data": {"dir": tmp_path}}
     )
     with TestClient(create_app(config, environ=AUTH_ENV)) as anonymous:
         response = anonymous.get("/api/graph", follow_redirects=False)
-        assert response.status_code == 303
-        assert response.headers["location"].startswith("/login")
+        assert response.status_code == 200
+        nodes = response.json()["nodes"]
+        assert nodes
+        assert all(n["public"] and not n["ghost"] for n in nodes)
         explore = anonymous.get("/explore", follow_redirects=False)
-        assert explore.status_code == 303
+        assert explore.status_code == 200
         # Browser strings are not private: the sign-in page may need them later.
         assert anonymous.get("/static/locales/en.json").status_code == 200
 
