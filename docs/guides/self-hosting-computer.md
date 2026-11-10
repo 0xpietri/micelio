@@ -1,6 +1,6 @@
 # Self-hosting on your own computer
 
-Run the notes MCP server and Mycelium on your desktop or laptop (Linux, macOS or Windows) and
+Run the notes MCP server and Micelio on your desktop or laptop (Linux, macOS or Windows) and
 talk to your notes from any device, including your phone in voice mode.
 
 **The trade-off:** it only works while the computer is on, awake and online. If you want
@@ -172,12 +172,12 @@ answer `"status":"ok"`, and `/admin` should ask for the password.
 
 Try it: *"Read the vault guide, then create a note in notes/ about what we just discussed."*
 
-## 6. Run Mycelium
+## 6. Run Micelio
 
-Mycelium only reads, so it can use your normal Obsidian folder on any system:
+Micelio only reads, so it can use your normal Obsidian folder on any system:
 
 ```sh
-uvx mycelium serve --vault ~/Obsidian        # http://127.0.0.1:8765
+uvx micelio serve --vault ~/Obsidian        # http://127.0.0.1:8765
 ```
 
 Keep it on `127.0.0.1`: it is for you on this computer. To show it to others, use a server

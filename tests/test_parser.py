@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from mycelium.vault.parser import (
+from micelio.vault.parser import (
     WikiLink,
     extract_links,
     link_key,

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from mycelium.i18n import available_languages, load_strings, translator
+from micelio.i18n import available_languages, load_strings, translator
 
 
 def test_english_is_available() -> None:

@@ -8,9 +8,9 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from mycelium.app import create_app
-from mycelium.config import Config, VaultConfig
-from mycelium.graph import (
+from micelio.app import create_app
+from micelio.config import Config, VaultConfig
+from micelio.graph import (
     GraphBuilder,
     Scope,
     ScopeError,
@@ -18,13 +18,13 @@ from mycelium.graph import (
     ghost_id,
     parse_scope,
 )
-from mycelium.i18n import available_languages, browser_strings, load_strings
-from mycelium.vault import VaultIndex
+from micelio.i18n import available_languages, browser_strings, load_strings
+from micelio.vault import VaultIndex
 
 from .conftest import EXAMPLE_VAULT, VaultFactory
 from .test_auth_web import ENV as AUTH_ENV
 
-STATIC = Path(__file__).resolve().parents[1] / "src" / "mycelium" / "static"
+STATIC = Path(__file__).resolve().parents[1] / "src" / "micelio" / "static"
 BAYES = "learning-bayesian-statistics"
 PLANETS = "do-planets-at-birth-leave-a-trace"
 FREE_WILL = "free-will-in-a-determined-world"
@@ -327,7 +327,7 @@ def test_locale_json_route(client: TestClient) -> None:
 
 
 def test_other_static_files_still_served(client: TestClient) -> None:
-    assert client.get("/static/css/mycelium.css").status_code == 200
+    assert client.get("/static/css/micelio.css").status_code == 200
     script = client.get("/static/js/graph.js")
     assert script.status_code == 200
     assert "javascript" in script.headers["content-type"]

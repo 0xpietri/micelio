@@ -3,8 +3,8 @@ from __future__ import annotations
 import os
 from datetime import date
 
-from mycelium.formatting import Dates
-from mycelium.vault import VaultIndex
+from micelio.formatting import Dates
+from micelio.vault import VaultIndex
 
 from .conftest import VaultFactory
 

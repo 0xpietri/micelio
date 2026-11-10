@@ -10,17 +10,17 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
-from mycelium.app import create_app
-from mycelium.appearance import Appearance, AppearanceStore
-from mycelium.config import TEXT_FONTS, TITLE_FONTS, Config, TypographyConfig, VaultConfig
-from mycelium.pages import theme_css
+from micelio.app import create_app
+from micelio.appearance import Appearance, AppearanceStore
+from micelio.config import TEXT_FONTS, TITLE_FONTS, Config, TypographyConfig, VaultConfig
+from micelio.pages import theme_css
 
 from .conftest import EXAMPLE_VAULT
 from .test_auth_web import Site, SiteFactory
 from .test_auth_web import make_site as make_site  # the fixture
 from .test_landing import png, save
 
-STATIC = Path(__file__).resolve().parents[1] / "src" / "mycelium" / "static"
+STATIC = Path(__file__).resolve().parents[1] / "src" / "micelio" / "static"
 PAGES = (
     "/projects",
     "/projects/learning-bayesian-statistics",
@@ -82,7 +82,7 @@ def test_typography_defaults_and_limits(tmp_path: Path) -> None:
 
 
 def test_example_config_documents_typography() -> None:
-    text = (Path(__file__).resolve().parents[1] / "mycelium.example.toml").read_text("utf-8")
+    text = (Path(__file__).resolve().parents[1] / "micelio.example.toml").read_text("utf-8")
     assert "[typography]" in text
     for key in ("title_font", "text_font", "title_size", "text_size", "graph_labels"):
         assert f"\n{key} = " in text
@@ -214,7 +214,7 @@ def test_recolored_and_uploaded_backgrounds_reach_every_page(client: TestClient)
 
 
 def test_no_light_theme_is_left() -> None:
-    for name in ("mycelium.css", "graph.css", "appearance.css", "landing.css"):
+    for name in ("micelio.css", "graph.css", "appearance.css", "landing.css"):
         css = (STATIC / "css" / name).read_text("utf-8")
         assert "prefers-color-scheme" not in css, name
 
@@ -234,7 +234,7 @@ def test_appearance_page_offers_fonts_and_sizes(client: TestClient) -> None:
     sizes = (("title_size", 70, 140), ("text_size", 14, 20), ("graph_labels", 80, 150))
     for name, low, high in sizes:
         assert f'name="{name}" id="{name}" min="{low}" max="{high}"' in html
-    assert 'title_font = "shrikhand"' in html  # the same choices as mycelium.toml lines
+    assert 'title_font = "shrikhand"' in html  # the same choices as micelio.toml lines
 
 
 def test_saving_type_settings_changes_every_page(client: TestClient) -> None:
@@ -268,7 +268,7 @@ def test_saving_type_settings_changes_every_page(client: TestClient) -> None:
     assert "--title-shadow: none;" in look
     # An empty name brings the config's title back.
     save(client, site_name="")
-    assert '<a class="brand" href="/">Mycelium</a>' in client.get("/projects").text
+    assert '<a class="brand" href="/">Micelio</a>' in client.get("/projects").text
 
 
 def test_visitors_see_the_look_but_cannot_change_it(make_site: SiteFactory) -> None:
@@ -300,7 +300,7 @@ def test_spanish_appearance_has_no_english_type_settings(tmp_path: Path) -> None
 # -- the graph's code -------------------------------------------------------------------
 
 
-def test_graph_pages_load_the_mycelium_drawing() -> None:
+def test_graph_pages_load_the_micelio_drawing() -> None:
     graph = (STATIC / "js" / "graph.js").read_text("utf-8")
     assert 'from "./draw.js"' in graph
     landing = (STATIC / "js" / "landing.js").read_text("utf-8")

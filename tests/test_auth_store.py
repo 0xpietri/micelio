@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from mycelium.auth.store import AuthStore
+from micelio.auth.store import AuthStore
 
 
 @pytest.fixture

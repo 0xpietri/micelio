@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from mycelium.vault import Edge, VaultIndex
-from mycelium.vault import index as index_module
+from micelio.vault import Edge, VaultIndex
+from micelio.vault import index as index_module
 
 from .conftest import VaultFactory, config_for
 

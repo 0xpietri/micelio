@@ -25,7 +25,7 @@ Date: 2026-11-09
   `site.language` and `site.timezone` are validated at start-up; Windows gets `tzdata`.
 - **Languages**: `en` and `es` locale files with identical keys (enforced by a test).
   CONTRIBUTING explains how to add one. The default categories are named by the locale
-  (`category.<key>`); a category's `label` in `mycelium.toml` is now optional and can be one
+  (`category.<key>`); a category's `label` in `micelio.toml` is now optional and can be one
   name or a table per language.
 - **Themes**: dark and light, following `prefers-color-scheme`. Category colors come from a
   generated `/theme.css`, so no page has inline styles (tested).

@@ -1,6 +1,6 @@
 # Self-hosting on a server
 
-Run the notes MCP server and Mycelium on a small Linux server, so you can dictate notes from
+Run the notes MCP server and Micelio on a small Linux server, so you can dictate notes from
 your phone at any time and read them on your own website, with your computers switched off.
 
 Time: an afternoon the first time.
@@ -38,7 +38,7 @@ In your DNS, point two names at the server:
 | Name | Serves |
 | --- | --- |
 | `notes-mcp.example.com` | the MCP server (assistants connect here) |
-| `notes.example.com` | Mycelium (you read your notes here) |
+| `notes.example.com` | Micelio (you read your notes here) |
 
 Keep them separate: different software, different logins, easier to reason about.
 
@@ -103,30 +103,34 @@ write access to your notes.
 Check `https://notes-mcp.example.com/health` answers `"status":"ok"` and that `/admin` asks
 for the password.
 
-## 4. Mycelium
+## 4. Micelio
 
-Mycelium's image (`ghcr.io/0xpietri/mycelium`) ships with v0.1.0. Once it is out, add it as a
-service; it only needs the vault **read-only**, a config file and a data volume:
+Add Micelio's image (`ghcr.io/0xpietri/micelio`, amd64 and arm64) as a service; it only
+needs the vault **read-only**, a config file and a data volume. The repository's
+[`compose.example.yml`](../../compose.example.yml) has the same with comments.
 
 ```yaml
 services:
-  mycelium:
-    image: ghcr.io/0xpietri/mycelium:0.1
+  micelio:
+    image: ghcr.io/0xpietri/micelio:0.1
     restart: unless-stopped
     read_only: true
-    env_file: mycelium.env            # sign-in secrets, see .env.example
+    tmpfs: [/tmp]
+    env_file: micelio.env            # sign-in secrets, see .env.example
     environment:
-      MYCELIUM_CONFIG: /config/mycelium.toml
-      MYCELIUM_VAULT: /vault
+      MICELIO_CONFIG: /config/micelio.toml
+      # Caddy on the host reaches the container through a Docker network; trust it for the
+      # visitor's address (the sign-in lockout counts failures per address).
+      MICELIO_FORWARDED_ALLOW_IPS: 172.16.0.0/12   # Docker's usual networks
     volumes:
       - /srv/vault:/vault:ro
-      - ./mycelium.toml:/config/mycelium.toml:ro
-      - mycelium-data:/data
+      - ./micelio.toml:/config/micelio.toml:ro
+      - micelio-data:/data
     ports:
       - "127.0.0.1:8765:8765"
 
 volumes:
-  mycelium-data:
+  micelio-data:
 ```
 
 And in Caddy (the bundled one, or your own):
@@ -137,7 +141,7 @@ notes.example.com {
 }
 ```
 
-Mycelium has its own sign-in (password and authenticator app). Anonymous visitors only see
+Micelio has its own sign-in (password and authenticator app). Anonymous visitors only see
 notes marked `public: true`.
 
 If you run Caddy, Nginx or Traefik already for other sites, use the MCP project's
@@ -160,9 +164,9 @@ reads it through `get_vault_guide` before writing.
   Copy the vault (or its Git repository) off the server every night, for example pulled by a
   machine at home with `rsync` or `restic`.
 - **Monitoring.** Watch the `status` field of `/health` on the MCP server (it returns HTTP 200
-  even when degraded) and `/healthz` on Mycelium, with Uptime Kuma or any checker.
+  even when degraded) and `/healthz` on Micelio, with Uptime Kuma or any checker.
 - **Updates.** Upgrade the MCP server by moving to a new release tag after reading its
-  changelog, and Mycelium by changing its image tag. Clean old Docker images now and then
+  changelog, and Micelio by changing its image tag. Clean old Docker images now and then
   (`docker image prune`).
 
 ## Costs, roughly

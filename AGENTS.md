@@ -4,7 +4,7 @@ These rules apply to any coding assistant (Claude, Codex, Copilot, Gemini, local
 
 ## Source of truth
 
-- The specification is `docs/spec/MYCELIUM_SPEC_v0.1.md`. Read it before any change.
+- The specification is `docs/spec/MICELIO_SPEC_v0.1.md`. Read it before any change.
 - Implement only the step you were asked for (spec §14). Each step ends with tests, a short
   report in `docs/reports/` and a stop for review.
 - If the spec is ambiguous or contradicts itself, stop on that point, explain it and propose
@@ -12,14 +12,14 @@ These rules apply to any coding assistant (Claude, Codex, Copilot, Gemini, local
 
 ## Boundaries
 
-- Mycelium **reads** the vault. It never creates, edits, moves or deletes notes, and never
+- Micelio **reads** the vault. It never creates, edits, moves or deletes notes, and never
   runs Git in the vault.
 - Anonymous visitors see only notes with `public: true`. Any new page or endpoint needs a test
   proving no private title, path or tag leaks to an anonymous request.
 - Secrets come only from environment variables. Commit `.env.example` with placeholders only.
 - No inline `<script>` or `<style>` blocks; the Content Security Policy only allows files
   under `/static` (inline `style=""` attributes are allowed for computed sizes and colors).
-- Personal values (names, categories, colors, folders) belong in `mycelium.toml`, never in code.
+- Personal values (names, categories, colors, folders) belong in `micelio.toml`, never in code.
 
 ## Engineering
 

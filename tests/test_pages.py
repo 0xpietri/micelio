@@ -6,8 +6,8 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from mycelium.app import create_app
-from mycelium.config import Config, VaultConfig
+from micelio.app import create_app
+from micelio.config import Config, VaultConfig
 
 from .conftest import EXAMPLE_VAULT
 
@@ -181,7 +181,7 @@ def test_own_category_labels(tmp_path: Path) -> None:
 
 
 def test_new_notes_show_up_on_reload(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    from mycelium.vault import index as index_module
+    from micelio.vault import index as index_module
 
     monkeypatch.setattr(index_module, "REFRESH_INTERVAL_S", 0.0)
     (tmp_path / "notes").mkdir()

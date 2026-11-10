@@ -14,7 +14,7 @@ written into the spec (§7a, the new §7b, §15):
 - The owner can **upload their own background**, guided by a **prompt builder** that fixes
   the format and leaves the creative parts open.
 - All of it on a signed-in **Appearance page** that saves to the data folder. This is the
-  first time Mycelium writes anything; it never touches the vault, and principle 2 now
+  first time Micelio writes anything; it never touches the vault, and principle 2 now
   names this one exception.
 
 ## Done

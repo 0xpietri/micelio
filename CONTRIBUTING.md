@@ -7,10 +7,10 @@ Thanks for wanting to help. Issues and pull requests are welcome.
 You need [uv](https://docs.astral.sh/uv/). It installs the right Python for you.
 
 ```sh
-git clone https://github.com/0xpietri/mycelium
-cd mycelium
+git clone https://github.com/0xpietri/micelio
+cd micelio
 uv sync
-uv run mycelium serve --vault examples/vault   # http://127.0.0.1:8765
+uv run micelio serve --vault examples/vault   # http://127.0.0.1:8765
 ```
 
 ## Before you open a pull request
@@ -38,8 +38,8 @@ CI runs the same commands on Linux, macOS and Windows.
 
 ## Adding a language
 
-1. Copy `src/mycelium/locales/en.toml` to `src/mycelium/locales/<code>.toml` (for example `pt.toml`).
+1. Copy `src/micelio/locales/en.toml` to `src/micelio/locales/<code>.toml` (for example `pt.toml`).
 2. Translate the values. Keep the keys and the `{placeholders}` exactly as they are.
 3. Run `uv run pytest tests/test_i18n.py`: it fails if a key is missing or extra.
-4. Try it with `language = "<code>"` in `mycelium.toml`. Dates follow the language on their own.
+4. Try it with `language = "<code>"` in `micelio.toml`. Dates follow the language on their own.
 5. Open a pull request. Thank you!

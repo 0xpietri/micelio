@@ -4,7 +4,7 @@ import base64
 
 import pytest
 
-from mycelium.auth.totp import (
+from micelio.auth.totp import (
     code_at,
     generate_secret,
     is_valid_secret,
@@ -64,7 +64,7 @@ def test_generated_secrets() -> None:
 
 
 def test_provisioning_uri() -> None:
-    uri = provisioning_uri("ABCDEFGH", account="Ada Lovelace", issuer="Mycelium")
-    assert uri.startswith("otpauth://totp/Mycelium%3AAda%20Lovelace?")
+    uri = provisioning_uri("ABCDEFGH", account="Ada Lovelace", issuer="Micelio")
+    assert uri.startswith("otpauth://totp/Micelio%3AAda%20Lovelace?")
     assert "secret=ABCDEFGH" in uri
-    assert "issuer=Mycelium" in uri
+    assert "issuer=Micelio" in uri

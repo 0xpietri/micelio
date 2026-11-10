@@ -1,0 +1,285 @@
+# Español. Mismas claves que en.toml; los {marcadores} quedan sin traducir.
+
+[site]
+owners_micelio = "El micelio de {owner}"
+
+[nav]
+projects = "Proyectos"
+journal = "Diario"
+health = "Salud"
+main = "Principal"
+explore = "Explorar"
+appearance = "Apariencia"
+
+[login]
+title = "Iniciar sesión"
+password = "Contraseña"
+code = "Código de tu app autenticadora"
+submit = "Entrar"
+failed = "La contraseña y el código no coinciden. Probá de nuevo."
+locked = "Demasiados intentos. Probá de nuevo en {minutes} minutos."
+expired = "El formulario venció. Probá de nuevo."
+
+[logout]
+submit = "Cerrar sesión"
+
+[landing]
+tagline = "Un cuaderno vivo de ideas"
+explore = "Explorar el grafo"
+projects = "Proyectos"
+label = "Un bosque dibujado con el vault: los proyectos son hongos y las notas son nubes de esporas en el micelio de abajo. Cada uno también aparece como link después del dibujo."
+list = "Proyectos y notas del dibujo"
+more_one = "Queda 1 nota más sin dibujar."
+more = "Quedan {count} notas más sin dibujar."
+empty = "Todavía no brotó nada. Agregá un proyecto al vault y acá crece su hongo."
+empty_public = "Todavía no hay nada público acá."
+notes_one = "1 nota"
+notes = "{count} notas"
+bridge = "Puente entre proyectos"
+legend = "Qué estás viendo"
+mushroom = "Hongo"
+cloud = "Nube de esporas"
+thread = "Hilo"
+crystal = "Cristal"
+spores = "Esporas doradas"
+link = "vínculo"
+
+[appearance]
+title = "Apariencia"
+lead = "Esta página la ves solo vos. Lo que elijas acá es lo que ve cada visitante en todas las páginas. Se guarda en la carpeta de datos de Micelio, nunca en tus notas."
+see = "Ver la portada"
+saved = "Guardado."
+uploaded = "Fondo subido."
+removed = "Se quitó tu fondo; volvió la pintura incluida."
+palette = "Paleta de colores"
+palette_help = "Cambia los hongos, los hilos, las esporas, los botones y los colores de las categorías en todas las páginas. También puede recolorear el fondo."
+typography = "Nombre y letras"
+typography_help = "Fuentes y tamaños para todas las páginas y los grafos. Todas las fuentes vienen con Micelio (SIL Open Font License); nada se carga de otro sitio."
+site_name = "Nombre del sitio"
+site_name_help = "Se muestra arriba a la izquierda en todas las páginas y en la pestaña del navegador. Si lo dejás vacío dice: {default}"
+title_font = "Fuente de los títulos"
+title_font_help = "Para el nombre del sitio, el título de la portada y el título de cada página."
+title_effect = "Efecto de los títulos"
+effect_poster = "Póster"
+effect_poster_help = "Un borde oscuro y una sombra de color, como en la portada."
+effect_plain = "Plano"
+effect_plain_help = "Solo el color."
+text_font = "Fuente del texto"
+text_font_help = "Para las notas, las listas y los menús."
+text_sample = "Una creencia previa es donde empezás, no donde tenés que quedarte."
+sizes = "Tamaños"
+title_size = "Títulos"
+text_size = "Texto"
+graph_labels = "Nombres en los grafos"
+toml = "Las mismas opciones como valores por defecto en micelio.toml"
+toml_help = "Opcional. Lo que guardes en esta página manda sobre el archivo."
+background = "Fondo"
+background_help = "Usá la pintura incluida o subí la tuya: PNG, JPEG o WebP, de al menos 1200 × 800 (lo ideal es 1536 × 1024), hasta 8 MB. Otras proporciones se recortan para llenar la pantalla."
+builtin = "Atardecer psicodélico (incluido)"
+own = "Tu imagen"
+own_none = "Todavía no subiste ninguna imagen."
+upload = "Subir una imagen"
+upload_submit = "Subir"
+remove = "Quitar tu imagen"
+recolor = "Recolorear el fondo con la paleta"
+soil = "Línea del suelo"
+soil_help = "Dónde empieza la tierra, en porcentaje de la altura de la imagen."
+texts = "Título y bajada"
+headline = "Título"
+headline_help = "Se muestra en una sola línea arriba a la izquierda. Si lo dejás vacío dice: {default}"
+tagline = "Bajada"
+tagline_help = "Si la dejás vacía dice: {default}"
+submit = "Guardar"
+error_empty = "Elegí una imagen primero."
+error_size = "Esa imagen pesa más de 8 MB."
+error_type = "Ese archivo no es una imagen PNG, JPEG o WebP."
+error_small = "Esa imagen es muy chica. Usá al menos 1200 × 800."
+error_form = "El formulario venció. Probá de nuevo."
+
+[prompt]
+title = "Creá tu propio fondo"
+help = "Completá las partes creativas; las reglas de formato quedan fijas para que entren los hongos y el micelio. Copiá el prompt en cualquier generador de imágenes (ChatGPT, Gemini, Midjourney, Stable Diffusion) y subí la imagen arriba."
+fixed = "Lo fija Micelio: 1536 × 1024 (3:2), la línea del suelo al {soil}% de la altura, la esquina de arriba a la izquierda tranquila para el título, el subsuelo oscuro, nada parado sobre el horizonte, sin hongos y sin texto."
+copy = "Copiar prompt"
+copied = "Copiado."
+copy_failed = "Seleccioná el texto y copialo a mano."
+output = "Tu prompt"
+style = "Estilo"
+style_help = "El estilo artístico: póster psicodélico, acuarela, grabado, pixel art, ukiyo-e…"
+style_default = "Póster psicodélico de los años sesenta con ilustración vectorial plana, contornos negros gruesos y rellenos planos con degradados suaves"
+sky = "Cielo"
+sky_help = "Qué hay en el cielo: sol, luna, estrellas, nubes, auroras."
+sky_default = "Franjas de color líquidas que se derriten y giran como aceite sobre agua, y un sol op-art de anillos concéntricos arriba a la derecha"
+horizon = "Horizonte"
+horizon_help = "Qué hay bajito en el horizonte: sierras, médanos, una ciudad, olas."
+horizon_default = "Dos capas de montañas lejanas y una franja fina de lomas con pasto y florcitas"
+underground = "Subsuelo"
+underground_help = "La textura de la tierra: capas de roca, cristales, un mosaico, agua profunda."
+underground_default = "Un vitral de celdas irregulares en tonos joya oscuros, separadas por gruesas líneas negras de plomo"
+colors = "Colores"
+colors_help = "Se completan con tu paleta. Cambialos como quieras."
+mood = "Clima"
+mood_help = "La sensación de la escena."
+mood_default = "Alegre, onírico y un poco lisérgico, como si la tierra respirara"
+template = """Ilustración de paisaje apaisada, 1536 x 1024 píxeles (3:2), para el fondo de un sitio web. Es solo un fondo: más adelante se dibujan encima hongos, hilos luminosos y texto, así que dejá lugar para eso.
+
+ESTILO
+{style}. Usá estos colores: {colors}.
+
+CIELO (el {soil}% de arriba)
+{sky}. Dejá la zona de arriba a la izquierda (0-50% a lo ancho, 0-20% hacia abajo) más tranquila y oscura para que se lea un título claro.
+
+HORIZONTE
+Una línea de horizonte apenas ondulada cruza de borde a borde exactamente al {soil}% de la altura. {horizon}. Nada alto se para sobre la línea del horizonte.
+
+SUBSUELO (el {rest}% de abajo)
+{underground}. Mantenelo oscuro y de bajo contraste, cada vez más oscuro hacia abajo, para que resalten las líneas finas y claras que se dibujan encima.
+
+CLIMA
+{mood}.
+
+NO INCLUIR
+Ni hongos, ni árboles ni raíces, ni líneas o hilos blancos bajo tierra, ni personas, ni animales, ni texto, letras, logos o marcas de agua, ni marco o borde."""
+
+[palette]
+psychedelic = "Psicodélica"
+psychedelic_help = "El póster neón original."
+tokyo-night = "Tokyo Night"
+tokyo-night_help = "Luces de ciudad en una noche azul profunda."
+catppuccin = "Catppuccin Mocha"
+catppuccin_help = "Pasteles suaves sobre un oscuro cálido."
+rose-pine = "Rosé Pine"
+rose-pine_help = "Rosa, pino y oro apagados."
+
+[type]
+project = "Proyecto"
+note = "Nota"
+journal = "Diario"
+source = "Fuente"
+ghost = "Nota faltante"
+
+[status]
+draft = "Borrador"
+active = "Activo"
+paused = "En pausa"
+closed = "Cerrado"
+unknown = "Desconocido"
+
+[category]
+science = "Ciencia"
+philosophy = "Filosofía"
+study = "Estudio"
+free = "Libre"
+
+[projects]
+title = "Proyectos"
+lead = "Cada proyecto es un hongo: la especie es su categoría, el crecimiento su estado."
+empty = "Todavía no hay proyectos. Agregá una nota a la carpeta de proyectos y aparece acá."
+uncategorized = "Sin categoría"
+notes = "{count} notas"
+last = "Última conversación: {date}"
+never = "Sin conversaciones todavía"
+
+[project]
+notes = "Notas de este proyecto"
+no_notes = "Este proyecto todavía no enlaza ninguna nota."
+journal = "Conversaciones"
+bridge = "También en otra categoría"
+graph = "Mapa del proyecto"
+graph_label = "Grafo de este proyecto y sus notas. Las mismas notas están abajo como enlaces."
+
+[note]
+created = "Creación: {date}"
+updated = "Última edición: {date}"
+projects = "Forma parte de"
+no_projects = "Todavía no forma parte de ningún proyecto."
+backlinks = "Enlazada desde"
+no_backlinks = "Nada enlaza acá todavía."
+tags = "Etiquetas"
+bridge = "Puente entre categorías"
+graph = "Vecindario"
+graph_label = "Grafo de esta nota y de las notas a un enlace de distancia. También están enlazadas en esta página."
+
+[journal]
+title = "Diario"
+empty = "Todavía no hay conversaciones."
+
+[health]
+title = "Salud del vault"
+summary = "{notes} notas y {links} enlaces."
+all_good = "Nada para arreglar. Todos los enlaces llegan a una nota y todos los valores son conocidos."
+issues = "Problemas"
+orphans = "Huérfanas"
+orphans_help = "Notas que no enlazan a nada y a las que nada enlaza."
+no_orphans = "No hay huérfanas."
+file = "Archivo"
+detail = "Detalle"
+
+[issue]
+broken-link = "Enlace a una nota que no existe"
+unknown-type = "Tipo desconocido"
+unknown-category = "Categoría desconocida"
+unknown-status = "Estado desconocido"
+category-ignored = "Categoría en una nota que no es un proyecto"
+frontmatter = "Frontmatter ilegible"
+too-large = "Archivo demasiado grande"
+unreadable = "No se pudo leer el archivo"
+
+[errors]
+not_found = "No encontrada"
+not_found_help = "Acá no hay ninguna nota. Puede que la hayan renombrado o movido."
+sign_in_help = "Si este cuaderno es tuyo, iniciá sesión para ver todas las notas."
+back = "Volver a los proyectos"
+
+[explore]
+title = "Explorar"
+search = "Buscar"
+search_placeholder = "Parte de un título"
+types = "Tipo"
+categories = "Categoría"
+statuses = "Estado"
+no_category = "Sin categoría"
+no_status = "Sin estado"
+latest = "Últimas conversaciones"
+no_journal = "Todavía no hay conversaciones."
+list = "Todas las notas en una lista ({count})"
+graph_label = "Grafo de todas las notas. Las mismas notas están como enlaces en el panel lateral."
+legend = "Cómo leerlo"
+legend_project = "Hongo: un proyecto. La especie es su categoría, el crecimiento su estado."
+legend_note = "Nube de esporas: una nota, que brilla con el color de su categoría. Un anillo punteado marca un puente."
+legend_journal = "Esporas doradas: una conversación del diario."
+legend_source = "Cristal: una fuente."
+legend_thread = "Los hilos que brillan son enlaces; por ellos corren chispas."
+
+[graph]
+loading = "Cargando el grafo…"
+failed = "No se pudo cargar el grafo."
+empty = "Todavía no hay nada para dibujar acá."
+hint = "Hacé clic en un hongo o una nube para abrirlo. Arrastrá para moverte, usá la rueda para el zoom."
+hint_box = "Hacé clic en un hongo o una nube para abrirlo."
+zoom_in = "Acercar"
+zoom_out = "Alejar"
+fit = "Ver todo"
+match_one = "1 coincidencia"
+matches = "{count} coincidencias"
+no_match = "Ninguna nota coincide."
+bridge = "Puente entre categorías"
+ghost = "Nota faltante"
+
+[font]
+shrikhand = "Shrikhand"
+shrikhand_help = "Letras de póster setentoso"
+righteous = "Righteous"
+righteous_help = "Redondeada y retrofuturista"
+bagel-fat-one = "Bagel Fat One"
+bagel-fat-one_help = "Gorda y saltarina"
+fraunces = "Fraunces Black"
+fraunces_help = "Una serif antigua y suave"
+system = "Del sistema"
+system_help = "La fuente de tu dispositivo"
+atkinson-hyperlegible = "Atkinson Hyperlegible"
+atkinson-hyperlegible_help = "Pensada para leer fácil"
+literata = "Literata"
+literata_help = "Una serif de libro para notas largas"
+space-grotesk = "Space Grotesk"
+space-grotesk_help = "Geométrica, un poco técnica"

@@ -6,10 +6,10 @@ from pathlib import Path
 
 import pytest
 
-from mycelium import cli
-from mycelium.auth.passwords import verify_password
-from mycelium.auth.store import AuthStore
-from mycelium.auth.totp import code_at, step_for
+from micelio import cli
+from micelio.auth.passwords import verify_password
+from micelio.auth.store import AuthStore
+from micelio.auth.totp import code_at, step_for
 
 from .conftest import EXAMPLE_VAULT
 
@@ -52,9 +52,31 @@ def test_serve_runs_uvicorn(monkeypatch: pytest.MonkeyPatch) -> None:
     assert seen["port"] == 9000
 
 
+def test_serve_takes_defaults_from_the_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    seen: dict[str, object] = {}
+    monkeypatch.setattr("uvicorn.run", lambda app, **kwargs: seen.update(kwargs))
+    monkeypatch.setenv("MICELIO_HOST", "localhost")
+    monkeypatch.setenv("MICELIO_PORT", "9100")
+    monkeypatch.setenv("MICELIO_FORWARDED_ALLOW_IPS", "172.17.0.1")
+    assert cli.main(["serve", "--vault", str(EXAMPLE_VAULT)]) == 0
+    assert seen["host"] == "localhost"
+    assert seen["port"] == 9100
+    assert seen["forwarded_allow_ips"] == "172.17.0.1"
+    # Flags still win over the environment.
+    assert cli.main(["serve", "--vault", str(EXAMPLE_VAULT), "--port", "9200"]) == 0
+    assert seen["port"] == 9200
+
+
+def test_serve_rejects_a_bad_port_from_the_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("MICELIO_PORT", "eighty")
+    with pytest.raises(SystemExit) as exc:
+        cli.main(["serve", "--vault", str(EXAMPLE_VAULT)])
+    assert exc.value.code == 2
+
+
 def test_serve_on_a_public_address_needs_secrets(capsys: pytest.CaptureFixture[str]) -> None:
     assert cli.main(["serve", "--vault", str(EXAMPLE_VAULT), "--host", "0.0.0.0"]) == 2
-    assert "MYCELIUM_PASSWORD_HASH" in capsys.readouterr().err
+    assert "MICELIO_PASSWORD_HASH" in capsys.readouterr().err
 
 
 def test_serve_says_when_sign_in_is_off(
@@ -74,7 +96,7 @@ def test_set_password(capsys: pytest.CaptureFixture[str]) -> None:
     pw = "a long enough passphrase"
     assert cli.main(["user", "set-password"], prompt=answers(pw, pw)) == 0
     line = capsys.readouterr().out.strip().splitlines()[-1]
-    assert line.startswith("MYCELIUM_PASSWORD_HASH='$argon2id$")
+    assert line.startswith("MICELIO_PASSWORD_HASH='$argon2id$")
     assert line.endswith("'")
     assert verify_password(line.split("=", 1)[1].strip("'"), pw)
 
@@ -111,7 +133,7 @@ def test_totp_setup_confirms_a_code(
     assert cli.main(["user", "totp", "--account", "ada"], prompt=prompt, clock=lambda: now) == 0
     out = capsys.readouterr().out
     assert "otpauth" not in out  # the QR carries it; the secret is printed for manual entry
-    assert f"MYCELIUM_TOTP_SECRET='{seen['secret']}'" in out
+    assert f"MICELIO_TOTP_SECRET='{seen['secret']}'" in out
     assert "\u2588" in out
 
 

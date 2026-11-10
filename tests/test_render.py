@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from mycelium.render import Renderer
-from mycelium.vault import VaultIndex
+from micelio.render import Renderer
+from micelio.vault import VaultIndex
 
 from .conftest import VaultFactory
 

@@ -1,6 +1,6 @@
 [project]
-name = "mycelium"
-version = "0.1.0.dev0"
+name = "micelio"
+version = "0.1.0"
 description = "Your Markdown notes as a living network of ideas: projects, graphs and links, self-hosted and read-only."
 readme = "README.md"
 license = "MIT"
@@ -10,6 +10,7 @@ requires-python = ">=3.12"
 keywords = ["obsidian", "markdown", "knowledge-graph", "mcp", "second-brain", "zettelkasten"]
 classifiers = [
     "Development Status :: 3 - Alpha",
+    "Environment :: Web Environment",
     "Framework :: FastAPI",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3.12",
@@ -33,11 +34,12 @@ dependencies = [
 ]
 
 [project.scripts]
-mycelium = "mycelium.cli:main"
+micelio = "micelio.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/0xpietri/mycelium"
-Issues = "https://github.com/0xpietri/mycelium/issues"
+Homepage = "https://github.com/0xpietri/micelio"
+Issues = "https://github.com/0xpietri/micelio/issues"
+Changelog = "https://github.com/0xpietri/micelio/blob/main/CHANGELOG.md"
 
 [dependency-groups]
 dev = [
@@ -54,7 +56,21 @@ requires = ["hatchling>=1.33.0"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/mycelium"]
+packages = ["src/micelio"]
+
+# The source archive carries what builds and tests the package, not the design files.
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/micelio",
+    "tests",
+    "examples",
+    "micelio.example.toml",
+    "compose.example.yml",
+    "Dockerfile",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+]
 
 [tool.ruff]
 line-length = 100
@@ -72,7 +88,7 @@ ignore = []
 strict = true
 python_version = "3.12"
 mypy_path = "src"
-packages = ["mycelium"]
+packages = ["micelio"]
 
 [[tool.mypy.overrides]]
 module = ["qrcode", "qrcode.*"]
@@ -88,7 +104,7 @@ filterwarnings = [
 ]
 
 [tool.coverage.run]
-source = ["mycelium"]
+source = ["micelio"]
 branch = true
 
 [tool.coverage.report]

@@ -5,21 +5,24 @@ from pathlib import Path
 
 import pytest
 
-from mycelium.config import Config, VaultConfig
-from mycelium.vault import VaultIndex
+from micelio.config import Config, VaultConfig
+from micelio.vault import VaultIndex
 
 EXAMPLE_VAULT = Path(__file__).resolve().parents[1] / "examples" / "vault"
 
 
 @pytest.fixture(autouse=True)
 def _clean_env(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("MYCELIUM_CONFIG", raising=False)
+    monkeypatch.delenv("MICELIO_CONFIG", raising=False)
     for name in (
-        "MYCELIUM_VAULT",
-        "MYCELIUM_DATA",
-        "MYCELIUM_PASSWORD_HASH",
-        "MYCELIUM_TOTP_SECRET",
-        "MYCELIUM_SESSION_KEY",
+        "MICELIO_VAULT",
+        "MICELIO_DATA",
+        "MICELIO_PASSWORD_HASH",
+        "MICELIO_TOTP_SECRET",
+        "MICELIO_SESSION_KEY",
+        "MICELIO_HOST",
+        "MICELIO_PORT",
+        "MICELIO_FORWARDED_ALLOW_IPS",
     ):
         monkeypatch.delenv(name, raising=False)
 

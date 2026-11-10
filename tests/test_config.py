@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from mycelium.config import ConfigError, load_config
+from micelio.config import ConfigError, load_config
 
 
 def write(path: Path, text: str) -> Path:
@@ -15,20 +15,20 @@ def write(path: Path, text: str) -> Path:
 def test_defaults_without_a_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.chdir(tmp_path)
     config = load_config()
-    assert config.site.title == "Mycelium"
+    assert config.site.title == "Micelio"
     assert [c.key for c in config.categories] == ["science", "philosophy", "study", "free"]
     assert config.vault.root == (tmp_path / "vault").resolve()
     assert config.auth.mode == "local"
 
 
 def test_relative_root_resolves_against_the_config_folder(tmp_path: Path) -> None:
-    cfg = write(tmp_path / "mycelium.toml", '[vault]\nroot = "notes"\n')
+    cfg = write(tmp_path / "micelio.toml", '[vault]\nroot = "notes"\n')
     assert load_config(cfg).vault.root == (tmp_path / "notes").resolve()
 
 
 def test_vault_override_and_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    cfg = write(tmp_path / "mycelium.toml", '[vault]\nroot = "notes"\n')
-    monkeypatch.setenv("MYCELIUM_VAULT", str(tmp_path / "from-env"))
+    cfg = write(tmp_path / "micelio.toml", '[vault]\nroot = "notes"\n')
+    monkeypatch.setenv("MICELIO_VAULT", str(tmp_path / "from-env"))
     assert load_config(cfg).vault.root == (tmp_path / "from-env").resolve()
     other = tmp_path / "flag"
     assert load_config(cfg, vault_override=other).vault.root == other.resolve()
@@ -36,7 +36,7 @@ def test_vault_override_and_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
 
 def test_config_path_from_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     cfg = write(tmp_path / "m.toml", '[site]\nowner = "Ada"\n')
-    monkeypatch.setenv("MYCELIUM_CONFIG", str(cfg))
+    monkeypatch.setenv("MICELIO_CONFIG", str(cfg))
     assert load_config().site.owner == "Ada"
 
 
@@ -56,7 +56,7 @@ def test_custom_categories_and_lowercased_color(tmp_path: Path) -> None:
 
 
 def test_category_names() -> None:
-    from mycelium.config import Category
+    from micelio.config import Category
 
     plain = Category(key="deep-sea", color="#000000", species="morel")
     assert plain.name("es") == "Deep sea"
@@ -109,7 +109,7 @@ def test_missing_file(tmp_path: Path) -> None:
 
 
 def test_example_config_is_valid() -> None:
-    example = Path(__file__).resolve().parents[1] / "mycelium.example.toml"
+    example = Path(__file__).resolve().parents[1] / "micelio.example.toml"
     config = load_config(example)
     assert config.site.owner
     assert len(config.categories) == 4

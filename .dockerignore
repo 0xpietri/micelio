@@ -1,0 +1,8 @@
+# Only what the image needs: the package source, the lockfile and the metadata.
+*
+!pyproject.toml
+!uv.lock
+!README.md
+!LICENSE
+!src/
+**/__pycache__
