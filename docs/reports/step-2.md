@@ -4,18 +4,18 @@ Date: 2026-11-09
 
 ## Done
 
-- **Secrets from the environment only**: `MYCELIUM_PASSWORD_HASH` (argon2id),
-  `MYCELIUM_TOTP_SECRET` (base32), `MYCELIUM_SESSION_KEY` (32+ characters). Malformed or
+- **Secrets from the environment only**: `MICELIO_PASSWORD_HASH` (argon2id),
+  `MICELIO_TOTP_SECRET` (base32), `MICELIO_SESSION_KEY` (32+ characters). Malformed or
   partial secrets stop the server with a message naming each one and the command that makes it.
 - **When sign-in is on** (`auth/settings.py`): `auth.mode = "none"` turns it off; listening on
   loopback with no secrets turns it off (spec §10, the `uvx` case); anywhere else all three
-  secrets are required. `mycelium serve` says on start-up when sign-in is off and why.
+  secrets are required. `micelio serve` says on start-up when sign-in is off and why.
 - **Sign-in** (`auth/web.py`): one form with password and 6-digit code; RFC 6238 TOTP written
   with the standard library (tested against the RFC vectors), one step of drift, a code or
   any earlier step can never be reused. Failures never say which half was wrong.
 - **Sessions** (`auth/store.py`): random tokens, only their SHA-256 in SQLite under
   `[data].dir`, 12 h, `HttpOnly`, `SameSite=Strict`, `Secure` except on plain-HTTP localhost
-  (where Safari would drop the cookie). Sign-out deletes the row; `mycelium user sign-out-all`
+  (where Safari would drop the cookie). Sign-out deletes the row; `micelio user sign-out-all`
   deletes them all.
 - **Lockout**: 5 failures per address in 15 minutes return 429 until the window passes;
   stored in SQLite, so a restart does not reset it. A success clears the address.
@@ -25,7 +25,7 @@ Date: 2026-11-09
   `/login` and `/static/` stay open. Public notes (step 6) will refine this per route.
 - **Security headers** on every response: CSP `default-src 'self'` with no inline code,
   `frame-ancestors 'none'`, `nosniff`, `Referrer-Policy: same-origin`.
-- **CLI**: `mycelium user set-password | totp | session-key | sign-out-all`. Output is ready to
+- **CLI**: `micelio user set-password | totp | session-key | sign-out-all`. Output is ready to
   paste into `.env`, single-quoted so the `$` in argon2 hashes survives Docker Compose. `totp`
   draws a QR code and insists on a correct code before printing the secret; on a terminal that
   cannot draw it, it prints the `otpauth://` link instead.
@@ -33,7 +33,7 @@ Date: 2026-11-09
   `locales/en.toml` with a `t()` helper and a test that every locale has exactly the English
   keys. Step 3 adds Spanish and Babel.
 - New config: `[auth] session_hours, max_failures, lockout_minutes`, `[data] dir`
-  (`MYCELIUM_DATA`). `serve --forwarded-allow-ips` for proxies that are not on 127.0.0.1.
+  (`MICELIO_DATA`). `serve --forwarded-allow-ips` for proxies that are not on 127.0.0.1.
 
 Tests: 137, coverage 99 %. Checked in a real browser too: sign-in with a live TOTP code, the
 home page, sign-out.

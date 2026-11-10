@@ -1,0 +1,70 @@
+# Copy to micelio.toml and adjust. Every field is optional; these are the defaults
+# unless marked "example". Secrets never go here: see .env.example.
+
+[site]
+title = "Micelio"
+owner = "Your Name"                  # example: the landing says "Your Name's micelio"
+# headline = "My garden of ideas"    # example: replaces that title; or { en = "...", es = "..." }
+# tagline = "Notes that grow"        # example: replaces the translated "A living notebook of ideas"
+language = "en"                      # interface language: en | es
+timezone = "UTC"                     # example: "America/Argentina/Buenos_Aires"
+
+[vault]
+root = "examples/vault"              # relative paths resolve against this file's folder
+projects = "projects"
+notes = "notes"
+journal = "journal"
+sources = "sources"
+
+# Projects carry one category. Each category has a mushroom species for the landing:
+# fly-agaric, shaggy-inkcap, morel, chanterelle, liberty-caps, coral, parasol,
+# glowing-bonnets. Its color comes from the landing palette, in this order; set
+# color = "#aabbcc" to fix one yourself.
+# The four default keys are named in the interface language. For your own
+# categories add a label: label = "Art", or one per language:
+# label = { en = "Art", es = "Arte" }.
+
+[[categories]]
+key = "science"
+species = "fly-agaric"
+
+[[categories]]
+key = "philosophy"
+species = "shaggy-inkcap"
+
+[[categories]]
+key = "study"
+species = "morel"
+
+[[categories]]
+key = "free"
+species = "chanterelle"
+
+[landing]
+palette = "psychedelic"              # psychedelic | tokyo-night | catppuccin | rose-pine
+soil = 52                            # where the ground starts, % of the background's height
+max_notes = 300                      # over this, only the most connected notes are drawn
+# The Appearance page (/appearance, signed in) can change palette, background and texts;
+# what it saves lives in the data folder and wins over these defaults.
+
+[typography]
+title_font = "shrikhand"             # shrikhand | righteous | bagel-fat-one | fraunces
+text_font = "system"                 # system | atkinson-hyperlegible | literata | space-grotesk
+title_size = 100                     # titles, % of the normal size (70-140)
+text_size = 16                       # text, in px (14-20)
+graph_labels = 100                   # names on the graphs, % of the normal size (80-150)
+title_effect = "poster"              # poster (dark outline and colored shadow) | plain
+# The Appearance page can change all of these too; what it saves wins.
+
+[graph]
+hide_by_default = ["journal", "source"]
+max_nodes = 400                      # over this, /explore draws only the most connected notes
+
+[auth]
+mode = "local"                       # local | none (when a gateway in front handles sign-in)
+session_hours = 12
+max_failures = 5                     # failed sign-ins per address before a lockout
+lockout_minutes = 15
+
+[data]
+dir = "data"                         # Micelio's own state (sessions); safe to delete

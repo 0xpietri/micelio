@@ -4,7 +4,7 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from mycelium.app import create_app
+from micelio.app import create_app
 
 from .conftest import EXAMPLE_VAULT, config_for
 
@@ -35,7 +35,7 @@ def test_home_without_sign_in_on_localhost() -> None:
     client = TestClient(create_app(config_for(EXAMPLE_VAULT), local_only=True))
     response = client.get("/")
     assert response.status_code == 200
-    assert '<h1 class="headline" id="headline">Mycelium</h1>' in response.text
+    assert '<h1 class="headline" id="headline">Micelio</h1>' in response.text
     assert "Sign out" not in response.text
 
 
@@ -49,6 +49,6 @@ def test_security_headers() -> None:
 
 def test_static_files_are_served() -> None:
     client = TestClient(create_app(config_for(EXAMPLE_VAULT), local_only=True))
-    response = client.get("/static/css/mycelium.css")
+    response = client.get("/static/css/micelio.css")
     assert response.status_code == 200
     assert "--accent" in response.text

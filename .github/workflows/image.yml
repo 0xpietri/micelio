@@ -71,7 +71,7 @@ jobs:
           context: .
           platforms: linux/amd64
           load: true
-          tags: mycelium:smoke
+          tags: micelio:smoke
           build-args: VERSION=${{ steps.meta.outputs.version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -80,9 +80,9 @@ jobs:
         run: |
           docker run -d --name smoke -p 127.0.0.1:8765:8765 --read-only --tmpfs /tmp \
             -v "$PWD/examples/vault:/vault:ro" \
-            -v "$PWD/examples/demo.toml:/config/mycelium.toml:ro" \
-            -e MYCELIUM_CONFIG=/config/mycelium.toml \
-            mycelium:smoke
+            -v "$PWD/examples/demo.toml:/config/micelio.toml:ro" \
+            -e MICELIO_CONFIG=/config/micelio.toml \
+            micelio:smoke
           for _ in $(seq 30); do
             curl -fsS http://127.0.0.1:8765/healthz && break
             sleep 1

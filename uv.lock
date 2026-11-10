@@ -721,7 +721,7 @@ wheels = [
 ]
 
 [[package]]
-name = "mycelium-notes"
+name = "micelio"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

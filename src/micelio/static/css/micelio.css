@@ -1,0 +1,330 @@
+/* Micelio: base styles. Plain CSS, no build step. One dark look built from the palette
+   (§7c): the painted background stays behind every page and text sits on ink glass.
+   Palette colors (--pal-*) and type settings come from /theme.css. */
+:root {
+  --ink: var(--pal-ink, #12051f);
+  --bg: var(--ink);
+  --glass: color-mix(in srgb, var(--ink) 82%, transparent);
+  --surface: color-mix(in srgb, var(--ink) 70%, #000);
+  --surface-2: color-mix(in srgb, var(--ink) 55%, #3a2a55);
+  --line: rgba(255, 255, 255, 0.15);
+  --text: #fbf6ff;
+  --muted: #cdc3df;
+  --sun: var(--pal-sun, #ffd23f);
+  --accent: var(--pal-button, #c6ff3a);
+  --link: var(--pal-button-alt, #22d3ee);
+  --error: #ff7aa8;
+  --ok: #7dff9a;
+  --ghost: #a99cc4;
+  --radius: 16px;
+  --cat: #9b5cff;
+  --display: var(--title-font, "Shrikhand", "Cooper Black", Georgia, serif);
+  --body: var(--text-font, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html { min-height: 100%; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font: var(--text-size, 16px) / 1.6 var(--body);
+  background: var(--bg);
+  color: var(--text);
+}
+
+a { color: var(--link); }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 3px solid var(--text); outline-offset: 2px; }
+
+/* The painted background (§7c): fixed, cropped to show the horizon or the underground. */
+.backdrop { position: fixed; inset: 0; z-index: -2; width: 100%; height: 100%; display: block; pointer-events: none; }
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--ink) 20%, transparent) 0%,
+    color-mix(in srgb, var(--ink) 55%, transparent) 40%,
+    color-mix(in srgb, var(--ink) 78%, transparent) 100%);
+}
+body.underground .scrim { background: color-mix(in srgb, var(--ink) 35%, transparent); }
+
+/* Titles: the landing's poster lettering, as chosen on the Appearance page. */
+.display, h1 {
+  font-family: var(--display);
+  font-weight: 400;
+  color: var(--sun);
+  -webkit-text-stroke: var(--title-stroke, 0.08em) var(--ink);
+  paint-order: stroke fill;
+  text-shadow: var(--title-shadow, 0.05em 0.06em 0 var(--pal-accent, #ff2fa0));
+  text-wrap: balance;
+}
+
+/* The top bar */
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  align-items: center;
+  padding: 0.7rem max(1rem, env(safe-area-inset-right, 0px)) 0.7rem max(1rem, env(safe-area-inset-left, 0px));
+}
+.top nav { display: flex; flex-wrap: wrap; gap: 0.45rem; flex: 1; }
+.top .end { display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: center; }
+
+.brand {
+  font-family: var(--display);
+  font-size: calc(1.7rem * var(--title-scale, 1));
+  line-height: 1;
+  color: var(--sun);
+  text-decoration: none;
+  -webkit-text-stroke: var(--title-stroke, 0.09em) var(--ink);
+  paint-order: stroke fill;
+  text-shadow: var(--title-shadow, 0.06em 0.07em 0 var(--pal-accent, #ff2fa0));
+}
+
+.pill, .top nav a, .top .end a, .top .end button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 0.9rem;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ink) 72%, transparent);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+.pill:hover, .top nav a:hover, .top .end a:hover, .top .end button:hover { background: var(--ink); }
+.top nav a[aria-current="page"], .top .end a[aria-current="page"] {
+  background: var(--accent);
+  color: var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+main { padding: 0 max(1rem, env(safe-area-inset-right, 0px)) 0 max(1rem, env(safe-area-inset-left, 0px)); }
+
+/* Ink glass: every page's text sits on it. */
+.glass, .page, .card {
+  background: var(--glass);
+  border: 2px solid var(--ink);
+  border-radius: 18px;
+  box-shadow: 0 0 0 1px var(--line) inset, 6px 6px 0 color-mix(in srgb, var(--ink) 70%, transparent);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+.page {
+  max-width: 48rem;
+  margin: 0.75rem auto 4rem;
+  padding: 1.6rem clamp(1rem, 4vw, 2.4rem) 2rem;
+  min-width: 0;
+}
+.page.wide { max-width: 60rem; }
+
+.card {
+  max-width: 44rem;
+  margin: 2rem auto;
+  padding: 1.5rem 1.75rem;
+}
+.card.narrow { max-width: 24rem; }
+
+h1 { margin: 0.3rem 0 0.6rem; font-size: calc(clamp(1.9rem, 4.6vw, 3rem) * var(--title-scale, 1)); line-height: 1.12; }
+h2 { margin-top: 2rem; font-size: 1.12rem; }
+
+.muted { color: var(--muted); }
+.small { font-size: 0.875rem; }
+.error { color: var(--error); font-weight: 600; }
+.ok { color: var(--ok); font-weight: 600; }
+
+.eyebrow { margin: 0; color: var(--muted); font-size: 0.88rem; display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+
+.dot {
+  display: inline-block;
+  flex: none;
+  width: 0.75em;
+  height: 0.75em;
+  border-radius: 50%;
+  background: var(--cat);
+  box-shadow: 0 0 8px var(--cat);
+}
+
+.badge {
+  display: inline-block;
+  padding: 0 0.55rem;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.7;
+  white-space: nowrap;
+}
+.status-active { border-color: var(--accent); color: var(--accent); }
+.status-closed { opacity: 0.7; }
+.bridge { border-color: var(--sun); color: var(--sun); }
+
+.groups { display: flex; flex-wrap: wrap; gap: 1.5rem 1.25rem; margin-top: 1.5rem; }
+.group { flex: 1 1 13rem; min-width: 0; }
+.group .field { grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); }
+.group h2 { display: flex; align-items: center; gap: 0.55rem; margin: 0 0 0.8rem; }
+
+.rows { list-style: none; padding: 0; margin: 0; }
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  align-items: center;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--line);
+  min-width: 0;
+}
+.row-title { font-weight: 600; }
+.excerpt { flex-basis: 100%; }
+
+/* A small mushroom drawn next to a project's name (static/js/specimens.js) */
+.mushroom-icon { display: inline-flex; flex: none; width: 2rem; height: 2rem; }
+.mushroom-icon svg { width: 100%; height: 100%; overflow: visible; }
+
+/* Projects as specimen cards */
+.field { display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: 0.9rem; margin-top: 1rem; }
+.specimen {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 2px solid var(--ink);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--ink) 65%, transparent);
+  color: var(--text);
+  text-decoration: none;
+  box-shadow: 4px 4px 0 color-mix(in srgb, var(--ink) 70%, transparent);
+  transition: transform 0.12s;
+}
+.specimen:hover { transform: translate(-2px, -2px); }
+.specimen-scene { display: block; height: 9.5rem; border-bottom: 2px solid var(--ink); background: linear-gradient(180deg, var(--surface-2) 0 60%, var(--surface) 60%); }
+.specimen-scene svg { display: block; width: 100%; height: 100%; }
+.specimen-body { display: grid; gap: 0.3rem; padding: 0.65rem 0.85rem 0.85rem; }
+.specimen-body strong { line-height: 1.3; }
+
+/* The journal: conversations rise like spores */
+.timeline { list-style: none; padding: 0; position: relative; }
+.timeline::before { content: ""; position: absolute; left: 0.55rem; top: 0.8rem; bottom: 0.8rem; width: 2px; background: linear-gradient(var(--pal-thread, #fff), transparent); opacity: 0.35; }
+.timeline li { position: relative; padding: 0.8rem 0 0.8rem 2.2rem; }
+.timeline li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 1.05rem;
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff 0 12%, transparent 13%), radial-gradient(circle at 65% 60%, #fff 0 10%, transparent 11%), var(--pal-spore, #ffd23f);
+  box-shadow: 0 0 14px var(--pal-spore, #ffd23f);
+}
+.timeline time { display: block; color: var(--muted); font-size: 0.875rem; }
+.timeline p { margin: 0.25rem 0 0; }
+
+.tags .tag { color: var(--muted); font-size: 0.875rem; }
+
+.related { margin-top: 2.5rem; padding-top: 0.5rem; border-top: 1px dashed var(--line); }
+
+/* Rendered notes */
+.prose { margin-top: 1.25rem; }
+.prose h2 { margin-top: 1.6rem; color: var(--sun); }
+.prose blockquote { margin: 1rem 0; padding: 0.25rem 1rem; border-left: 3px solid var(--line); color: var(--muted); }
+.prose pre, .prose code { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: 0.9em; }
+.prose pre { overflow-x: auto; padding: 0.9rem 1rem; background: var(--surface); border-radius: 10px; }
+.prose :not(pre) > code { padding: 0.1em 0.35em; background: var(--surface); border-radius: 4px; }
+.prose table, .table { border-collapse: collapse; width: 100%; }
+.prose th, .prose td, .table th, .table td { padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.prose img { max-width: 100%; }
+.prose .ghost { color: var(--ghost); border-bottom: 1px dashed var(--ghost); cursor: help; }
+.prose .attachment { color: var(--muted); font-style: italic; }
+.prose .contains-task-list { list-style: none; padding-left: 0.25rem; }
+.prose .footnotes { font-size: 0.875rem; color: var(--muted); }
+
+.callout { margin: 1.25rem 0; padding: 0.75rem 1rem; border-left: 4px solid var(--link); border-radius: 10px; background: var(--surface); }
+.callout > :last-child { margin-bottom: 0; }
+.callout-title { margin-top: 0; font-weight: 700; }
+.callout-warning, .callout-caution, .callout-attention { border-color: #ff8a1f; }
+.callout-danger, .callout-error, .callout-bug { border-color: var(--error); }
+.callout-tip, .callout-success, .callout-check, .callout-done { border-color: var(--ok); }
+.callout-question, .callout-help, .callout-faq { border-color: var(--sun); }
+.callout-quote, .callout-cite { border-color: var(--muted); }
+
+/* Forms */
+form label { display: block; margin-bottom: 1rem; color: var(--muted); }
+
+form input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]), form textarea {
+  display: block;
+  width: 100%;
+  margin-top: 0.35rem;
+  padding: 0.6rem 0.75rem;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+form input:focus, form textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+button {
+  padding: 0.6rem 1.2rem;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+button.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--muted);
+  font-weight: 400;
+  text-decoration: underline;
+}
+
+form.inline { display: inline; }
+
+/* Read by screen readers, not drawn. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .top nav { order: 3; flex-basis: 100%; }
+}
+
+/* A note's spore cloud, a source's crystal, a journal note's golden spores, in lists */
+.spore-icon {
+  display: inline-block;
+  flex: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 30% 35%, var(--pal-thread, #fff) 0 9%, transparent 10%),
+    radial-gradient(circle at 62% 28%, var(--pal-thread, #fff) 0 7%, transparent 8%),
+    radial-gradient(circle at 55% 65%, var(--pal-thread, #fff) 0 9%, transparent 10%),
+    radial-gradient(circle at 28% 70%, var(--pal-thread, #fff) 0 6%, transparent 7%),
+    radial-gradient(circle, color-mix(in srgb, var(--pal-thread, #fff) 30%, transparent) 0 40%, transparent 72%);
+}
+.spore-icon.golden { background: radial-gradient(circle at 35% 35%, #fff 0 12%, transparent 13%), radial-gradient(circle at 65% 60%, #fff 0 10%, transparent 11%), radial-gradient(circle, var(--pal-spore, #ffd23f) 0 45%, transparent 72%); }
+.spore-icon.crystal { border-radius: 2px; transform: rotate(45deg) scale(0.75); background: linear-gradient(135deg, #fff 0 18%, var(--pal-crystal, #22d3ee) 19%); border: 2px solid var(--ink); }

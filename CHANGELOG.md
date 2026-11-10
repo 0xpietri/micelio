@@ -9,7 +9,8 @@ All notable changes to this project are documented here. The format follows
 ## [0.1.0] - 2026-11-10
 
 The first release: a folder of Markdown notes shown as a forest of ideas, read-only and
-self-hosted.
+self-hosted. The project was called Mycelium while it was built; it is released as Micelio
+(Spanish for mycelium).
 
 ### Added
 
@@ -19,8 +20,8 @@ self-hosted.
   hidden folders and Syncthing conflict copies are skipped.
 - In-memory index with backlinks, project membership, bridges, ghost links and orphans,
   refreshed from file modification times.
-- `mycelium check` lists problems in a vault; `mycelium serve` runs the site.
-- `mycelium.toml` loading and validation: site, vault folders, categories with mushroom
+- `micelio check` lists problems in a vault; `micelio serve` runs the site.
+- `micelio.toml` loading and validation: site, vault folders, categories with mushroom
   species, graph, landing, typography, sign-in and data folder.
 
 **Pages**
@@ -47,7 +48,7 @@ self-hosted.
   uploaded background; the soil line; the title, tagline and site name; fonts, title
   effect and sizes; and a prompt builder for painting a background with any image
   generator. Saved in the data folder, never in the vault. Seven fonts ship with
-  Mycelium (SIL OFL).
+  Micelio (SIL OFL).
 
 **Languages**
 
@@ -58,7 +59,7 @@ self-hosted.
 **Sign-in and sharing**
 
 - Sign-in for one person: argon2 password and TOTP code, server-side sessions in SQLite,
-  lockout after repeated failures, `auth.mode = "none"` for gateways, and `mycelium user`
+  lockout after repeated failures, `auth.mode = "none"` for gateways, and `micelio user`
   commands to create the secrets. On `127.0.0.1` with no secrets, sign-in is off.
 - Public notes: anonymous visitors see the landing, `/explore`, `/projects`, the journal
   and the APIs built from `public: true` notes only. Private notes do not exist for them:
@@ -67,17 +68,16 @@ self-hosted.
 
 **Installing**
 
-- A Docker image, `ghcr.io/0xpietri/mycelium`, for `linux/amd64` and `linux/arm64`: a
+- A Docker image, `ghcr.io/0xpietri/micelio`, for `linux/amd64` and `linux/arm64`: a
   non-root user, a read-only root filesystem, the vault mounted read-only, one data volume
   and a health check. `compose.example.yml` runs it on the sample vault in one command.
-- The Python package `mycelium-notes` on PyPI: `uvx mycelium-notes serve --vault ~/Notes`.
-  Once installed, the command is `mycelium`.
-- `mycelium serve` takes its defaults from `MYCELIUM_HOST`, `MYCELIUM_PORT` and
-  `MYCELIUM_FORWARDED_ALLOW_IPS`.
-- Self-hosting guides for Mycelium plus a notes MCP server, on your own computer or on a
+- The Python package `micelio` on PyPI: `uvx micelio serve --vault ~/Notes`.
+- `micelio serve` takes its defaults from `MICELIO_HOST`, `MICELIO_PORT` and
+  `MICELIO_FORWARDED_ALLOW_IPS`.
+- Self-hosting guides for Micelio plus a notes MCP server, on your own computer or on a
   server.
 - A sample vault in `examples/vault`, CI on Linux, macOS and Windows, and releases from a
   tag (image, package and GitHub release).
 
-[Unreleased]: https://github.com/0xpietri/mycelium/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/0xpietri/mycelium/releases/tag/v0.1.0
+[Unreleased]: https://github.com/0xpietri/micelio/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/0xpietri/micelio/releases/tag/v0.1.0

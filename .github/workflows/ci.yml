@@ -46,5 +46,5 @@ jobs:
           python-version: ${{ matrix.python }}
       - run: uv sync --locked
       - run: uv run pytest --cov --cov-report=term-missing --cov-fail-under=90
-      - run: uv run mycelium check --vault examples/vault || test $? -eq 1
+      - run: uv run micelio check --vault examples/vault || test $? -eq 1
         shell: bash

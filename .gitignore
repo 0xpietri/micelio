@@ -16,7 +16,7 @@ htmlcov/
 
 # Local config and data
 .env
-mycelium.toml
+micelio.toml
 data/
 *.sqlite3
 

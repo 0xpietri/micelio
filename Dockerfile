@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-# Mycelium: one small container that reads a vault mounted read-only.
+# Micelio: one small container that reads a vault mounted read-only.
 
 ARG PYTHON_VERSION=3.12
 
@@ -24,31 +24,31 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # --- runtime: Python and the virtual environment, nothing else
 FROM python:${PYTHON_VERSION}-slim
 ARG VERSION=dev
-LABEL org.opencontainers.image.title="Mycelium" \
+LABEL org.opencontainers.image.title="Micelio" \
       org.opencontainers.image.description="Your Markdown notes as a living network of ideas" \
-      org.opencontainers.image.source="https://github.com/0xpietri/mycelium" \
+      org.opencontainers.image.source="https://github.com/0xpietri/micelio" \
       org.opencontainers.image.licenses="MIT" \
       org.opencontainers.image.version="${VERSION}"
 
-RUN groupadd --gid 10001 mycelium \
- && useradd --uid 10001 --no-log-init --gid mycelium --no-create-home --home-dir /data mycelium \
+RUN groupadd --gid 10001 micelio \
+ && useradd --uid 10001 --no-log-init --gid micelio --no-create-home --home-dir /data micelio \
  && mkdir -p /vault /data \
- && chown mycelium:mycelium /data
+ && chown micelio:micelio /data
 COPY --from=build /app/.venv /app/.venv
 
 ENV PATH=/app/.venv/bin:$PATH \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    MYCELIUM_VAULT=/vault \
-    MYCELIUM_DATA=/data \
-    MYCELIUM_HOST=0.0.0.0 \
-    MYCELIUM_PORT=8765
+    MICELIO_VAULT=/vault \
+    MICELIO_DATA=/data \
+    MICELIO_HOST=0.0.0.0 \
+    MICELIO_PORT=8765
 
-USER mycelium
+USER micelio
 WORKDIR /data
 VOLUME ["/data"]
 EXPOSE 8765
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD ["python", "-c", "import os, urllib.request; urllib.request.urlopen(f\"http://127.0.0.1:{os.environ.get('MYCELIUM_PORT', '8765')}/healthz\", timeout=4)"]
-ENTRYPOINT ["mycelium"]
+    CMD ["python", "-c", "import os, urllib.request; urllib.request.urlopen(f\"http://127.0.0.1:{os.environ.get('MICELIO_PORT', '8765')}/healthz\", timeout=4)"]
+ENTRYPOINT ["micelio"]
 CMD ["serve"]

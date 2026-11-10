@@ -10,11 +10,11 @@ import httpx
 import pytest
 from fastapi.testclient import TestClient
 
-from mycelium.app import create_app
-from mycelium.auth.passwords import hash_password
-from mycelium.auth.settings import AuthSetupError
-from mycelium.auth.totp import code_at, generate_secret, step_for
-from mycelium.auth.web import safe_next
+from micelio.app import create_app
+from micelio.auth.passwords import hash_password
+from micelio.auth.settings import AuthSetupError
+from micelio.auth.totp import code_at, generate_secret, step_for
+from micelio.auth.web import safe_next
 
 from .conftest import EXAMPLE_VAULT, config_for
 
@@ -22,9 +22,9 @@ PASSWORD = "a long enough passphrase"
 SECRET = generate_secret()
 HASH = hash_password(PASSWORD)
 ENV = {
-    "MYCELIUM_PASSWORD_HASH": HASH,
-    "MYCELIUM_TOTP_SECRET": SECRET,
-    "MYCELIUM_SESSION_KEY": "s" * 48,
+    "MICELIO_PASSWORD_HASH": HASH,
+    "MICELIO_TOTP_SECRET": SECRET,
+    "MICELIO_SESSION_KEY": "s" * 48,
 }
 START = 1_800_000_000.0
 
@@ -61,7 +61,7 @@ SiteFactory = Callable[..., Site]
 def make_site(tmp_path: Path) -> Iterator[SiteFactory]:
     with ExitStack() as stack:
 
-        def factory(base_url: str = "https://mycelium.example") -> Site:
+        def factory(base_url: str = "https://micelio.example") -> Site:
             now = [START]
             config = config_for(EXAMPLE_VAULT, data=tmp_path / "data")
             app = create_app(config, environ=ENV, clock=lambda: now[0])
@@ -84,7 +84,7 @@ def test_pages_redirect_to_login(site: Site) -> None:
 
 def test_open_paths_need_no_session(site: Site) -> None:
     assert site.client.get("/healthz").status_code == 200
-    assert site.client.get("/static/css/mycelium.css").status_code == 200
+    assert site.client.get("/static/css/micelio.css").status_code == 200
     assert site.client.get("/login").status_code == 200
 
 
@@ -97,7 +97,7 @@ def test_full_sign_in_and_out(site: Site) -> None:
     assert response.status_code == 303
     assert response.headers["location"] == "/"
     cookie = response.headers["set-cookie"]
-    assert "mycelium_session=" in cookie
+    assert "micelio_session=" in cookie
     for flag in ("HttpOnly", "Secure", "SameSite=strict", "Max-Age=43200"):
         assert flag.lower() in cookie.lower()
 
@@ -116,13 +116,13 @@ def test_full_sign_in_and_out(site: Site) -> None:
 
 def test_signed_out_cookie_no_longer_works(site: Site) -> None:
     site.sign_in()
-    token = site.client.cookies.get("mycelium_session")
+    token = site.client.cookies.get("micelio_session")
     assert token
     home = site.client.get("/")
     csrf = re.search(r'name="csrf" value="([^"]+)"', home.text)
     assert csrf
     site.client.post("/logout", data={"csrf": csrf.group(1)})
-    site.client.cookies.set("mycelium_session", token, domain="mycelium.example")
+    site.client.cookies.set("micelio_session", token, domain="micelio.example")
     assert site.client.get("/health", follow_redirects=False).status_code == 303
 
 
@@ -161,7 +161,7 @@ def test_wrong_password_or_code(site: Site) -> None:
     assert "did not work" in bad_password.text
     bad_code = site.sign_in(code=site.code(offset=3))
     assert bad_code.status_code == 401
-    assert "mycelium_session" not in site.client.cookies
+    assert "micelio_session" not in site.client.cookies
 
 
 def test_code_with_one_step_of_drift_works(site: Site) -> None:
@@ -232,7 +232,7 @@ def test_cookie_is_not_secure_on_plain_http_localhost(make_site: SiteFactory) ->
 
 
 def test_cookie_is_secure_on_http_elsewhere(make_site: SiteFactory) -> None:
-    site = make_site("http://mycelium.example")
+    site = make_site("http://micelio.example")
     page = site.client.get("/login")
     assert "secure" in page.headers["set-cookie"].lower()
 

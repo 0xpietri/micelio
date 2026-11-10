@@ -14,10 +14,10 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from mycelium.app import create_app
-from mycelium.config import Config, VaultConfig
-from mycelium.render import Renderer
-from mycelium.vault import PublicView, VaultIndex
+from micelio.app import create_app
+from micelio.config import Config, VaultConfig
+from micelio.render import Renderer
+from micelio.vault import PublicView, VaultIndex
 
 from .conftest import EXAMPLE_VAULT, VaultFactory, config_for
 from .test_auth_web import ENV, START, Site
@@ -78,7 +78,7 @@ def site_for(tmp_path: Path) -> Iterator[SiteFor]:
             )
             now = [START]
             app = create_app(config, environ=ENV, clock=lambda: now[0])
-            client = stack.enter_context(TestClient(app, base_url="https://mycelium.example"))
+            client = stack.enter_context(TestClient(app, base_url="https://micelio.example"))
             return Site(client, now)
 
         yield factory

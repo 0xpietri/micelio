@@ -25,7 +25,7 @@ All of it is written into the spec: the new §7c, §7 (drawing, shapes, layout),
   JavaScript: reading pages show the horizon at the top, `/explore` only the
   underground. When the background is recolored, `static/js/backdrop.js` adds the same
   SVG filter the landing uses. The landing keeps its own scene.
-- **Glass and pills**: `mycelium.css` is rewritten around the palette: ink glass panels
+- **Glass and pills**: `micelio.css` is rewritten around the palette: ink glass panels
   with the dark outline, pill navigation, titles in the title font with the poster
   effect. No `prefers-color-scheme` is left in any stylesheet.
 - **One engine**: the landing's drawing moved to `static/js/draw.js` (species, clouds,
@@ -55,7 +55,7 @@ All of it is written into the spec: the new §7c, §7 (drawing, shapes, layout),
   `site.title`), title font (Shrikhand, Righteous, Bagel Fat One, Fraunces Black), title
   effect (poster or plain), text font (system, Atkinson Hyperlegible, Literata, Space
   Grotesk), and sizes for titles (70–140 %), text (14–20 px) and names on the graphs
-  (80–150 %). The page previews changes live and shows the matching `mycelium.toml`
+  (80–150 %). The page previews changes live and shows the matching `micelio.toml`
   lines. Values saved on the page win over the config; bad values are ignored and keep
   what was there.
 - **`/theme.css`** now also carries the stem, spore and crystal colors and the type

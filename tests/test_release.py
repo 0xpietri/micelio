@@ -6,8 +6,8 @@ import re
 import tomllib
 from pathlib import Path
 
-from mycelium import DISTRIBUTION, __version__
-from mycelium.config import load_config
+from micelio import DISTRIBUTION, __version__
+from micelio.config import load_config
 
 from .conftest import EXAMPLE_VAULT
 
@@ -26,13 +26,10 @@ def test_installed_version_is_the_project_version() -> None:
     assert __version__ == project["version"]
 
 
-def test_both_commands_run_the_cli() -> None:
+def test_the_command_runs_the_cli() -> None:
     project = _pyproject()["project"]
     assert isinstance(project, dict)
-    assert project["scripts"] == {
-        "mycelium": "mycelium.cli:main",
-        "mycelium-notes": "mycelium.cli:main",
-    }
+    assert project["scripts"] == {"micelio": "micelio.cli:main"}
 
 
 def test_changelog_has_a_dated_section_for_the_version() -> None:
@@ -61,7 +58,7 @@ def test_compose_example_mounts_files_that_exist() -> None:
 
 def test_image_runs_as_a_user_and_reads_the_vault_from_its_mount() -> None:
     dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
-    assert re.search(r"^USER mycelium$", dockerfile, re.M)
-    for env in ("MYCELIUM_VAULT=/vault", "MYCELIUM_DATA=/data", "MYCELIUM_HOST=0.0.0.0"):
+    assert re.search(r"^USER micelio$", dockerfile, re.M)
+    for env in ("MICELIO_VAULT=/vault", "MICELIO_DATA=/data", "MICELIO_HOST=0.0.0.0"):
         assert env in dockerfile
     assert "uv sync --locked --no-dev" in dockerfile

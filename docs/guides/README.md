@@ -1,6 +1,6 @@
 # Self-hosting guides
 
-Mycelium shows your notes. To **write** notes by talking to an assistant (Claude, ChatGPT or
+Micelio shows your notes. To **write** notes by talking to an assistant (Claude, ChatGPT or
 any app that supports remote MCP connectors, including from a phone in voice mode), you also
 run a notes MCP server next to it. These guides set up both, with
 [maxkuminov/obsidian-mcp](https://github.com/maxkuminov/obsidian-mcp) as the MCP server.
@@ -19,13 +19,13 @@ owns their data.
 ```
  phone / desktop app ──HTTPS──▶ notes MCP (writes .md) ──▶ vault folder ◀── Obsidian
  (Claude, ChatGPT…)              + PostgreSQL (search)           │
-                                                                 └──▶ Mycelium (reads, shows)
+                                                                 └──▶ Micelio (reads, shows)
 ```
 
 - **The vault** is a plain folder of Markdown files. It is the only source of truth.
 - **The MCP server** lets an assistant search, read and write notes. It needs PostgreSQL with
   `pgvector`, and an embedding model for search by meaning (keyword search works without it).
-- **Mycelium** reads the same folder and shows projects, links and graphs. It never writes.
+- **Micelio** reads the same folder and shows projects, links and graphs. It never writes.
 - **Obsidian** is optional: any editor works on the folder.
 
 ## Before you start
@@ -36,7 +36,7 @@ owns their data.
   your Obsidian folder by Syncthing. The computer guide explains this.
 - Put a `CLAUDE.md` at the root of the vault describing your folders and frontmatter. The MCP
   server hands it to every assistant through its `get_vault_guide` tool, so they all follow
-  the same rules. Mycelium's expected layout is described in the main
+  the same rules. Micelio's expected layout is described in the main
   [README](../../README.md#how-a-vault-is-read).
-- Mycelium itself comes as a Docker image (`ghcr.io/0xpietri/mycelium`) for servers and as
-  a Python package (`mycelium-notes` on PyPI) for a personal computer.
+- Micelio itself comes as a Docker image (`ghcr.io/0xpietri/micelio`) for servers and as
+  a Python package (`micelio` on PyPI) for a personal computer.

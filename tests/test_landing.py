@@ -8,8 +8,8 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from mycelium.app import create_app
-from mycelium.appearance import (
+from micelio.app import create_app
+from micelio.appearance import (
     MAX_UPLOAD_BYTES,
     PALETTES,
     Appearance,
@@ -20,15 +20,15 @@ from mycelium.appearance import (
     image_info,
     palette_named,
 )
-from mycelium.config import PALETTE_NAMES, Config, ConfigError, VaultConfig, load_config
-from mycelium.landing import LandingBuilder
-from mycelium.vault import VaultIndex
+from micelio.config import PALETTE_NAMES, Config, ConfigError, VaultConfig, load_config
+from micelio.landing import LandingBuilder
+from micelio.vault import VaultIndex
 
 from .conftest import EXAMPLE_VAULT
 from .test_auth_web import Site, SiteFactory
 from .test_auth_web import make_site as make_site  # the fixture
 
-STATIC = Path(__file__).resolve().parents[1] / "src" / "mycelium" / "static"
+STATIC = Path(__file__).resolve().parents[1] / "src" / "micelio" / "static"
 
 PLANETS = "do-planets-at-birth-leave-a-trace"
 BAYES = "learning-bayesian-statistics"
@@ -106,7 +106,7 @@ def test_headline_and_tagline_per_language(tmp_path: Path) -> None:
 
 
 def test_landing_config(tmp_path: Path) -> None:
-    path = tmp_path / "mycelium.toml"
+    path = tmp_path / "micelio.toml"
     path.write_text('[landing]\npalette = "rose-pine"\nsoil = 40\n', encoding="utf-8")
     config = load_config(path)
     assert config.landing.palette == "rose-pine"
@@ -118,7 +118,7 @@ def test_landing_config(tmp_path: Path) -> None:
 
 
 def test_example_config_takes_colors_from_the_palette() -> None:
-    config = load_config(Path(__file__).resolve().parents[1] / "mycelium.example.toml")
+    config = load_config(Path(__file__).resolve().parents[1] / "micelio.example.toml")
     assert all(c.color is None for c in config.categories)
     assert config.landing.palette == "psychedelic"
 
@@ -290,7 +290,7 @@ def test_landing_draws_only_the_most_connected_notes(tmp_path: Path) -> None:
 
 def test_landing_page(client: TestClient) -> None:
     html = client.get("/").text
-    assert '<h1 class="headline" id="headline">Marcos Pietri&#39;s mycelium</h1>' in html
+    assert '<h1 class="headline" id="headline">Marcos Pietri&#39;s Micelio</h1>' in html
     assert "A living notebook of ideas" in html
     assert 'href="/explore"' in html
     assert 'href="/projects"' in html
@@ -311,7 +311,7 @@ def test_landing_in_spanish_has_no_english(tmp_path: Path) -> None:
             "Explorar el grafo",
         ):
             assert text in html
-        for english in ("mycelium</h1>", "A living notebook", "Explore the graph", "Project:"):
+        for english in ("micelio</h1>", "A living notebook", "Explore the graph", "Project:"):
             assert english not in html
         page = client.get("/appearance").text
         for text in ("Paleta de colores", "Creá tu propio fondo", "Copiar prompt", "ESTILO"):
