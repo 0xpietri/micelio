@@ -1,0 +1,36 @@
+# Mycelium with Docker Compose.
+#
+# Try it on the bundled sample vault, from a clone of the repository:
+#
+#     docker compose -f compose.example.yml up
+#
+# and open http://localhost:8765. The demo turns sign-in off and only listens on this
+# computer. For your own notes, copy this file to compose.yml and follow the comments.
+
+services:
+  mycelium:
+    image: ghcr.io/0xpietri/mycelium:0.1
+    # build: .                          # or build the image from this folder
+    restart: unless-stopped
+    read_only: true                     # the image writes only to /data (and /tmp)
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "127.0.0.1:8765:8765"           # behind a reverse proxy, keep it on 127.0.0.1
+    volumes:
+      - ./examples/vault:/vault:ro      # your vault: e.g. ~/Obsidian:/vault:ro
+      - ./examples/demo.toml:/config/mycelium.toml:ro   # your mycelium.toml
+      - mycelium-data:/data             # sessions and the Appearance page's choices
+    environment:
+      MYCELIUM_CONFIG: /config/mycelium.toml
+      # Behind a reverse proxy on the host, trust it for the visitor's address
+      # (used by the sign-in lockout). Docker networks usually sit in 172.16.0.0/12:
+      # MYCELIUM_FORWARDED_ALLOW_IPS: 172.16.0.0/12
+    # With sign-in on, put the three secrets from `mycelium user ...` in .env:
+    # env_file: .env
+
+volumes:
+  mycelium-data:

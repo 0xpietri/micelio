@@ -105,8 +105,9 @@ for the password.
 
 ## 4. Mycelium
 
-Mycelium's image (`ghcr.io/0xpietri/mycelium`) ships with v0.1.0. Once it is out, add it as a
-service; it only needs the vault **read-only**, a config file and a data volume:
+Add Mycelium's image (`ghcr.io/0xpietri/mycelium`, amd64 and arm64) as a service; it only
+needs the vault **read-only**, a config file and a data volume. The repository's
+[`compose.example.yml`](../../compose.example.yml) has the same with comments.
 
 ```yaml
 services:
@@ -114,10 +115,13 @@ services:
     image: ghcr.io/0xpietri/mycelium:0.1
     restart: unless-stopped
     read_only: true
+    tmpfs: [/tmp]
     env_file: mycelium.env            # sign-in secrets, see .env.example
     environment:
       MYCELIUM_CONFIG: /config/mycelium.toml
-      MYCELIUM_VAULT: /vault
+      # Caddy on the host reaches the container through a Docker network; trust it for the
+      # visitor's address (the sign-in lockout counts failures per address).
+      MYCELIUM_FORWARDED_ALLOW_IPS: 172.16.0.0/12   # Docker's usual networks
     volumes:
       - /srv/vault:/vault:ro
       - ./mycelium.toml:/config/mycelium.toml:ro

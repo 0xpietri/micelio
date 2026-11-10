@@ -177,7 +177,7 @@ Try it: *"Read the vault guide, then create a note in notes/ about what we just 
 Mycelium only reads, so it can use your normal Obsidian folder on any system:
 
 ```sh
-uvx mycelium serve --vault ~/Obsidian        # http://127.0.0.1:8765
+uvx mycelium-notes serve --vault ~/Obsidian        # http://127.0.0.1:8765
 ```
 
 Keep it on `127.0.0.1`: it is for you on this computer. To show it to others, use a server

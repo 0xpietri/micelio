@@ -20,6 +20,9 @@ def _clean_env(monkeypatch: pytest.MonkeyPatch) -> None:
         "MYCELIUM_PASSWORD_HASH",
         "MYCELIUM_TOTP_SECRET",
         "MYCELIUM_SESSION_KEY",
+        "MYCELIUM_HOST",
+        "MYCELIUM_PORT",
+        "MYCELIUM_FORWARDED_ALLOW_IPS",
     ):
         monkeypatch.delenv(name, raising=False)
 

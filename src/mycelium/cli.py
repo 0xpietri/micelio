@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import getpass
 import io
+import os
 import secrets
 import sys
 import time
@@ -25,6 +26,10 @@ from mycelium.config import Config, ConfigError, load_config
 from mycelium.vault import VaultIndex
 
 DEFAULT_PORT = 8765
+# Defaults for `serve` that a container sets once instead of repeating flags.
+HOST_ENV = "MYCELIUM_HOST"
+PORT_ENV = "MYCELIUM_PORT"
+FORWARDED_ENV = "MYCELIUM_FORWARDED_ALLOW_IPS"
 
 Prompt = Callable[[str], str]
 
@@ -39,12 +44,24 @@ def _parser() -> argparse.ArgumentParser:
     common.add_argument("--vault", type=Path, help="vault folder (overrides the config)")
 
     serve = sub.add_parser("serve", parents=[common], help="run the website")
-    serve.add_argument("--host", default="127.0.0.1")
-    serve.add_argument("--port", type=int, default=DEFAULT_PORT)
+    serve.add_argument(
+        "--host",
+        default=os.environ.get(HOST_ENV, "127.0.0.1"),
+        help=f"address to listen on (default 127.0.0.1, or ${HOST_ENV})",
+    )
+    serve.add_argument(
+        "--port",
+        type=int,
+        default=os.environ.get(PORT_ENV, DEFAULT_PORT),
+        help=f"port to listen on (default {DEFAULT_PORT}, or ${PORT_ENV})",
+    )
     serve.add_argument(
         "--forwarded-allow-ips",
-        default="127.0.0.1",
-        help="proxies trusted for X-Forwarded-For/-Proto (comma-separated, default 127.0.0.1)",
+        default=os.environ.get(FORWARDED_ENV, "127.0.0.1"),
+        help=(
+            "proxies trusted for X-Forwarded-For/-Proto "
+            f"(comma-separated, default 127.0.0.1, or ${FORWARDED_ENV})"
+        ),
     )
 
     sub.add_parser("check", parents=[common], help="scan the vault and list problems")

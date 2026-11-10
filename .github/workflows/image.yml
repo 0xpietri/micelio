@@ -1,0 +1,105 @@
+name: Image
+
+# The Docker image (§10): linux/amd64 on every merge to main, amd64 + arm64 on release
+# tags. Run it by hand to try a two-architecture build without publishing anything.
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: image-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IMAGE: ghcr.io/${{ github.repository }}
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Choose the platforms
+        id: target
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* || "$GITHUB_EVENT_NAME" == workflow_dispatch ]]; then
+            echo "platforms=linux/amd64,linux/arm64" >> "$GITHUB_OUTPUT"
+          else
+            echo "platforms=linux/amd64" >> "$GITHUB_OUTPUT"
+          fi
+          if [[ "$GITHUB_EVENT_NAME" == workflow_dispatch ]]; then
+            echo "push=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "push=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: docker/setup-qemu-action@v4
+        if: contains(steps.target.outputs.platforms, 'arm64')
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        if: steps.target.outputs.push == 'true'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=edge,branch=main,enable=${{ github.ref == 'refs/heads/main' }}
+            type=sha,format=short,enable=${{ github.ref == 'refs/heads/main' }}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}
+
+      # Build for this machine first and try it, so a broken image is never pushed.
+      - name: Build for the smoke test
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64
+          load: true
+          tags: mycelium:smoke
+          build-args: VERSION=${{ steps.meta.outputs.version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke test
+        run: |
+          docker run -d --name smoke -p 127.0.0.1:8765:8765 --read-only --tmpfs /tmp \
+            -v "$PWD/examples/vault:/vault:ro" \
+            -v "$PWD/examples/demo.toml:/config/mycelium.toml:ro" \
+            -e MYCELIUM_CONFIG=/config/mycelium.toml \
+            mycelium:smoke
+          for _ in $(seq 30); do
+            curl -fsS http://127.0.0.1:8765/healthz && break
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:8765/healthz | grep -q '"status":"ok"'
+          curl -fsS -o /dev/null http://127.0.0.1:8765/
+          curl -fsS -o /dev/null http://127.0.0.1:8765/explore
+          docker logs smoke
+
+      - name: Build and push
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: ${{ steps.target.outputs.platforms }}
+          push: ${{ steps.target.outputs.push == 'true' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: VERSION=${{ steps.meta.outputs.version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

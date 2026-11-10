@@ -52,6 +52,28 @@ def test_serve_runs_uvicorn(monkeypatch: pytest.MonkeyPatch) -> None:
     assert seen["port"] == 9000
 
 
+def test_serve_takes_defaults_from_the_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    seen: dict[str, object] = {}
+    monkeypatch.setattr("uvicorn.run", lambda app, **kwargs: seen.update(kwargs))
+    monkeypatch.setenv("MYCELIUM_HOST", "localhost")
+    monkeypatch.setenv("MYCELIUM_PORT", "9100")
+    monkeypatch.setenv("MYCELIUM_FORWARDED_ALLOW_IPS", "172.17.0.1")
+    assert cli.main(["serve", "--vault", str(EXAMPLE_VAULT)]) == 0
+    assert seen["host"] == "localhost"
+    assert seen["port"] == 9100
+    assert seen["forwarded_allow_ips"] == "172.17.0.1"
+    # Flags still win over the environment.
+    assert cli.main(["serve", "--vault", str(EXAMPLE_VAULT), "--port", "9200"]) == 0
+    assert seen["port"] == 9200
+
+
+def test_serve_rejects_a_bad_port_from_the_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("MYCELIUM_PORT", "eighty")
+    with pytest.raises(SystemExit) as exc:
+        cli.main(["serve", "--vault", str(EXAMPLE_VAULT)])
+    assert exc.value.code == 2
+
+
 def test_serve_on_a_public_address_needs_secrets(capsys: pytest.CaptureFixture[str]) -> None:
     assert cli.main(["serve", "--vault", str(EXAMPLE_VAULT), "--host", "0.0.0.0"]) == 2
     assert "MYCELIUM_PASSWORD_HASH" in capsys.readouterr().err

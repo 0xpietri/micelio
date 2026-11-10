@@ -38,5 +38,5 @@ owns their data.
   server hands it to every assistant through its `get_vault_guide` tool, so they all follow
   the same rules. Mycelium's expected layout is described in the main
   [README](../../README.md#how-a-vault-is-read).
-- Mycelium's own Docker image and PyPI package ship with v0.1.0. Until then, run it from
-  source as the main README shows.
+- Mycelium itself comes as a Docker image (`ghcr.io/0xpietri/mycelium`) for servers and as
+  a Python package (`mycelium-notes` on PyPI) for a personal computer.

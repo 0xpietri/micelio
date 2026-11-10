@@ -1,0 +1,6 @@
+# Config for the demo in compose.example.yml: the bundled sample vault, sign-in off.
+# Only for trying Mycelium on your own computer. For real use, drop `auth.mode = "none"`
+# and set the three secrets from .env.example (or put a sign-in gateway in front).
+
+[auth]
+mode = "none"

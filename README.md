@@ -5,11 +5,12 @@ Obsidian vault, or any folder of `.md` files) and shows it as projects, links an
 small self-hosted website. It is read-only: your notes stay plain files that you, your editor
 or an AI assistant write.
 
-> **Status: early development.** The first release (v0.1) is being built step by step; see
-> the [roadmap](#roadmap). What works today: sign-in, the landing (your projects as mushrooms
-> over a forest of notes), the graphs, and reading your projects, notes, journal and the health
-> of the vault, in English or Spanish, and public notes for anonymous visitors. The release
-> comes next.
+[![CI](https://github.com/0xpietri/mycelium/actions/workflows/ci.yml/badge.svg)](https://github.com/0xpietri/mycelium/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/mycelium-notes)](https://pypi.org/project/mycelium-notes/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
+![The sample vault in Mycelium: projects grow as mushrooms over a forest of notes, then the
+whole graph drawn as mycelium](docs/images/mycelium.gif)
 
 ## Why
 
@@ -27,18 +28,70 @@ pile up into a web of ideas that a file list cannot show. Mycelium makes that we
 
 ## Quick start
 
-With [uv](https://docs.astral.sh/uv/) installed (Linux, macOS or Windows):
+**Try it** on the bundled sample vault, with Docker:
 
 ```sh
 git clone https://github.com/0xpietri/mycelium
 cd mycelium
-uv sync
-uv run mycelium check --vault examples/vault
-uv run mycelium serve --vault examples/vault     # http://127.0.0.1:8765/healthz
+docker compose -f compose.example.yml up        # http://localhost:8765
 ```
 
-Once v0.1 is on PyPI and GHCR this becomes `uvx mycelium serve --vault ~/Notes` on a personal
-computer, or a Docker image on a server.
+**On your own computer**, with [uv](https://docs.astral.sh/uv/) (Linux, macOS or Windows),
+no Docker needed:
+
+```sh
+uvx mycelium-notes serve --vault ~/Obsidian     # http://127.0.0.1:8765
+```
+
+(or `pipx install mycelium-notes`, then `mycelium serve --vault ~/Obsidian`). On
+`127.0.0.1` sign-in is off until you set it up; nobody else can reach it.
+
+**On a server**, run the image `ghcr.io/0xpietri/mycelium` (amd64 and arm64, so a Raspberry
+Pi works too) with the vault mounted read-only:
+
+```sh
+docker run -d --name mycelium --read-only --tmpfs /tmp -p 127.0.0.1:8765:8765 \
+  -v ~/Obsidian:/vault:ro -v mycelium-data:/data --env-file .env \
+  ghcr.io/0xpietri/mycelium:0.1
+```
+
+`.env` holds the sign-in secrets (see [Signing in](#signing-in)); put a reverse proxy with
+TLS (Caddy, Nginx, Traefik) in front. [`compose.example.yml`](compose.example.yml) shows the
+same as a Compose file, and the [server guide](docs/guides/self-hosting-server.md) walks
+through a whole setup with a notes MCP server.
+
+To work on Mycelium itself, see [CONTRIBUTING.md](CONTRIBUTING.md): `uv sync`, then
+`uv run mycelium serve --vault examples/vault`.
+
+## How it works
+
+```mermaid
+flowchart LR
+    subgraph writers [Who writes]
+        A["AI assistant<br/>(Claude, ChatGPT, local model)"] -->|MCP| M[Notes MCP server]
+        O[You in Obsidian]
+    end
+    M --> V[("Vault<br/>Markdown files")]
+    O --> V
+    V -->|read-only| R
+    subgraph mycelium [Mycelium: one process]
+        R[Vault reader<br/>frontmatter + wikilinks] --> I[In-memory index<br/>links, projects, bridges]
+        I --> P[Pages<br/>FastAPI + Jinja]
+        I --> J["/api/graph, /api/landing"]
+        S[("data/<br/>SQLite: sessions,<br/>Appearance")] --- P
+    end
+    P --> B[Browser]
+    J --> B
+    B -.->|"draw.js + d3-force<br/>mushrooms and hyphae"| B
+```
+
+- The vault is the only source of truth. Mycelium re-reads files when they change and keeps
+  the index in memory; delete its data folder and nothing is lost.
+- Its own state (sign-in sessions, the Appearance page's choices, an uploaded background)
+  lives in a small SQLite file in the data folder, never in the vault.
+- Pages are rendered on the server; the landing and the graphs are plain JavaScript modules
+  over JSON, with vendored libraries and no build step.
+- Anonymous visitors get a filtered view built from `public: true` notes only.
 
 ## Talking to your notes
 
@@ -109,9 +162,9 @@ Aegis, 2FAS, Google Authenticator, 1Password…). Generate the three secrets onc
 in your environment:
 
 ```sh
-uv run mycelium user set-password    # prints MYCELIUM_PASSWORD_HASH
-uv run mycelium user totp            # shows a QR code, prints MYCELIUM_TOTP_SECRET
-uv run mycelium user session-key     # prints MYCELIUM_SESSION_KEY
+mycelium user set-password    # prints MYCELIUM_PASSWORD_HASH
+mycelium user totp            # shows a QR code, prints MYCELIUM_TOTP_SECRET
+mycelium user session-key     # prints MYCELIUM_SESSION_KEY
 ```
 
 - Sessions last 12 hours and are stored server-side, so signing out really ends them.
@@ -122,20 +175,30 @@ uv run mycelium user session-key     # prints MYCELIUM_SESSION_KEY
 - Already behind Cloudflare Access, Authelia or another gateway? Set `auth.mode = "none"` and
   Mycelium trusts whoever reaches it. Only do this when the gateway really guards every path.
 
+## Security
+
+- Mycelium never writes to the vault; mount it read-only. The image runs as a non-root user
+  with a read-only root filesystem and writes only to `/data`.
+- Anonymous visitors see notes marked `public: true` and nothing else: no private titles,
+  links, counts or ghost nodes, and a private note's URL answers 404.
+- Sign-in is a password plus a TOTP code, with server-side sessions and a lockout. Mycelium
+  refuses to listen on a public address without its secrets, unless you say a gateway
+  handles sign-in (`auth.mode = "none"`).
+- Every response carries a strict Content Security Policy (no inline code, no framing), and
+  note bodies are sanitized.
+- Secrets live in the environment, never in `mycelium.toml`. Report problems privately, see
+  [SECURITY.md](SECURITY.md).
+
 ## Roadmap
 
-| Step | What | State |
-| --- | --- | --- |
-| 1 | Skeleton: config, vault reader and index, `/healthz`, CI | done |
-| 2 | Sign-in: password + TOTP, sessions, or `auth.mode = "none"` | done |
-| 3 | Pages and languages: projects, notes, journal, health; English and Spanish | done |
-| 4 | Graphs: whole vault, per project, per note | done |
-| 5 | The landing: mushrooms above ground, mycelium below; the Appearance page | done |
-| 6 | Public notes for anonymous visitors | done |
-| 7 | Release v0.1.0: Docker image (amd64 + arm64), PyPI package | next |
+- **v0.1** (this release): the landing, the graphs, the reading pages, sign-in, public notes,
+  the Appearance page, English and Spanish, Docker image and PyPI package.
+- **v0.2**: a static export of the public notes, to share them without a server
+  (GitHub Pages, Cloudflare Pages, Netlify or a zip).
+- **v0.3**: an Obsidian plugin with the landing and the graph inside Obsidian.
 
-Later: a static export to share public notes without a server (v0.2) and an Obsidian plugin
-(v0.3). The full specification is in [`docs/spec`](docs/spec/MYCELIUM_SPEC_v0.1.md).
+The full specification is in [`docs/spec`](docs/spec/MYCELIUM_SPEC_v0.1.md); what changed in
+each version is in the [CHANGELOG](CHANGELOG.md).
 
 ## Contributing
 
