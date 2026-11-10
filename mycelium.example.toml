@@ -3,8 +3,9 @@
 
 [site]
 title = "Mycelium"
-owner = "Your Name"                  # example: shown on the landing page
-tagline = "A living notebook of ideas"
+owner = "Your Name"                  # example: the landing says "Your Name's mycelium"
+# headline = "My garden of ideas"    # example: replaces that title; or { en = "...", es = "..." }
+# tagline = "Notes that grow"        # example: replaces the translated "A living notebook of ideas"
 language = "en"                      # interface language: en | es
 timezone = "UTC"                     # example: "America/Argentina/Buenos_Aires"
 
@@ -15,32 +16,36 @@ notes = "notes"
 journal = "journal"
 sources = "sources"
 
-# Projects carry one category. Each category has a color and a mushroom species
-# for the landing: fly-agaric, shaggy-inkcap, morel, chanterelle, liberty-caps,
-# coral, parasol, glowing-bonnets.
+# Projects carry one category. Each category has a mushroom species for the landing:
+# fly-agaric, shaggy-inkcap, morel, chanterelle, liberty-caps, coral, parasol,
+# glowing-bonnets. Its color comes from the landing palette, in this order; set
+# color = "#aabbcc" to fix one yourself.
 # The four default keys are named in the interface language. For your own
 # categories add a label: label = "Art", or one per language:
 # label = { en = "Art", es = "Arte" }.
 
 [[categories]]
 key = "science"
-color = "#ff2fa0"
 species = "fly-agaric"
 
 [[categories]]
 key = "philosophy"
-color = "#22d3ee"
 species = "shaggy-inkcap"
 
 [[categories]]
 key = "study"
-color = "#ff8a1f"
 species = "morel"
 
 [[categories]]
 key = "free"
-color = "#ffd23f"
 species = "chanterelle"
+
+[landing]
+palette = "psychedelic"              # psychedelic | tokyo-night | catppuccin | rose-pine
+soil = 52                            # where the ground starts, % of the background's height
+max_notes = 300                      # over this, only the most connected notes are drawn
+# The Appearance page (/appearance, signed in) can change palette, background and texts;
+# what it saves lives in the data folder and wins over these defaults.
 
 [graph]
 hide_by_default = ["journal", "source"]

@@ -9,6 +9,7 @@ journal = "Diario"
 health = "Salud"
 main = "Principal"
 explore = "Explorar"
+appearance = "Apariencia"
 
 [login]
 title = "Iniciar sesión"
@@ -22,9 +23,112 @@ expired = "El formulario venció. Probá de nuevo."
 [logout]
 submit = "Cerrar sesión"
 
-[home]
-notes = "{count} notas en el vault"
-coming = "El mapa vivo de tus ideas llega en una próxima versión. Mientras tanto, mirá los proyectos."
+[landing]
+tagline = "Un cuaderno vivo de ideas"
+explore = "Explorar el grafo"
+projects = "Proyectos"
+label = "Un bosque dibujado con el vault: los proyectos son hongos y las notas son nubes de esporas en el micelio de abajo. Cada uno también aparece como link después del dibujo."
+list = "Proyectos y notas del dibujo"
+more_one = "Queda 1 nota más sin dibujar."
+more = "Quedan {count} notas más sin dibujar."
+empty = "Todavía no brotó nada. Agregá un proyecto al vault y acá crece su hongo."
+notes_one = "1 nota"
+notes = "{count} notas"
+bridge = "Puente entre proyectos"
+legend = "Qué estás viendo"
+mushroom = "Hongo"
+cloud = "Nube de esporas"
+thread = "Hilo"
+crystal = "Cristal"
+spores = "Esporas doradas"
+link = "vínculo"
+
+[appearance]
+title = "Apariencia"
+lead = "Esta página la ves solo vos. Lo que elijas acá es lo que ve cada visitante en la portada. Se guarda en la carpeta de datos de Mycelium, nunca en tus notas."
+see = "Ver la portada"
+saved = "Guardado."
+uploaded = "Fondo subido."
+removed = "Se quitó tu fondo; volvió la pintura incluida."
+palette = "Paleta de colores"
+palette_help = "Cambia los hongos, los hilos, las esporas, los botones y los colores de las categorías en todas las páginas. También puede recolorear el fondo."
+background = "Fondo"
+background_help = "Usá la pintura incluida o subí la tuya: PNG, JPEG o WebP, de al menos 1200 × 800 (lo ideal es 1536 × 1024), hasta 8 MB. Otras proporciones se recortan para llenar la pantalla."
+builtin = "Atardecer psicodélico (incluido)"
+own = "Tu imagen"
+own_none = "Todavía no subiste ninguna imagen."
+upload = "Subir una imagen"
+upload_submit = "Subir"
+remove = "Quitar tu imagen"
+recolor = "Recolorear el fondo con la paleta"
+soil = "Línea del suelo"
+soil_help = "Dónde empieza la tierra, en porcentaje de la altura de la imagen."
+texts = "Título y bajada"
+headline = "Título"
+headline_help = "Se muestra en una sola línea arriba a la izquierda. Si lo dejás vacío dice: {default}"
+tagline = "Bajada"
+tagline_help = "Si la dejás vacía dice: {default}"
+submit = "Guardar"
+error_empty = "Elegí una imagen primero."
+error_size = "Esa imagen pesa más de 8 MB."
+error_type = "Ese archivo no es una imagen PNG, JPEG o WebP."
+error_small = "Esa imagen es muy chica. Usá al menos 1200 × 800."
+error_form = "El formulario venció. Probá de nuevo."
+
+[prompt]
+title = "Creá tu propio fondo"
+help = "Completá las partes creativas; las reglas de formato quedan fijas para que entren los hongos y el micelio. Copiá el prompt en cualquier generador de imágenes (ChatGPT, Gemini, Midjourney, Stable Diffusion) y subí la imagen arriba."
+fixed = "Lo fija Mycelium: 1536 × 1024 (3:2), la línea del suelo al {soil}% de la altura, la esquina de arriba a la izquierda tranquila para el título, el subsuelo oscuro, nada parado sobre el horizonte, sin hongos y sin texto."
+copy = "Copiar prompt"
+copied = "Copiado."
+copy_failed = "Seleccioná el texto y copialo a mano."
+output = "Tu prompt"
+style = "Estilo"
+style_help = "El estilo artístico: póster psicodélico, acuarela, grabado, pixel art, ukiyo-e…"
+style_default = "Póster psicodélico de los años sesenta con ilustración vectorial plana, contornos negros gruesos y rellenos planos con degradados suaves"
+sky = "Cielo"
+sky_help = "Qué hay en el cielo: sol, luna, estrellas, nubes, auroras."
+sky_default = "Franjas de color líquidas que se derriten y giran como aceite sobre agua, y un sol op-art de anillos concéntricos arriba a la derecha"
+horizon = "Horizonte"
+horizon_help = "Qué hay bajito en el horizonte: sierras, médanos, una ciudad, olas."
+horizon_default = "Dos capas de montañas lejanas y una franja fina de lomas con pasto y florcitas"
+underground = "Subsuelo"
+underground_help = "La textura de la tierra: capas de roca, cristales, un mosaico, agua profunda."
+underground_default = "Un vitral de celdas irregulares en tonos joya oscuros, separadas por gruesas líneas negras de plomo"
+colors = "Colores"
+colors_help = "Se completan con tu paleta. Cambialos como quieras."
+mood = "Clima"
+mood_help = "La sensación de la escena."
+mood_default = "Alegre, onírico y un poco lisérgico, como si la tierra respirara"
+template = """Ilustración de paisaje apaisada, 1536 x 1024 píxeles (3:2), para el fondo de un sitio web. Es solo un fondo: más adelante se dibujan encima hongos, hilos luminosos y texto, así que dejá lugar para eso.
+
+ESTILO
+{style}. Usá estos colores: {colors}.
+
+CIELO (el {soil}% de arriba)
+{sky}. Dejá la zona de arriba a la izquierda (0-50% a lo ancho, 0-20% hacia abajo) más tranquila y oscura para que se lea un título claro.
+
+HORIZONTE
+Una línea de horizonte apenas ondulada cruza de borde a borde exactamente al {soil}% de la altura. {horizon}. Nada alto se para sobre la línea del horizonte.
+
+SUBSUELO (el {rest}% de abajo)
+{underground}. Mantenelo oscuro y de bajo contraste, cada vez más oscuro hacia abajo, para que resalten las líneas finas y claras que se dibujan encima.
+
+CLIMA
+{mood}.
+
+NO INCLUIR
+Ni hongos, ni árboles ni raíces, ni líneas o hilos blancos bajo tierra, ni personas, ni animales, ni texto, letras, logos o marcas de agua, ni marco o borde."""
+
+[palette]
+psychedelic = "Psicodélica"
+psychedelic_help = "El póster neón original."
+tokyo-night = "Tokyo Night"
+tokyo-night_help = "Luces de ciudad en una noche azul profunda."
+catppuccin = "Catppuccin Mocha"
+catppuccin_help = "Pasteles suaves sobre un oscuro cálido."
+rose-pine = "Rosé Pine"
+rose-pine_help = "Rosa, pino y oro apagados."
 
 [type]
 project = "Proyecto"

@@ -6,8 +6,9 @@ small self-hosted website. It is read-only: your notes stay plain files that you
 or an AI assistant write.
 
 > **Status: early development.** The first release (v0.1) is being built step by step; see
-> the [roadmap](#roadmap). What works today: sign-in, and reading your projects, notes, journal
-> and the health of the vault, in English or Spanish. Graphs and the landing come next.
+> the [roadmap](#roadmap). What works today: sign-in, the landing (your projects as mushrooms
+> over a forest of notes), the graphs, and reading your projects, notes, journal and the health
+> of the vault, in English or Spanish. Public notes for visitors come next.
 
 ## Why
 
@@ -84,8 +85,21 @@ are always shown as written. Adding a language takes one file, see
 
 Copy [`mycelium.example.toml`](mycelium.example.toml) to `mycelium.toml` and point
 `--config` (or `MYCELIUM_CONFIG`) at it. It holds the site title, the owner's name, the vault
-folders and the categories, each with a color and a mushroom species for the landing page.
+folders and the categories, each with a mushroom species for the landing page.
 Secrets never go in this file; see [`.env.example`](.env.example).
+
+## The landing and its look
+
+The home page draws your vault as a forest: each project is a mushroom above the soil (its
+species comes from the category, its size from its notes, its shape from its status), notes
+are clouds of spores in the mycelium below, links are threads, sources are crystals and the
+latest journal notes float as golden spores. Hover for titles, click to open.
+
+Signed in, **Appearance** (`/appearance`) changes how it looks: four palettes (Psychedelic,
+Tokyo Night, Catppuccin Mocha, Rosé Pine), your own background image, where the soil starts,
+and the title and tagline. It also builds a prompt you can paste into any image generator to
+paint a background that fits. These choices are saved in the data folder, never in your notes;
+`[landing]` in the config sets the defaults.
 
 ## Signing in
 
@@ -114,9 +128,9 @@ uv run mycelium user session-key     # prints MYCELIUM_SESSION_KEY
 | 1 | Skeleton: config, vault reader and index, `/healthz`, CI | done |
 | 2 | Sign-in: password + TOTP, sessions, or `auth.mode = "none"` | done |
 | 3 | Pages and languages: projects, notes, journal, health; English and Spanish | done |
-| 4 | Graphs: whole vault, per project, per note | next |
-| 5 | The landing: mushrooms above ground, mycelium below | |
-| 6 | Public notes for anonymous visitors | |
+| 4 | Graphs: whole vault, per project, per note | done |
+| 5 | The landing: mushrooms above ground, mycelium below; the Appearance page | done |
+| 6 | Public notes for anonymous visitors | next |
 | 7 | Release v0.1.0: Docker image (amd64 + arm64), PyPI package | |
 
 Later: a static export to share public notes without a server (v0.2) and an Obsidian plugin

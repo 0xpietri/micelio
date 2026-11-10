@@ -1,0 +1,182 @@
+/* The landing (§7a): the painted background, the live SVG layer and the title.
+   Colors come from the palette as custom properties set on .scene. */
+
+@font-face {
+  font-family: "Shrikhand";
+  src: url("../vendor/fonts/shrikhand/shrikhand-latin.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+body.landing { background: var(--pal-ink, #12051f); }
+body.landing main { padding: 0; max-width: none; margin: 0; }
+
+.scene {
+  --sun: var(--pal-sun, #ffd23f);
+  --accent: var(--pal-accent, #ff2fa0);
+  --button: var(--pal-button, #c6ff3a);
+  --button-alt: var(--pal-button-alt, #22d3ee);
+  --ink: var(--pal-ink, #12051f);
+  --thread: var(--pal-thread, #ffffff);
+  --display: "Shrikhand", "Cooper Black", Georgia, serif;
+  position: relative;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 520px;
+  overflow: hidden;
+  background: var(--ink);
+  color: #fdf6ff;
+}
+
+.forest { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+.hero {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: clamp(16px, 4vh, 40px) max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px), 3vw);
+  pointer-events: none;
+  z-index: 2;
+}
+.hero .tagline, .hero .actions { max-width: 40rem; }
+
+.headline {
+  display: inline-block;
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: 4.2rem;
+  line-height: 1.1;
+  white-space: nowrap;
+  color: var(--sun);
+  -webkit-text-stroke: 0.09em var(--ink);
+  paint-order: stroke fill;
+  text-shadow: 0.06em 0.07em 0 var(--accent);
+}
+
+.tagline {
+  margin: 0.6rem 0 1.1rem;
+  font-size: clamp(1rem, 1.7vw, 1.25rem);
+  font-weight: 600;
+  color: #fdf6ff;
+  text-shadow: 0 2px 0 var(--ink), 0 0 12px var(--ink);
+}
+
+.actions { display: flex; flex-wrap: wrap; gap: 0.75rem; pointer-events: auto; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 1.15rem;
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  font-weight: 800;
+  color: var(--ink);
+  text-decoration: none;
+  box-shadow: 4px 4px 0 var(--ink);
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+.btn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--ink); }
+.btn:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+.btn-main { background: var(--button); }
+.btn-alt { background: var(--button-alt); }
+
+.corner {
+  position: absolute;
+  top: 12px;
+  right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.85rem;
+  z-index: 2;
+}
+.corner a, .corner button {
+  padding: 0.3rem 0.75rem;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ink) 75%, transparent);
+  color: #fdf6ff;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+.corner a:hover, .corner button:hover { background: var(--ink); }
+
+.legend {
+  position: absolute;
+  bottom: 12px;
+  right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid;
+  gap: 0.1rem;
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--ink) 72%, transparent);
+  font-size: 0.8rem;
+  color: #d9cfee;
+  z-index: 2;
+}
+.legend div { display: flex; gap: 0.35rem; }
+.legend dt { font-weight: 700; color: #fdf6ff; }
+.legend dd { margin: 0; }
+.legend .more { margin-top: 0.25rem; font-style: italic; }
+
+.tip {
+  position: absolute;
+  z-index: 5;
+  max-width: 18rem;
+  padding: 0.4rem 0.65rem;
+  border: 2px solid var(--sun);
+  border-radius: 10px;
+  background: var(--ink);
+  color: #fdf6ff;
+  font-size: 0.85rem;
+  pointer-events: none;
+  box-shadow: 3px 3px 0 var(--accent);
+}
+.tip strong { display: block; }
+.tip span { color: #cdbfe6; }
+
+@media (max-width: 700px) {
+  .hero { padding-top: 56px; }
+  .legend { display: none; }
+}
+
+/* The live layer */
+.mushroom { cursor: pointer; }
+.mushroom:focus { outline: none; }
+.mushroom .grow { transform-box: fill-box; transform-origin: 50% 100%; transition: transform 0.2s; }
+.mushroom:hover .grow, .mushroom:focus-visible .grow { transform: scale(1.07); }
+.mushroom:focus-visible .grow { filter: drop-shadow(0 0 6px #fff); }
+.mushroom .sway { transform-box: fill-box; transform-origin: 50% 100%; animation: sway 6s ease-in-out infinite; }
+@keyframes sway { 0%, 100% { transform: rotate(-1.2deg); } 50% { transform: rotate(1.2deg); } }
+
+.hypha {
+  fill: none;
+  stroke: var(--thread);
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: grow 2.4s ease-out forwards;
+}
+.hypha.twig { stroke-opacity: 0.55; }
+@keyframes grow { to { stroke-dashoffset: 0; } }
+
+.knot, .crystal, .spore { cursor: pointer; opacity: 0; animation: appear 0.8s ease-out forwards; }
+@keyframes appear { to { opacity: 1; } }
+.cloud { transform-box: fill-box; transform-origin: center; transition: transform 0.2s; }
+.knot:hover .cloud { transform: scale(1.3); }
+.spore .drift { animation: drift 7s ease-in-out infinite; }
+@keyframes drift { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(6px, -10px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .hypha { animation: none; stroke-dashoffset: 0; }
+  .knot, .crystal, .spore { animation: none; opacity: 1; }
+  .mushroom .sway, .spore .drift { animation: none; }
+}

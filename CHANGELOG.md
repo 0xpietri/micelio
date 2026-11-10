@@ -8,6 +8,17 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- The landing: the vault drawn as a forest over a painted background, projects as
+  mushrooms (eight species, grown by status, sized by notes), notes as spore clouds in
+  the mycelium, links as hyphae, sources as crystals and the latest journal notes as
+  spores; positions from a vendored, seeded d3-force; `/api/landing` with the same data.
+- The Appearance page (`/appearance`): four palettes (Psychedelic, Tokyo Night,
+  Catppuccin Mocha, Rosé Pine) that also recolor the background and the category colors
+  everywhere, an uploaded background image, the soil line, the title and tagline, and a
+  prompt builder for making a background with any image generator. Saved in the data
+  folder, never in the vault.
+- `site.headline`, per-language `site.tagline` and a `[landing]` section in the config;
+  a category's `color` is now optional and comes from the palette.
 - The graph: `/api/graph` for the whole vault, a project or a note's neighborhood;
   `/explore` with search and filters; graphs on project and note pages, drawn with a
   vendored Cytoscape.js; browser strings served as `/static/locales/<lang>.json`.

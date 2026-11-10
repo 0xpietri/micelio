@@ -35,7 +35,7 @@ def test_home_without_sign_in_on_localhost() -> None:
     client = TestClient(create_app(config_for(EXAMPLE_VAULT), local_only=True))
     response = client.get("/")
     assert response.status_code == 200
-    assert "27 notes in the vault" in response.text
+    assert '<h1 class="headline" id="headline">Mycelium</h1>' in response.text
     assert "Sign out" not in response.text
 
 

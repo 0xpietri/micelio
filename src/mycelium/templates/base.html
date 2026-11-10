@@ -10,6 +10,7 @@
   {% block head %}{% endblock %}
 </head>
 <body{% block body_class %}{% endblock %}>
+  {% block header %}
   <header class="top">
     <a class="brand" href="/">{{ site.title }}</a>
     {% if request.state.signed_in is not defined or request.state.signed_in %}
@@ -18,6 +19,7 @@
       <a href="/projects"{% if nav == "projects" %} aria-current="page"{% endif %}>{{ t("nav.projects") }}</a>
       <a href="/journal"{% if nav == "journal" %} aria-current="page"{% endif %}>{{ t("nav.journal") }}</a>
       <a href="/health"{% if nav == "health" %} aria-current="page"{% endif %}>{{ t("nav.health") }}</a>
+      <a href="/appearance"{% if nav == "appearance" %} aria-current="page"{% endif %}>{{ t("nav.appearance") }}</a>
     </nav>
     {% endif %}
     {% if sign_in.enabled and request.state.signed_in %}
@@ -27,6 +29,7 @@
     </form>
     {% endif %}
   </header>
+  {% endblock %}
   <main>
     {% block content %}{% endblock %}
   </main>

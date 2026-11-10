@@ -1,0 +1,58 @@
+/* The Appearance page (§7b). */
+
+.page.wide { max-width: 64rem; }
+.look fieldset { margin: 0 0 1.5rem; padding: 0; border: 0; min-width: 0; }
+.look legend { padding: 0; }
+.look legend h2 { margin: 1.5rem 0 0.25rem; }
+.small { font-size: 0.875rem; }
+
+.choices { display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
+.look .choice {
+  display: grid;
+  gap: 0.35rem;
+  align-content: start;
+  margin: 0;
+  padding: 0.75rem;
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+.look .choice:has(input:checked) { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+.look .choice:has(input:focus-visible) { outline: 3px solid var(--link); outline-offset: 2px; }
+.look .choice:has(input:disabled) { cursor: default; opacity: 0.7; }
+.look .choice input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; }
+.choice-name { font-weight: 700; }
+.swatch { width: 100%; height: 1.6rem; border-radius: 6px; border: 2px solid var(--bg); }
+.thumb { width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: cover; border-radius: 8px; max-width: 100%; }
+.thumb.empty { display: grid; place-items: center; padding: 0.5rem; background: var(--surface-2); color: var(--muted); font-size: 0.875rem; text-align: center; }
+
+.look .inline-check { display: flex; gap: 0.5rem; align-items: center; color: var(--text); }
+.look .inline-check input, .look .range input, .upload input[type="file"] { display: inline-block; width: auto; margin: 0; }
+.look .range { display: grid; gap: 0.25rem; color: var(--text); }
+.range-row { display: flex; gap: 0.75rem; align-items: center; }
+.range-row input { flex: 1; max-width: 20rem; }
+.look input[type="text"] { margin-bottom: 0.25rem; }
+
+.upload .row, .prompt .row { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
+.upload input[type="file"] { padding: 0.4rem; border: 1px dashed var(--line); border-radius: 8px; color: var(--muted); max-width: 100%; }
+
+.prompt-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 1.25rem; }
+@media (max-width: 860px) { .prompt-grid { grid-template-columns: 1fr; } }
+.prompt label { display: grid; gap: 0.25rem; color: var(--text); font-weight: 700; margin-bottom: 0.75rem; }
+.prompt label .small { font-weight: 400; }
+.prompt textarea {
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-weight: 400;
+  resize: vertical;
+}
+.prompt textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+#prompt-output { font: 0.82rem/1.5 ui-monospace, Menlo, Consolas, monospace; }
+.fixed { margin: 0 0 0.75rem; padding: 0.6rem 0.75rem; border: 2px dashed var(--line); border-radius: 8px; color: var(--muted); font-size: 0.875rem; }

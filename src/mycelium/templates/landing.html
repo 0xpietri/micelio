@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}{{ headline }}{% endblock %}
+{% block head %}
+  <link rel="stylesheet" href="/static/css/landing.css">
+  <link rel="preload" as="image" href="{{ background }}">
+{% endblock %}
+{% block body_class %} class="landing"{% endblock %}
+{% block header %}{% endblock %}
+{% block content %}
+<section class="scene" id="scene">
+  <div class="hero">
+    <h1 class="headline" id="headline">{{ headline }}</h1>
+    <p class="tagline">{{ tagline }}</p>
+    {% if not data.projects %}<p class="tagline empty">{{ t("landing.empty") }}</p>{% endif %}
+    <div class="actions">
+      <a class="btn btn-main" href="/explore">{{ t("landing.explore") }}</a>
+      <a class="btn btn-alt" href="/projects">{{ t("landing.projects") }}</a>
+    </div>
+  </div>
+  <svg class="forest" id="forest" role="group" aria-labelledby="forest-label" xmlns="http://www.w3.org/2000/svg">
+    <title id="forest-label">{{ t("landing.label") }}</title>
+    <image href="{{ background }}" x="0" y="0" width="1536" height="1024" preserveAspectRatio="xMidYMid slice"></image>
+  </svg>
+  {% if request.state.signed_in is not defined or request.state.signed_in %}
+  <nav class="corner" aria-label="{{ t('nav.main') }}">
+    <a href="/appearance">{{ t("nav.appearance") }}</a>
+    {% if sign_in.enabled %}
+    <form method="post" action="/logout" class="inline">
+      <input type="hidden" name="csrf" value="{{ sign_in.logout_token(request) }}">
+      <button type="submit">{{ t("logout.submit") }}</button>
+    </form>
+    {% endif %}
+  </nav>
+  {% endif %}
+  <dl class="legend" aria-label="{{ t('landing.legend') }}">
+    <div><dt>{{ t("landing.mushroom") }}</dt><dd>{{ t("type.project") }}</dd></div>
+    <div><dt>{{ t("landing.cloud") }}</dt><dd>{{ t("type.note") }}</dd></div>
+    <div><dt>{{ t("landing.thread") }}</dt><dd>{{ t("landing.link") }}</dd></div>
+    <div><dt>{{ t("landing.crystal") }}</dt><dd>{{ t("type.source") }}</dd></div>
+    <div><dt>{{ t("landing.spores") }}</dt><dd>{{ t("type.journal") }}</dd></div>
+    {% if data.hidden %}<div class="more">{% if data.hidden == 1 %}{{ t("landing.more_one") }}{% else %}{{ t("landing.more", count=data.hidden) }}{% endif %}</div>{% endif %}
+  </dl>
+  <div class="tip" id="tip" hidden></div>
+</section>
+<nav class="visually-hidden" aria-label="{{ t('landing.list') }}">
+  <ul>
+    {% for p in data.projects %}<li><a href="{{ p.href }}" tabindex="-1">{{ t("type.project") }}: {{ p.title }}</a></li>{% endfor %}
+    {% for n in data.notes %}<li><a href="{{ n.href }}" tabindex="-1">{{ t("type.note") }}: {{ n.title }}</a></li>{% endfor %}
+    {% for s in data.sources %}<li><a href="{{ s.href }}" tabindex="-1">{{ t("type.source") }}: {{ s.title }}</a></li>{% endfor %}
+    {% for j in data.journal %}<li><a href="{{ j.href }}" tabindex="-1">{{ t("type.journal") }}: {{ j.title }}</a></li>{% endfor %}
+  </ul>
+</nav>
+<script src="/static/vendor/d3-force/d3-force.bundle.min.js"></script>
+<script type="module" src="/static/js/landing.js"></script>
+{% endblock %}

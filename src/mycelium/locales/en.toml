@@ -10,6 +10,7 @@ journal = "Journal"
 health = "Health"
 main = "Main"
 explore = "Explore"
+appearance = "Appearance"
 
 [login]
 title = "Sign in"
@@ -23,9 +24,112 @@ expired = "The form expired. Please try again."
 [logout]
 submit = "Sign out"
 
-[home]
-notes = "{count} notes in the vault"
-coming = "The living map of your ideas arrives in a later version. Meanwhile, browse the projects."
+[landing]
+tagline = "A living notebook of ideas"
+explore = "Explore the graph"
+projects = "Projects"
+label = "A forest drawn from the vault: projects are mushrooms, notes are clouds of spores in the mycelium below. Every one of them is also listed as a link after the drawing."
+list = "Projects and notes in the drawing"
+more_one = "1 more note is not drawn."
+more = "{count} more notes are not drawn."
+empty = "Nothing has surfaced yet. Add a project to the vault and its mushroom grows here."
+notes_one = "1 note"
+notes = "{count} notes"
+bridge = "Bridge between projects"
+legend = "What you see"
+mushroom = "Mushroom"
+cloud = "Spore cloud"
+thread = "Thread"
+crystal = "Crystal"
+spores = "Golden spores"
+link = "link"
+
+[appearance]
+title = "Appearance"
+lead = "Only you see this page. What you choose here is what every visitor sees on the landing. It is saved in Mycelium's data folder, never in your notes."
+see = "See the landing"
+saved = "Saved."
+uploaded = "Background uploaded."
+removed = "Your background was removed; the included painting is back."
+palette = "Color palette"
+palette_help = "Changes the mushrooms, the threads, the spores, the buttons and the category colors on every page. It can also recolor the background."
+background = "Background"
+background_help = "Use the included painting or upload your own: PNG, JPEG or WebP, at least 1200 × 800 (1536 × 1024 is ideal), up to 8 MB. Other shapes are cropped to fill the screen."
+builtin = "Psychedelic dusk (included)"
+own = "Your image"
+own_none = "No image uploaded yet."
+upload = "Upload an image"
+upload_submit = "Upload"
+remove = "Remove your image"
+recolor = "Recolor the background with the palette"
+soil = "Soil line"
+soil_help = "Where the ground starts, as a percentage of the image's height."
+texts = "Title and tagline"
+headline = "Title"
+headline_help = "Shown on one line at the top left. Leave it empty to use: {default}"
+tagline = "Tagline"
+tagline_help = "Leave it empty to use: {default}"
+submit = "Save"
+error_empty = "Choose an image first."
+error_size = "That image is larger than 8 MB."
+error_type = "That file is not a PNG, JPEG or WebP image."
+error_small = "That image is too small. Use at least 1200 × 800."
+error_form = "The form expired. Please try again."
+
+[prompt]
+title = "Make your own background"
+help = "Fill in the creative parts; the format rules stay fixed so the mushrooms and the mycelium fit. Copy the prompt into any image generator (ChatGPT, Gemini, Midjourney, Stable Diffusion) and upload the image above."
+fixed = "Fixed by Mycelium: 1536 × 1024 (3:2), the soil line at {soil}% of the height, a calm top-left corner for the title, a dark underground, nothing standing on the horizon, no mushrooms, no text."
+copy = "Copy prompt"
+copied = "Copied."
+copy_failed = "Select the text and copy it by hand."
+output = "Your prompt"
+style = "Style"
+style_help = "The art style: psychedelic poster, watercolor, woodcut, pixel art, ukiyo-e…"
+style_default = "1960s psychedelic concert poster meets flat vector illustration, bold black outlines, flat fills with smooth gradients"
+sky = "Sky"
+sky_help = "What fills the sky: sun, moon, stars, clouds, auroras."
+sky_default = "Liquid, melting bands of color that swirl like oil on water, and an op-art sun made of concentric rings at the upper right"
+horizon = "Horizon"
+horizon_help = "What sits low on the horizon: hills, dunes, a city skyline, waves."
+horizon_default = "Two layers of distant mountains and a thin strip of grassy hills with tiny flowers"
+underground = "Underground"
+underground_help = "The texture of the soil: rock layers, crystals, a mosaic, deep water."
+underground_default = "A stained-glass mosaic of irregular cells in deep jewel tones, separated by thick black lead lines"
+colors = "Colors"
+colors_help = "Filled in from your palette. Change them freely."
+mood = "Mood"
+mood_help = "The feeling of the scene."
+mood_default = "Joyful, dreamy and slightly trippy, like the ground is breathing"
+template = """Wide landscape illustration, 1536 x 1024 pixels (3:2), for the background of a website. It is only a backdrop: mushrooms, glowing threads and text will be drawn on top of it later, so leave room for them.
+
+STYLE
+{style}. Use these colors: {colors}.
+
+SKY (top {soil}%)
+{sky}. Keep the top-left area (0-50% across, 0-20% down) calmer and darker so a light title stays readable there.
+
+HORIZON
+A slightly wavy horizon line runs edge to edge at exactly {soil}% of the height. {horizon}. Nothing tall stands on the horizon line.
+
+UNDERGROUND (bottom {rest}%)
+{underground}. Keep it dark and low in contrast, getting darker toward the bottom, so thin light lines drawn on top stand out.
+
+MOOD
+{mood}.
+
+DO NOT INCLUDE
+No mushrooms or fungi, no trees or roots, no white lines or threads underground, no people, no animals, no text, letters, logos or watermark, no frame or border."""
+
+[palette]
+psychedelic = "Psychedelic"
+psychedelic_help = "The original neon poster."
+tokyo-night = "Tokyo Night"
+tokyo-night_help = "City lights on a deep blue night."
+catppuccin = "Catppuccin Mocha"
+catppuccin_help = "Soft pastels over a warm dark."
+rose-pine = "Rosé Pine"
+rose-pine_help = "Muted rose, pine and gold."
 
 [type]
 project = "Project"
