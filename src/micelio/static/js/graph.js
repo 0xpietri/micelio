@@ -673,6 +673,8 @@ function zoomButtons(host, strings, { hint, onZoom, onFit }) {
   const open = (yes) => {
     panel.hidden = !yes;
     gear.setAttribute("aria-expanded", String(yes));
+    // On a phone only the ⚙ shows until it is opened (CSS).
+    bar.classList.toggle("open", yes);
   };
   const gear = button({ class: "graph-gear", "aria-expanded": "false", "aria-label": tr(strings, "graph.settings"), title: tr(strings, "graph.settings") }, "⚙", () => open(panel.hidden));
   panel.addEventListener("keydown", (e) => { if (e.key === "Escape") { open(false); gear.focus(); } });

@@ -8,14 +8,18 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
-- The site's name and a project's title sit on a small sign in the theme's colors, so
-  they read on any background and palette.
 - A project's growth card stands on the soil line, beside the mushrooms (on a phone it
   sits under the title), with a small mushroom that grows with the stage and breathes.
 - A project's scene grows down with its underground: more notes or more spacing make it
   taller. Its + / − / ⚙ sit on the soil line, and + / − spread the notes and threads
   apart (names keep their size) while the sky and the mushrooms stay put.
 - A project's title is smaller than the site's name, on one line when it fits.
+- A third title effect on the Appearance page, "Sign": titles on a small dark sign in the
+  theme's colors. "Poster" stays the default.
+- On a phone a graph's corner shows only the ⚙; opening it brings + / − / Fit.
+- The Appearance page has a button to put the soil line back where it started.
+- The owner's hint on a project or source page says what clicking the mushroom or the
+  mineral does.
 - In the graphs a thread shows what it joins: a project's notes hang on solid threads in
   its color, journal entries on gold dots, sources on dashes, and links between notes are
   thin and faint. The threads no longer glow, so names read better.

@@ -52,6 +52,34 @@ class Reader:
     graphs: GraphBuilder
 
 
+# How each title effect is drawn, as custom properties (static/css/micelio.css reads
+# them; appearance.js, look.js and look-early.js hold the same table for live previews).
+_NO_PLATE = {
+    "title-plate-bg": "transparent",
+    "title-plate-border": "0 solid transparent",
+    "title-plate-shadow": "none",
+    "title-plate-pad": "0",
+}
+TITLE_LOOKS: dict[str, dict[str, str]] = {
+    "poster": {
+        "title-stroke": "0.08em",
+        "title-shadow": "0.05em 0.06em 0 var(--pal-accent)",
+        **_NO_PLATE,
+    },
+    "plain": {"title-stroke": "0", "title-shadow": "none", **_NO_PLATE},
+    "sign": {
+        "title-stroke": "0",
+        "title-shadow": "none",
+        "title-plate-bg": "color-mix(in srgb, var(--pal-ink) 88%, transparent)",
+        "title-plate-border": "2px solid color-mix(in srgb, var(--pal-sun) 55%, var(--pal-ink))",
+        "title-plate-shadow": (
+            "0.1em 0.1em 0 color-mix(in srgb, var(--pal-accent) 80%, var(--pal-ink))"
+        ),
+        "title-plate-pad": "0.1em 0.42em 0.14em",
+    },
+}
+
+
 def theme_css(colors: dict[str, str], appearance: Appearance) -> str:
     """The palette, the type settings and the category colors as CSS custom properties,
     so pages need no inline styles (CSP). Font stacks live in ``static/css/fonts.css``."""
@@ -68,15 +96,13 @@ def theme_css(colors: dict[str, str], appearance: Appearance) -> str:
         "crystal": palette.crystals[0],
         "crystal-alt": palette.crystals[1],
     }
-    poster = appearance.title_effect == "poster"
     look = {
         "title-font": f"var(--font-{appearance.title_font})",
         "text-font": f"var(--font-{appearance.text_font})",
         "title-scale": f"{appearance.title_size / 100:g}",
         "text-size": f"{appearance.text_size}px",
         "label-scale": f"{appearance.graph_labels / 100:g}",
-        "title-stroke": "0.08em" if poster else "0",
-        "title-shadow": "0.05em 0.06em 0 var(--pal-accent)" if poster else "none",
+        **TITLE_LOOKS[appearance.title_effect],
     }
     rules = [":root { " + " ".join(f"--pal-{k}: {v};" for k, v in tokens.items()) + " }"]
     rules += [":root { " + " ".join(f"--{k}: {v};" for k, v in look.items()) + " }"]

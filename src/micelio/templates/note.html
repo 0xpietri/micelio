@@ -22,7 +22,7 @@
     <section>
       <h2>{{ t("note.graph") }}</h2>
       {{ graph_box("note:" ~ note.slug, t("note.graph_label"), "graph-small", mode="box") }}
-      {% if note.type == "source" and looks_token(request) %}<p class="muted small dress-hint">{{ t("graph.dress_hint") }}</p>{% endif %}
+      {% if note.type == "source" and looks_token(request) %}<p class="muted small dress-hint">{{ t("graph.dress_hint_source") }}</p>{% endif %}
     </section>
     {% if note.type != "journal" %}
     <section>

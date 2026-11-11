@@ -4,6 +4,22 @@
 // the defaults.
 import { rampFilter } from "./draw.js";
 
+const TITLE_LOOKS = {
+  poster: { "--title-stroke": "0.08em", "--title-shadow": "0.05em 0.06em 0 var(--pal-accent)" },
+  plain: { "--title-stroke": "0", "--title-shadow": "none" },
+  sign: {
+    "--title-stroke": "0",
+    "--title-shadow": "none",
+    "--title-plate-bg": "color-mix(in srgb, var(--pal-ink) 88%, transparent)",
+    "--title-plate-border": "2px solid color-mix(in srgb, var(--pal-sun) 55%, var(--pal-ink))",
+    "--title-plate-shadow": "0.1em 0.1em 0 color-mix(in srgb, var(--pal-accent) 80%, var(--pal-ink))",
+    "--title-plate-pad": "0.1em 0.42em 0.14em",
+  },
+};
+const NO_PLATE = { "--title-plate-bg": "transparent", "--title-plate-border": "0 solid transparent", "--title-plate-shadow": "none", "--title-plate-pad": "0" };
+/** The title effect's custom properties (the same table as pages.TITLE_LOOKS). */
+function titleLook(effect) { return { ...NO_PLATE, ...(TITLE_LOOKS[effect] || TITLE_LOOKS.poster) }; }
+
 async function loadStrings() {
   const lang = document.documentElement.lang || "en";
   try {
@@ -34,9 +50,7 @@ function livePreview() {
     root.setProperty("--title-scale", String(Number(value("title_size")) / 100));
     root.setProperty("--text-size", `${value("text_size")}px`);
     root.setProperty("--label-scale", String(Number(value("graph_labels")) / 100));
-    const poster = value("title_effect") === "poster";
-    root.setProperty("--title-stroke", poster ? "0.08em" : "0");
-    root.setProperty("--title-shadow", poster ? "0.05em 0.06em 0 var(--pal-accent)" : "none");
+    for (const [name, v] of Object.entries(titleLook(value("title_effect")))) root.setProperty(name, v);
     for (const range of form.querySelectorAll('input[type="range"][data-unit]')) {
       const out = document.getElementById(`${range.id}-value`);
       if (out) out.textContent = `${range.value} ${range.dataset.unit}`;
@@ -172,6 +186,16 @@ function clickOutsideLeaves(flush) {
 
 async function start() {
   livePreview();
+  // "Back to the start" for the soil line: the slider moves and the page saves itself.
+  const soilReset = document.querySelector(".soil-reset");
+  const soilRange = document.getElementById("soil");
+  if (soilReset && soilRange) {
+    soilReset.addEventListener("click", () => {
+      soilRange.value = soilReset.dataset.default;
+      soilRange.dispatchEvent(new Event("input", { bubbles: true }));
+      soilRange.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+  }
   const flush = autosave();
   clickOutsideLeaves(flush);
   const strings = await loadStrings();

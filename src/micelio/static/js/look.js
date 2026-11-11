@@ -2,6 +2,22 @@
 // localStorage only. It never posts anything; the site stays the same for everyone else.
 // look-early.js applies the saved look before the page paints; this wires the panel.
 
+const TITLE_LOOKS = {
+  poster: { "--title-stroke": "0.08em", "--title-shadow": "0.05em 0.06em 0 var(--pal-accent)" },
+  plain: { "--title-stroke": "0", "--title-shadow": "none" },
+  sign: {
+    "--title-stroke": "0",
+    "--title-shadow": "none",
+    "--title-plate-bg": "color-mix(in srgb, var(--pal-ink) 88%, transparent)",
+    "--title-plate-border": "2px solid color-mix(in srgb, var(--pal-sun) 55%, var(--pal-ink))",
+    "--title-plate-shadow": "0.1em 0.1em 0 color-mix(in srgb, var(--pal-accent) 80%, var(--pal-ink))",
+    "--title-plate-pad": "0.1em 0.42em 0.14em",
+  },
+};
+const NO_PLATE = { "--title-plate-bg": "transparent", "--title-plate-border": "0 solid transparent", "--title-plate-shadow": "none", "--title-plate-pad": "0" };
+/** The title effect's custom properties (the same table as pages.TITLE_LOOKS). */
+function titleLook(effect) { return { ...NO_PLATE, ...(TITLE_LOOKS[effect] || TITLE_LOOKS.poster) }; }
+
 const KEY = "micelio.look.v1";
 const FIELDS = ["title_font", "text_font", "title_effect", "title_size", "text_size", "graph_labels"];
 
@@ -31,14 +47,7 @@ function applyType(look) {
   set("--title-scale", look.title_size ? String(look.title_size / 100) : null);
   set("--text-size", look.text_size ? `${look.text_size}px` : null);
   set("--label-scale", look.graph_labels ? String(look.graph_labels / 100) : null);
-  if (look.title_effect) {
-    const poster = look.title_effect === "poster";
-    set("--title-stroke", poster ? "0.08em" : "0");
-    set("--title-shadow", poster ? "0.05em 0.06em 0 var(--pal-accent)" : "none");
-  } else {
-    set("--title-stroke", null);
-    set("--title-shadow", null);
-  }
+  for (const [name, v] of Object.entries(titleLook(look.title_effect || "poster"))) set(name, look.title_effect ? v : null);
 }
 
 function wire(panel) {

@@ -396,17 +396,15 @@ form.inline { display: inline; }
 .changes ul { margin: 0.2rem 0; padding-left: 1.2rem; }
 .changes li { margin: 0.2rem 0; }
 
-/* Titles over a painting sit on a small sign in the theme's colors, so they read on
-   any background and any palette. */
-.brand, .hero-heading h1 {
-  display: inline-block;
-  padding: 0.12em 0.45em 0.16em;
-  border: 2px solid color-mix(in srgb, var(--sun) 55%, var(--ink));
+/* Titles can sit on a small sign in the theme's colors (title effect "sign" on the
+   Appearance page), so they read on any background; the plate is drawn from custom
+   properties the theme sets, and is nothing for the other effects. */
+.brand, h1, .headline {
+  background: var(--title-plate-bg, transparent);
+  border: var(--title-plate-border, 0 solid transparent);
+  box-shadow: var(--title-plate-shadow, none);
+  padding: var(--title-plate-pad, 0);
   border-radius: 14px;
-  background: color-mix(in srgb, var(--ink) 88%, transparent);
-  box-shadow: 4px 4px 0 color-mix(in srgb, var(--pal-accent, #ff2fa0) 80%, var(--ink));
-  -webkit-text-stroke: 0;
-  text-shadow: none;
 }
-.brand { padding: 0.08em 0.4em 0.12em; border-radius: 12px; box-shadow: 3px 3px 0 color-mix(in srgb, var(--pal-accent, #ff2fa0) 80%, var(--ink)); }
+.brand, .hero-heading h1, .explore-panel h1 { display: inline-block; }
 .hero-heading .dress-hint { display: inline-block; margin-top: 0.5rem; padding: 0.15rem 0.6rem; border-radius: 999px; background: color-mix(in srgb, var(--ink) 80%, transparent); color: var(--text); }

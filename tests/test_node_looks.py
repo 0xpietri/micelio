@@ -123,7 +123,7 @@ def test_visitors_cannot_dress_and_get_no_key(site_for: SiteFor) -> None:
     site = site_for(VAULT)
     page = site.client.get("/projects/open-garden").text
     assert 'name="micelio-looks"' not in page
-    assert "Click it to choose its look" not in page
+    assert "Click the mushroom to change its species" not in page
     answer = site.client.post(
         "/api/looks/open-garden", json={"species": "coral"}, headers={"X-Micelio-Form": "x"}
     )
@@ -139,7 +139,7 @@ def test_signed_in_owner_gets_the_key_and_hint(site_for: SiteFor) -> None:
     site.sign_in()
     page = site.client.get("/projects/open-garden").text
     assert 'name="micelio-looks"' in page
-    assert "Click it to choose its look" in page
+    assert "Click the mushroom to change its species" in page
     token = key(site.client, "/projects/open-garden")
     answer = site.client.post(
         "/api/looks/open-garden", json={"species": "coral"}, headers={"X-Micelio-Form": token}

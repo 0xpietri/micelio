@@ -57,6 +57,7 @@
         <span class="range-row">
           <input type="range" name="soil" id="soil" min="{{ soil_min }}" max="{{ soil_max }}" value="{{ appearance.soil }}" aria-describedby="soil-help">
           <output for="soil" id="soil-value">{{ appearance.soil }}%</output>
+          <button type="button" class="link soil-reset" data-default="{{ soil_default }}">{{ t("appearance.soil_default", value=soil_default) }}</button>
         </span>
         <span class="muted small" id="soil-help">{{ t("appearance.soil_help") }}</span>
       </label>

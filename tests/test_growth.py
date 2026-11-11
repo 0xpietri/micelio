@@ -107,3 +107,16 @@ def test_project_scene_grows_down_and_zooms_only_underground() -> None:
     assert ".scene-page .hero-scene.sized { height: var(--scene-h); }" in css
     assert ".hero-scene.has-soil .graph-tools" in css
     assert ".stage-fruiting .growth-shroom-body" in css
+
+
+def test_title_effects_and_soil_reset(client: TestClient) -> None:
+    from micelio.pages import TITLE_LOOKS
+
+    assert set(TITLE_LOOKS) == {"poster", "sign", "plain"}
+    assert TITLE_LOOKS["sign"]["title-plate-pad"] != "0"
+    assert TITLE_LOOKS["poster"]["title-plate-bg"] == "transparent"
+    page = client.get("/appearance").text
+    assert 'name="title_effect" value="sign"' in page
+    assert 'class="link soil-reset" data-default="52"' in page
+    theme = client.get("/theme.css").text
+    assert "--title-plate-bg: transparent" in theme  # poster by default

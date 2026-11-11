@@ -260,3 +260,7 @@ form .check, .check {
 @media (max-width: 719px) {
   .scene-page .growth { bottom: auto; top: calc(var(--top-room) + 5.6rem); left: 1rem; width: auto; right: 1rem; }
 }
+/* On a phone the graph's corner shows only the ⚙; opening it brings the other buttons. */
+@media (max-width: 719px) {
+  .graph-tools:not(.open) > :not(.graph-gear):not(.graph-panel) { display: none; }
+}
