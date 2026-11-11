@@ -137,6 +137,8 @@ Secrets (password hash, TOTP secret, session key) come only from environment var
 - Adding a language = copy `en.toml`, translate, open a PR. `CONTRIBUTING.md` explains it in five lines.
 - v0.1 ships `en` and `es`. Dates and numbers are formatted per language (Babel).
 
+Since 2026-11-11 anyone can switch the interface language with the flag in the header (`/language/<code>`, kept in a `micelio_lang` cookie for a year); `site.language` is the default.
+
 ## 6. Pages and API
 
 | Route | Shows |
@@ -205,9 +207,10 @@ A signed-in page, `/appearance`, decided by marcos on 2026-11-10. What it saves 
 - **Background**: the included painting (*Psychedelic dusk*, 1536 x 1024 WebP) or an image the owner uploads. PNG, JPEG or WebP, at most 8 MB, at least 1200 x 800; the type is checked from the file's bytes, never its name. One uploaded image is kept; a new upload replaces it. Wider or taller images are cropped to fill the screen.
 - **Recolor**: on by default for the included painting, off for an upload. It maps the image's brightness onto the palette's ramp with an SVG filter in the browser; the file itself is never changed.
 - **Soil line**: where the ground starts, 30–70 % of the image's height (52 % for the included painting).
-- **Title and tagline**: optional text that replaces `site.headline` and `site.tagline`.
+- **Title and tagline**: optional text that replaces `site.headline` and `site.tagline`. Until the page is first saved the tagline shows the default; once saved, an empty tagline shows nothing (2026-11-11).
 - **Prompt guide**: a form that builds a prompt for any image generator (ChatGPT, Gemini, Midjourney, Stable Diffusion). The format rules are fixed and shown as such: 1536 x 1024 (3:2), the horizon at the soil line, a calm top-left corner for the title, a dark low-contrast underground, nothing tall on the horizon, no mushrooms, trees, threads or text. The owner writes the creative parts: style, sky, horizon, underground, colors (prefilled from the palette) and mood. A button copies the result. The prompt is in the interface language.
 - **Names and lettering** (added 2026-11-10): the site's name (empty: `site.title`), the title font (Shrikhand, Righteous, Bagel Fat One, Fraunces Black), the title effect (*poster*: dark outline and colored shadow, or *plain*), the text font (the system's, Atkinson Hyperlegible, Literata, Space Grotesk), and three sizes: titles 70–140 %, text 14–20 px, names on the graphs 80–150 %. Every font ships with Micelio (SIL OFL, Latin subsets); nothing loads from another site. The page previews a change before it is saved and shows the matching `[typography]` lines of `micelio.toml`, whose values are the defaults.
+- **Saves itself** (2026-11-11): every choice is saved as soon as it changes (text after a pause in typing) and the page repaints the theme and background in place; there is no Save button unless JavaScript is off. A chosen image uploads at once. The prompt guide is folded. A click on the painting around the panel goes back to the page the owner came from.
 - Saving needs the sign-in form token (HMAC, like sign-out). With `auth.mode = "none"` the page is as open as the rest of the site, so the gateway in front must protect it.
 
 ## 7c. The look on every page
@@ -215,6 +218,8 @@ A signed-in page, `/appearance`, decided by marcos on 2026-11-10. What it saves 
 Decided by marcos on 2026-11-10: the landing's painting is part of the whole interface, and every graph is drawn as micelio.
 
 - **Background**: the painting (or the uploaded image, recolored when chosen) stays fixed behind every page. Reading pages show the horizon at the top and scroll into the underground; `/explore` shows only the underground. The landing keeps its own scene.
+- **Header** (2026-11-11): two lines. First the site's name and, at the right, the ⚙ menu (the viewer's graph settings on pages with a graph, then the look: a link to Appearance for the owner, the visitor's own look for visitors), the language flag and an icon to sign out or in. Below, the sections.
+- **A visitor's own look** (2026-11-11): palette, fonts, title effect and sizes, kept in the visitor's browser (`localStorage`); the palette's name goes to `/theme.css`, `/api/graph` and `/api/landing` as `?palette=`, which only recolor that answer. The site stays the owner's for everyone else.
 - **Glass**: text sits on ink-colored glass panels with the palette's dark outline; navigation is pill buttons; titles use the title font and effect of §7b.
 - **One dark look**: no light theme; the palette sets every color.
 - **Project page**: a scene at the top, the project's mushroom on the soil line, its notes as spore clouds below, the other projects its bridge notes reach standing faded at the sides; the title over the sky.

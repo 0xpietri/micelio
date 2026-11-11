@@ -1,6 +1,6 @@
 [project]
 name = "micelio"
-version = "0.1.0"
+version = "0.1.1"
 description = "Your Markdown notes as a living network of ideas: projects, graphs and links, self-hosted and read-only."
 readme = "README.md"
 license = "MIT"

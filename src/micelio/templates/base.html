@@ -1,5 +1,6 @@
 <!doctype html>
-<html lang="{{ language }}">
+{%- set visitor = request.state.signed_in is defined and not request.state.signed_in %}
+<html lang="{{ language }}"{% if visitor %} data-visitor{% endif %}>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,6 +9,12 @@
   <link rel="stylesheet" href="{{ url_for('static', path='css/fonts.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', path='css/micelio.css') }}">
   <link rel="stylesheet" href="/theme.css">
+  {% if visitor %}
+  {#- A visitor's own look, kept in their browser: applied before the page paints. #}
+  <script src="/static/js/look-early.js"></script>
+  <script type="module" src="/static/js/look.js"></script>
+  {% endif %}
+  <script type="module" src="/static/js/menu.js"></script>
   {% block head %}{% endblock %}
 </head>
 <body{% block body_class %}{% endblock %}>
@@ -26,7 +33,12 @@
   {% endblock %}
   {% block header %}
   <header class="top">
-    <a class="brand" href="/">{{ site_name() }}</a>
+    {#- Two lines (§7c): the name, then the ⚙ menu, the language and signing out or in;
+        below, the sections. #}
+    <div class="top-row">
+      <a class="brand" href="/">{{ site_name() }}</a>
+      {% if nav != "login" %}{% include "_menu.html" %}{% endif %}
+    </div>
     {% set everything = request.state.signed_in is not defined or request.state.signed_in %}
     <nav aria-label="{{ t('nav.main') }}">
       <a href="/explore"{% if nav == "explore" %} aria-current="page"{% endif %}>{{ t("nav.explore") }}</a>
@@ -36,19 +48,6 @@
       <a href="/health"{% if nav == "health" %} aria-current="page"{% endif %}>{{ t("nav.health") }}</a>
       {% endif %}
     </nav>
-    <div class="end">
-    {% if everything %}
-      <a href="/appearance"{% if nav == "appearance" %} aria-current="page"{% endif %}>{{ t("nav.appearance") }}</a>
-    {% endif %}
-    {% if sign_in.enabled and everything %}
-    <form method="post" action="/logout" class="inline">
-      <input type="hidden" name="csrf" value="{{ sign_in.logout_token(request) }}">
-      <button type="submit">{{ t("logout.submit") }}</button>
-    </form>
-    {% elif sign_in.enabled and nav != "login" %}
-    <a class="sign-in" href="/login?next={{ request.url.path|urlencode }}">{{ t("login.title") }}</a>
-    {% endif %}
-    </div>
   </header>
   {% endblock %}
   <main>

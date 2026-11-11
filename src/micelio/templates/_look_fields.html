@@ -1,0 +1,37 @@
+{#- A visitor's own look (§7b): palette, fonts and sizes kept in their browser only, by
+    static/js/look.js. Nothing here is sent to the server; the owner's look is the default. -#}
+{% set look = look_choices() %}
+<section class="look-panel" aria-label="{{ t('appearance.visitor_title') }}"
+     data-palette="{{ look.owner.palette }}" data-title-font="{{ look.owner.title_font }}" data-text-font="{{ look.owner.text_font }}"
+     data-title-effect="{{ look.owner.title_effect }}" data-title-size="{{ look.owner.title_size }}" data-text-size="{{ look.owner.text_size }}"
+     data-graph-labels="{{ look.owner.graph_labels }}" data-recolors="{{ 'on' if look.recolors else '' }}">
+  <h2 class="menu-heading">{{ t("appearance.visitor_title") }}</h2>
+  <p class="muted small">{{ t("appearance.visitor_note") }}</p>
+  <fieldset>
+    <legend>{{ t("appearance.palette") }}</legend>
+    <div class="look-palettes">
+      {% for p in look.palettes %}
+      <label class="look-palette" title="{{ t('palette.' ~ p.key) }}">
+        <input type="radio" name="look-palette" value="{{ p.key }}" data-ramp="{{ (p.ramp or []) | join(' ') }}">
+        <svg class="look-swatch" viewBox="0 0 {{ (p.swatch | length - 1) * 20 }} 20" preserveAspectRatio="none" aria-hidden="true">{% for c in p.swatch[1:] %}<rect x="{{ loop.index0 * 20 }}" y="0" width="20" height="20" fill="{{ c }}"></rect>{% endfor %}</svg>
+        <span>{{ t("palette." ~ p.key) }}</span>
+      </label>
+      {% endfor %}
+    </div>
+  </fieldset>
+  <label>{{ t("appearance.title_font") }}
+    <select name="look-title_font">{% for f in look.title_fonts %}<option value="{{ f }}">{{ t("font." ~ f) }}</option>{% endfor %}</select>
+  </label>
+  <label>{{ t("appearance.text_font") }}
+    <select name="look-text_font">{% for f in look.text_fonts %}<option value="{{ f }}">{{ t("font." ~ f) }}</option>{% endfor %}</select>
+  </label>
+  <label>{{ t("appearance.title_effect") }}
+    <select name="look-title_effect">{% for e in look.title_effects %}<option value="{{ e }}">{{ t("appearance.effect_" ~ e) }}</option>{% endfor %}</select>
+  </label>
+  {% for name, (low, high, step, unit) in look.sizes.items() %}
+  <label class="look-range"><span class="look-range-head"><span>{{ t("appearance." ~ name) }}</span><output data-unit="{{ unit }}"></output></span>
+    <input type="range" name="look-{{ name }}" min="{{ low }}" max="{{ high }}" step="{{ step }}">
+  </label>
+  {% endfor %}
+  <button type="button" class="link look-reset">{{ t("appearance.visitor_reset") }}</button>
+</section>

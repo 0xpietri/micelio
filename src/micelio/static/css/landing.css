@@ -86,7 +86,7 @@ body.landing main { padding: 0; max-width: none; margin: 0; }
   font-size: 0.85rem;
   z-index: 2;
 }
-.corner a, .corner button {
+.corner .icon-button, .corner .lang-menu > summary {
   padding: 0.3rem 0.75rem;
   border: 2px solid var(--ink);
   border-radius: 999px;
@@ -97,7 +97,7 @@ body.landing main { padding: 0; max-width: none; margin: 0; }
   text-decoration: none;
   cursor: pointer;
 }
-.corner a:hover, .corner button:hover { background: var(--ink); }
+.corner .icon-button:hover { background: var(--ink); }
 
 .legend {
   position: absolute;

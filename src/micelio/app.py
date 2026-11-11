@@ -11,7 +11,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.exception_handlers import http_exception_handler
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -23,7 +23,15 @@ from micelio.auth.store import AuthStore
 from micelio.auth.web import Clock, SignIn, install_security_headers
 from micelio.config import Config
 from micelio.formatting import Dates
-from micelio.i18n import available_languages, browser_strings, translator
+from micelio.i18n import (
+    LANGUAGE_COOKIE,
+    ActiveLanguage,
+    LanguageMiddleware,
+    available_languages,
+    browser_strings,
+    language_menu,
+    translator,
+)
 from micelio.landing_web import LandingPages
 from micelio.pages import Pages
 from micelio.vault import PublicView, VaultIndex
@@ -71,7 +79,9 @@ def create_app(
     language = config.site.language
     t = translator(language)
     templates = Jinja2Templates(directory=PACKAGE / "templates")
-    templates.env.globals.update(t=t, site=config.site, language=language)
+    templates.env.globals.update(
+        t=t, site=config.site, language=ActiveLanguage(language), languages=language_menu
+    )
 
     sign_in = SignIn(config, settings, store, templates, t, clock)
     app.state.sign_in = sign_in
@@ -88,6 +98,20 @@ def create_app(
         if strings is None:
             raise StarletteHTTPException(status_code=404)
         return JSONResponse(strings, headers={"Cache-Control": "no-cache"})
+
+    @app.get("/language/{code}", include_in_schema=False)
+    def choose_language(code: str, next: str = "/") -> Response:
+        """The flag in the header: remember the language in a cookie, go back (§5a)."""
+        if code not in browser_locales:
+            raise StarletteHTTPException(status_code=404)
+        back = (
+            next if next.startswith("/") and not next.startswith("//") and "\\" not in next else "/"
+        )
+        response = RedirectResponse(back, status_code=303)
+        response.set_cookie(
+            LANGUAGE_COOKIE, code, max_age=365 * 24 * 3600, samesite="lax", path="/"
+        )
+        return response
 
     app.mount("/static", StaticFiles(directory=PACKAGE / "static"), name="static")
     sign_in.install(app)
@@ -117,4 +141,6 @@ def create_app(
             body["notes"] = len(vault.notes)
         return body
 
+    # Outermost, so the visitor's language is set before anything else runs.
+    app.add_middleware(LanguageMiddleware, languages=available_languages())
     return app

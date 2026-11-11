@@ -8,6 +8,7 @@ from zoneinfo import ZoneInfo
 
 from babel.dates import format_date
 
+from micelio.i18n import active_language
 from micelio.vault.index import Note
 
 _LEADING_DATE = re.compile(r"(\d{4})-(\d{2})-(\d{2})")
@@ -42,4 +43,4 @@ class Dates:
         return _parse(note.updated) or self.modified(note)
 
     def show(self, value: date) -> str:
-        return format_date(value, format="medium", locale=self.language)
+        return format_date(value, format="medium", locale=active_language(self.language))

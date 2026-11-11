@@ -10,8 +10,10 @@
   <p class="muted">{{ t("appearance.lead") }} <a href="/">{{ t("appearance.see") }} →</a></p>
   {% if done %}<p class="ok" role="status">{{ t("appearance." ~ done) }}</p>{% endif %}
   {% if error %}<p class="error" role="alert">{{ t("appearance.error_" ~ error) }}</p>{% endif %}
+  <p class="muted small leave-hint" hidden>{{ t("appearance.leave") }}</p>
+  <p class="autosave small" id="autosave-status" role="status" aria-live="polite" data-saving="{{ t('appearance.saving') }}" data-saved="{{ t('appearance.saved') }}" data-failed="{{ t('appearance.save_failed') }}"></p>
 
-  <form method="post" action="/appearance" id="look-form">
+  <form method="post" action="/appearance" id="look-form" data-autosave>
     <input type="hidden" name="csrf" value="{{ form_token }}">
 
     <fieldset>
@@ -136,20 +138,21 @@ title_effect = "{{ appearance.title_effect }}"</pre>
         <span class="muted small">{{ t("appearance.headline_help", default=default_headline) }}</span>
       </label>
       <label>{{ t("appearance.tagline") }}
-        <input type="text" name="tagline" maxlength="120" value="{{ appearance.tagline }}" placeholder="{{ default_tagline }}">
-        <span class="muted small">{{ t("appearance.tagline_help", default=default_tagline) }}</span>
+        <input type="text" name="tagline" maxlength="120" value="{{ default_tagline if appearance.tagline is none else appearance.tagline }}">
+        <span class="muted small">{{ t("appearance.tagline_help") }}</span>
       </label>
     </fieldset>
 
-    <button type="submit">{{ t("appearance.submit") }}</button>
+    {#- Without JavaScript the page saves with this button; with it, every change saves itself. #}
+    <button type="submit" class="save-fallback">{{ t("appearance.submit") }}</button>
   </form>
 
   <section class="upload">
     <h2>{{ t("appearance.upload") }}</h2>
-    <form method="post" action="/appearance/background" enctype="multipart/form-data" class="row">
+    <form method="post" action="/appearance/background" enctype="multipart/form-data" class="row" id="upload-form">
       <input type="hidden" name="csrf" value="{{ form_token }}">
       <input type="file" name="image" accept="image/png,image/jpeg,image/webp" aria-label="{{ t('appearance.upload') }}">
-      <button type="submit">{{ t("appearance.upload_submit") }}</button>
+      <button type="submit" class="save-fallback">{{ t("appearance.upload_submit") }}</button>
     </form>
     {% if appearance.own_type %}
     <form method="post" action="/appearance/background/remove">
@@ -159,8 +162,8 @@ title_effect = "{{ appearance.title_effect }}"</pre>
     {% endif %}
   </section>
 
-  <section class="prompt" id="prompt" data-soil="{{ appearance.soil }}">
-    <h2>{{ t("prompt.title") }}</h2>
+  <details class="prompt" id="prompt" data-soil="{{ appearance.soil }}">
+    <summary><h2>{{ t("prompt.title") }}</h2></summary>
     <p class="muted small">{{ t("prompt.help") }}</p>
     <div class="prompt-grid">
       <div class="fields">
@@ -179,6 +182,6 @@ title_effect = "{{ appearance.title_effect }}"</pre>
         <p class="row"><button type="button" id="prompt-copy">{{ t("prompt.copy") }}</button> <span id="prompt-status" class="ok small" aria-live="polite"></span></p>
       </div>
     </div>
-  </section>
+  </details>
 </div>
 {% endblock %}

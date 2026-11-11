@@ -14,7 +14,7 @@ from typing import Literal, TypedDict
 
 from micelio.appearance import PALETTES, category_colors
 from micelio.config import Config
-from micelio.i18n import category_names
+from micelio.i18n import active_language, category_names
 from micelio.render import href_for
 from micelio.vault.index import IndexView, Note
 from micelio.vault.parser import link_key
@@ -146,7 +146,7 @@ class GraphBuilder:
         }
 
     def _categories(self) -> list[CategoryData]:
-        language = self.config.site.language
+        language = active_language(self.config.site.language)
         names = category_names(language)
         colors = self.colors()
         return [

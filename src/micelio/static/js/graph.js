@@ -7,7 +7,7 @@ import {
   DEFS, SVG_NS, cloud, el, f1, fold, fragment, hyphaPath, lighter, loadStrings, mix, painter,
   paletteFromCss, rampFilter, reduced, seededRandom, tr,
 } from "./draw.js";
-import { LIMITS, labelText, load, save } from "./graph-settings.js";
+import { labelText, load, save } from "./graph-settings.js";
 
 export { fold, loadStrings, tr };
 
@@ -180,12 +180,47 @@ function panZoom(svg, onChange, opt = {}) {
     e.preventDefault();
     zoomAt(e.clientX, e.clientY, e.deltaY > 0 ? 1.12 : 1 / 1.12);
   }, { passive: false });
+  // One pointer drags; two (fingers on a phone or tablet) pinch to zoom and move together.
+  const touches = new Map();
   let drag = null;
+  let pinch = null;
+  const startPinch = () => {
+    const [a, b] = [...touches.values()];
+    pinch = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2, vb: { ...vb } };
+    drag = null;
+    svg.classList.add("dragging");
+    svg.dataset.dragged = "1";
+  };
   svg.addEventListener("pointerdown", (e) => {
-    if (e.button !== 0) return;
-    drag = { x: e.clientX, y: e.clientY, vb: { ...vb }, moved: false, id: e.pointerId };
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (touches.size === 2) {
+      for (const id of touches.keys()) { try { svg.setPointerCapture(id); } catch { /* gone */ } }
+      startPinch();
+      return;
+    }
+    if (touches.size === 1) drag = { x: e.clientX, y: e.clientY, vb: { ...vb }, moved: false, id: e.pointerId };
   });
   svg.addEventListener("pointermove", (e) => {
+    if (!touches.has(e.pointerId)) return;
+    touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pinch && touches.size >= 2) {
+      const [a, b] = [...touches.values()];
+      const r = rect();
+      const d = Math.hypot(a.x - b.x, a.y - b.y) || 1;
+      const nw = Math.min(home.w * maxOut, Math.max(home.w / 8, (pinch.vb.w * pinch.d) / d));
+      const k = nw / pinch.vb.w;
+      // The point under the fingers' first midpoint stays under their midpoint now.
+      const px = pinch.vb.x + ((pinch.mx - r.left) / r.width) * pinch.vb.w;
+      const py = pinch.vb.y + ((pinch.my - r.top) / r.height) * pinch.vb.h;
+      const mx = (a.x + b.x) / 2;
+      const my = (a.y + b.y) / 2;
+      const w = pinch.vb.w * k;
+      const h = pinch.vb.h * k;
+      vb = { x: px - ((mx - r.left) / r.width) * w, y: py - ((my - r.top) / r.height) * h, w, h };
+      apply();
+      return;
+    }
     if (!drag) return;
     const dx = e.clientX - drag.x;
     const dy = e.clientY - drag.y;
@@ -199,7 +234,22 @@ function panZoom(svg, onChange, opt = {}) {
     vb = { ...vb, x: drag.vb.x - (dx / r.width) * vb.w, y: drag.vb.y - (dy / r.height) * vb.h };
     apply();
   });
-  const end = () => {
+  const end = (e) => {
+    touches.delete(e.pointerId);
+    if (pinch) {
+      if (touches.size < 2) {
+        pinch = null;
+        if (opt.onZoom) opt.onZoom(ratio());
+        // The finger left on the glass carries on as a drag, from where it is now.
+        const [rest] = [...touches.entries()];
+        drag = rest ? { x: rest[1].x, y: rest[1].y, vb: { ...vb }, moved: true, id: rest[0] } : null;
+        if (!rest) {
+          svg.classList.remove("dragging");
+          setTimeout(() => delete svg.dataset.dragged, 0);
+        }
+      }
+      return;
+    }
     if (drag && drag.moved) svg.dataset.dragged = "1";
     drag = null;
     svg.classList.remove("dragging");
@@ -475,9 +525,7 @@ function drawForest(svg, data, L, strings, state, settings) {
   return vb;
 }
 
-/* ---------- the viewer's settings panel ---------- */
-
-let panels = 0;
+/* ---------- zoom buttons ---------- */
 
 function html(tag, attrs = {}, text = "") {
   const node = document.createElement(tag);
@@ -486,99 +534,20 @@ function html(tag, attrs = {}, text = "") {
   return node;
 }
 
-/** Zoom buttons and a settings panel in the graph's corner. ``onChange(key)`` hears every
- * change after ``settings`` is updated and saved. */
-function controls(host, strings, settings, { onChange, onZoom, onFit }) {
-  const id = `graph-settings-${++panels}`;
+/** + / − / Fit in the graph's corner. The viewer's settings (spacing, names) live in
+ * the ⚙ menu of the header (static/js/menu.js), which tells every graph when they change. */
+function zoomButtons(host, strings, { onZoom, onFit }) {
   const bar = html("div", { class: "graph-tools" });
-  const button = (attrs, text) => {
+  const button = (attrs, text, fn) => {
     const b = html("button", { type: "button", ...attrs }, text);
+    b.addEventListener("click", fn);
     bar.appendChild(b);
-    return b;
   };
-  button({ "data-zoom": "in", "aria-label": tr(strings, "graph.zoom_in"), title: tr(strings, "graph.zoom_in") }, "+")
-    .addEventListener("click", () => onZoom(1 / 1.3));
-  button({ "data-zoom": "out", "aria-label": tr(strings, "graph.zoom_out"), title: tr(strings, "graph.zoom_out") }, "−")
-    .addEventListener("click", () => onZoom(1.3));
-  button({ "data-zoom": "fit" }, tr(strings, "graph.fit")).addEventListener("click", onFit);
-  const gear = button({
-    class: "graph-gear", "aria-expanded": "false", "aria-controls": id,
-    "aria-label": tr(strings, "graph.settings"), title: tr(strings, "graph.settings"),
-  }, "⚙");
-
-  const panel = html("div", { class: "graph-settings glass", id, role: "group", "aria-label": tr(strings, "graph.settings") });
-  panel.hidden = true;
-  panel.appendChild(html("p", { class: "graph-settings-title" }, tr(strings, "graph.settings")));
-  const outputs = {};
-  const inputs = {};
-  const shown = (key, value) => (key === "length" ? tr(strings, "graph.chars", { count: value }) : `${value} %`);
-  const range = (key) => {
-    const [min, max, step] = LIMITS[key];
-    const row = html("label", { class: "graph-range" });
-    const head = html("span", { class: "graph-range-head" });
-    head.appendChild(html("span", {}, tr(strings, `graph.${key}`)));
-    const out = html("output", {}, shown(key, settings[key]));
-    head.appendChild(out);
-    const input = html("input", { type: "range", min, max, step, name: key });
-    input.value = String(settings[key]);
-    row.append(head, input);
-    // Spacing lays the graph out again, so it waits for the slider to be let go.
-    input.addEventListener("input", () => {
-      out.textContent = shown(key, Number(input.value));
-      if (key !== "spacing") set(key, Number(input.value));
-    });
-    input.addEventListener("change", () => set(key, Number(input.value)));
-    outputs[key] = out;
-    inputs[key] = input;
-    panel.appendChild(row);
-  };
-  const set = (key, value) => {
-    if (settings[key] === value) return;
-    settings[key] = value;
-    save(settings);
-    if (key === "shorten") inputs.length.disabled = !value;
-    onChange(key);
-  };
-  range("spacing");
-  range("labels");
-  const check = html("label", { class: "graph-check" });
-  const box = html("input", { type: "checkbox", name: "shorten" });
-  box.checked = settings.shorten;
-  box.addEventListener("change", () => set("shorten", box.checked));
-  check.append(box, document.createTextNode(` ${tr(strings, "graph.shorten")}`));
-  panel.appendChild(check);
-  range("length");
-  inputs.length.disabled = !settings.shorten;
-  panel.appendChild(html("p", { class: "graph-settings-note" }, tr(strings, "graph.settings_note")));
-  const reset = html("button", { type: "button", class: "link" }, tr(strings, "graph.reset"));
-  reset.addEventListener("click", () => {
-    for (const key of Object.keys(LIMITS)) {
-      const value = LIMITS[key][3];
-      inputs[key].value = String(value);
-      outputs[key].textContent = shown(key, value);
-      set(key, value);
-    }
-    box.checked = true;
-    set("shorten", true);
-  });
-  panel.appendChild(reset);
-
-  const toggle = (open) => {
-    panel.hidden = !open;
-    gear.setAttribute("aria-expanded", String(open));
-    if (open) panel.querySelector("input").focus();
-  };
-  gear.addEventListener("click", () => toggle(panel.hidden));
-  panel.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") { toggle(false); gear.focus(); }
-  });
-  document.addEventListener("pointerdown", (e) => {
-    if (!panel.hidden && !panel.contains(e.target) && !bar.contains(e.target)) toggle(false);
-  });
-  host.append(bar, panel);
+  button({ "data-zoom": "in", "aria-label": tr(strings, "graph.zoom_in"), title: tr(strings, "graph.zoom_in") }, "+", () => onZoom(1 / 1.3));
+  button({ "data-zoom": "out", "aria-label": tr(strings, "graph.zoom_out"), title: tr(strings, "graph.zoom_out") }, "−", () => onZoom(1.3));
+  button({ "data-zoom": "fit" }, tr(strings, "graph.fit"), onFit);
+  host.appendChild(bar);
 }
-
-/* ---------- mounting ---------- */
 
 /** The most connected nodes, at most ``max``: projects first, ghosts last. */
 function trim(data, max) {
@@ -614,7 +583,10 @@ export async function mountGraph(host) {
   if (!window.d3) return null;
   let data;
   try {
-    const response = await fetch(host.dataset.graph, { headers: { Accept: "application/json" } });
+    // A visitor's own palette (look.js) colors the categories too.
+    const url = new URL(host.dataset.graph, location.href);
+    if (document.documentElement.dataset.palette) url.searchParams.set("palette", document.documentElement.dataset.palette);
+    const response = await fetch(url, { headers: { Accept: "application/json" } });
     if (!response.ok) throw new Error(String(response.status));
     data = await response.json();
   } catch {
@@ -690,15 +662,20 @@ export async function mountGraph(host) {
   redraw();
   place();
 
-  controls(host, strings, settings, {
+  zoomButtons(host, strings, {
     onZoom: (f) => view.zoom(f),
     onFit: () => { rememberZoom(1); place(); },
-    onChange: (key) => {
-      if (key === "labels") return labelZoom();
-      if (key === "spacing" && laid) laid = layoutFree(data, settings.spacing);
-      redraw();
-      if (key === "spacing") place();
-    },
+  });
+  // The ⚙ menu saved new settings: take them and draw again as needed.
+  window.addEventListener("micelio:graph-settings", (e) => {
+    const key = e.detail && e.detail.key;
+    const fresh = load();
+    for (const k of ["spacing", "labels", "shorten", "length"]) settings[k] = fresh[k];
+    if (key === "labels") return labelZoom();
+    if (key === "spacing" && laid) laid = layoutFree(data, settings.spacing);
+    redraw();
+    if (key === "spacing" || key === "reset") place();
+    labelZoom();
   });
 
   let timer = null;

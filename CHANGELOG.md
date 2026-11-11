@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-11
+
 ### Added
 
 - A settings panel (⚙) on every graph: space between nodes, size of the names, and
@@ -13,6 +15,22 @@ All notable changes to this project are documented here. The format follows
   choices and the zoom are remembered in the browser (`localStorage`).
 - Every graph pans and zooms, with + / − / Fit buttons, including the note's neighborhood
   and the project's scene; inside a reading page the wheel zooms only with Ctrl or ⌘.
+- The Appearance page saves every change by itself and repaints the page at once; the
+  Save buttons only remain without JavaScript. A chosen background uploads at once.
+- "Make your own background" is folded on the Appearance page.
+- A click outside the Appearance panel goes back to the previous page.
+- Pinch with two fingers to zoom any graph on a phone or tablet.
+- A two-line header: the site's name with a ⚙ menu, a language flag and a sign-out (or
+  sign-in) icon; the sections below. The ⚙ menu holds the graph settings (they moved
+  there from each graph's corner) and the look.
+- Visitors can choose their own look (palette, fonts, sizes) in the ⚙ menu. It is kept
+  in their browser and never changes the site for anyone else.
+- Anyone can switch the interface language (English, Español) with the flag; the choice
+  is kept in a cookie.
+
+### Changed
+
+- An empty tagline on the Appearance page now shows no tagline instead of the default.
 
 ## [0.1.0] - 2026-11-10
 
@@ -87,5 +105,6 @@ self-hosted. The project was called Mycelium while it was built; it is released 
 - A sample vault in `examples/vault`, CI on Linux, macOS and Windows, and releases from a
   tag (image, package and GitHub release).
 
-[Unreleased]: https://github.com/0xpietri/micelio/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/0xpietri/micelio/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/0xpietri/micelio/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/0xpietri/micelio/releases/tag/v0.1.0

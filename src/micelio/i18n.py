@@ -7,11 +7,74 @@ A key missing from a language falls back to English, then to the key itself.
 from __future__ import annotations
 
 import tomllib
+from contextvars import ContextVar
 from functools import cache
 from importlib.resources import files
 from typing import Protocol
 
 DEFAULT_LANGUAGE = "en"
+
+# The language a visitor chose with the flag in the header (a cookie, §5a). Set for each
+# request by ``LanguageMiddleware``; without it, ``site.language`` from the config.
+LANGUAGE_COOKIE = "micelio_lang"
+_chosen: ContextVar[str | None] = ContextVar("micelio_language", default=None)
+
+
+def active_language(default: str) -> str:
+    """The language of the request being answered: the visitor's choice, else ``default``."""
+    return _chosen.get() or default
+
+
+class ActiveLanguage:
+    """``{{ language }}`` in templates: renders as the request's language."""
+
+    def __init__(self, default: str) -> None:
+        self.default = default
+
+    def __str__(self) -> str:
+        return active_language(self.default)
+
+    def __eq__(self, other: object) -> bool:
+        return str(self) == other
+
+    def __hash__(self) -> int:
+        return hash(str(self))
+
+
+def language_menu() -> list[dict[str, str]]:
+    """Every interface language with its flag and its own name, for the header."""
+    return [
+        {
+            "code": code,
+            "flag": load_strings(code).get("site.flag", code.upper()),
+            "name": load_strings(code).get("site.language_name", code),
+        }
+        for code in available_languages()
+    ]
+
+
+class LanguageMiddleware:
+    """Reads the language cookie and makes it the request's language (pure ASGI, so the
+    choice reaches every handler, thread or not)."""
+
+    def __init__(self, app: object, languages: list[str]) -> None:
+        self.app = app
+        self.languages = frozenset(languages)
+
+    async def __call__(self, scope: dict[str, object], receive: object, send: object) -> None:
+        chosen = None
+        if scope.get("type") == "http":
+            for name, value in scope.get("headers", []):  # type: ignore[attr-defined]
+                if name == b"cookie":
+                    for part in value.decode("latin-1").split(";"):
+                        key, _, raw = part.strip().partition("=")
+                        if key == LANGUAGE_COOKIE and raw in self.languages:
+                            chosen = raw
+        token = _chosen.set(chosen)
+        try:
+            await self.app(scope, receive, send)  # type: ignore[operator]
+        finally:
+            _chosen.reset(token)
 
 
 class Translate(Protocol):
@@ -45,10 +108,11 @@ def load_strings(language: str) -> dict[str, str]:
 
 
 def translator(language: str) -> Translate:
-    strings = load_strings(language)
+    """``t()`` in the request's language (the visitor's choice), else ``language``."""
     fallback = load_strings(DEFAULT_LANGUAGE)
 
     def t(key: str, /, **values: object) -> str:
+        strings = load_strings(active_language(language))
         text = strings.get(key) or fallback.get(key) or key
         return text.format(**values) if values else text
 
