@@ -30,3 +30,14 @@ now served by `FreshStaticFiles`: `Cache-Control: no-cache` and an ETag from the
 
 He also asked for the ⚙ only on graphs, in the graph's top right corner
 (`static/js/graph-panel.js`), "Appearance" back as text in the header, and a larger name.
+
+## New versions without tags by hand
+
+marcos wants `miceliodeploy` to install the latest changes without a new version and
+`miceliodeploy edge` to make a new version, gathering the changes since the last one.
+`.github/workflows/version.yml` does the GitHub half: `.github/scripts/new_version.py`
+numbers the version (the last tag's next patch), moves Unreleased under it in
+`CHANGELOG.md`, the workflow commits, tags and starts `image.yml` and `release.yml` on the
+tag (a tag pushed with the workflow token starts nothing by itself). 0.1.1 was never
+tagged, so its entries went back under Unreleased and `pyproject.toml` says 0.1.0 again:
+the first run will make 0.1.1. The server half lives in factory-panel's `miceliodeploy`.

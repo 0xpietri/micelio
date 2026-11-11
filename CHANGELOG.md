@@ -8,30 +8,10 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
-- A footer on every page but the landing with the version, the build's commit and
-  "What's new": the newest changes, unfolded with a click. `/changes` lists every
-  change, newest first. The changelog ships inside the package and the image, so the
-  site never asks GitHub.
-
-### Changed
-
-- The ⚙ with the graph settings sits in each graph's top right corner, next to + / − /
-  Fit, and only on pages with a graph. The header shows "Appearance" as text again (for
-  visitors it opens their own look), and the site's name is larger on wide screens.
-
-### Fixed
-
-- After a deploy, browsers kept the previous build's styles and scripts for months (every
-  build's files have the same date), so the header looked broken and the graph settings
-  did nothing. Static files now carry a hash of their content and are checked each time.
-
-## [0.1.1] - 2026-11-11
-
-### Added
-
-- A settings panel (⚙) on every graph: space between nodes, size of the names, and
-  shortened long names that show whole while their node is pointed at or focused. The
-  choices and the zoom are remembered in the browser (`localStorage`).
+- A ⚙ in every graph's top right corner with the viewer's settings: space between nodes,
+  size of the names, and shortened long names that show whole while their node is
+  pointed at or focused. The choices and the zoom are remembered in the browser
+  (`localStorage`).
 - Every graph pans and zooms, with + / − / Fit buttons, including the note's neighborhood
   and the project's scene; inside a reading page the wheel zooms only with Ctrl or ⌘.
 - The Appearance page saves every change by itself and repaints the page at once; the
@@ -39,17 +19,26 @@ All notable changes to this project are documented here. The format follows
 - "Make your own background" is folded on the Appearance page.
 - A click outside the Appearance panel goes back to the previous page.
 - Pinch with two fingers to zoom any graph on a phone or tablet.
-- A two-line header: the site's name with a ⚙ menu, a language flag and a sign-out (or
-  sign-in) icon; the sections below. The ⚙ menu holds the graph settings (they moved
-  there from each graph's corner) and the look.
-- Visitors can choose their own look (palette, fonts, sizes) in the ⚙ menu. It is kept
+- A two-line header: the site's name (larger on wide screens), Appearance, a language
+  flag and a sign-out (or sign-in) icon; the sections below.
+- Visitors can choose their own look (palette, fonts, sizes) under Appearance. It is kept
   in their browser and never changes the site for anyone else.
 - Anyone can switch the interface language (English, Español) with the flag; the choice
   is kept in a cookie.
+- A footer on every page but the landing with the version, the build's commit and
+  "What's new": the changes since the last version, unfolded with a click. `/changes` lists every
+  change, newest first. The changelog ships inside the package and the image, so the
+  site never asks GitHub.
 
 ### Changed
 
 - An empty tagline on the Appearance page now shows no tagline instead of the default.
+
+### Fixed
+
+- After a deploy, browsers kept the previous build's styles and scripts for months (every
+  build's files have the same date), so pages could look broken and the graph settings
+  do nothing. Static files now carry a hash of their content and are checked each time.
 
 ## [0.1.0] - 2026-11-10
 
@@ -124,6 +113,5 @@ self-hosted. The project was called Mycelium while it was built; it is released 
 - A sample vault in `examples/vault`, CI on Linux, macOS and Windows, and releases from a
   tag (image, package and GitHub release).
 
-[Unreleased]: https://github.com/0xpietri/micelio/compare/v0.1.1...HEAD
-[0.1.1]: https://github.com/0xpietri/micelio/compare/v0.1.0...v0.1.1
+[Unreleased]: https://github.com/0xpietri/micelio/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/0xpietri/micelio/releases/tag/v0.1.0

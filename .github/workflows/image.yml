@@ -1,7 +1,8 @@
 name: Image
 
 # The Docker image (§10): linux/amd64 on every merge to main, amd64 + arm64 on release
-# tags. Run it by hand to try a two-architecture build without publishing anything.
+# tags (pushed, or started on the tag by version.yml). Run it by hand on a branch to try a
+# two-architecture build without publishing anything.
 on:
   push:
     branches: [main]
@@ -36,7 +37,8 @@ jobs:
           else
             echo "platforms=linux/amd64" >> "$GITHUB_OUTPUT"
           fi
-          if [[ "$GITHUB_EVENT_NAME" == workflow_dispatch ]]; then
+          # By hand on a branch: a trial build. On a tag (version.yml starts it there): publish.
+          if [[ "$GITHUB_EVENT_NAME" == workflow_dispatch && "$GITHUB_REF" != refs/tags/v* ]]; then
             echo "push=false" >> "$GITHUB_OUTPUT"
           else
             echo "push=true" >> "$GITHUB_OUTPUT"

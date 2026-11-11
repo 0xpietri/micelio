@@ -1,0 +1,60 @@
+name: New version
+
+# A new version from what main has (`miceliodeploy edge` starts this, or the "Run
+# workflow" button): number it, move CHANGELOG.md's Unreleased changes under it, commit
+# to main, tag v<version>, then build the image (amd64 + arm64) and the package from that
+# tag. A tag pushed with the workflow's own token starts no workflow by itself, so this
+# one starts them.
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Which number grows when the last version was already published"
+        type: choice
+        options: [patch, minor, major]
+        default: patch
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: new-version
+  cancel-in-progress: false
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v7
+      - name: Number the version and write its changes
+        id: new
+        run: |
+          last=$(git tag --list 'v*' --sort=-version:refname | head -n1)
+          version=$(python3 .github/scripts/new_version.py --last-tag "$last" --bump "${{ inputs.bump }}")
+          uv lock
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - run: uv sync --locked
+      - run: uv run pytest -q
+      - name: Commit and tag
+        env:
+          VERSION: ${{ steps.new.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "Micelio $VERSION"
+          git tag -a "v$VERSION" -m "Micelio $VERSION"
+          git push origin HEAD:main "v$VERSION"
+      - name: Build the image and the package from the tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.new.outputs.version }}
+        run: |
+          gh workflow run image.yml --ref "v$VERSION"
+          gh workflow run release.yml --ref "v$VERSION"
+          echo "Micelio $VERSION: tagged; image and package are building." >> "$GITHUB_STEP_SUMMARY"

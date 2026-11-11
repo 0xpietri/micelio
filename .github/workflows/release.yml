@@ -9,6 +9,8 @@ name: Release
 on:
   push:
     tags: ["v*"]
+  # version.yml starts it on the tag it made.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -22,6 +24,7 @@ jobs:
       - uses: astral-sh/setup-uv@v7
       - name: The tag matches the version
         run: |
+          [[ "$GITHUB_REF" == refs/tags/v* ]] || { echo "run this on a v* tag"; exit 1; }
           version=$(uv version --short)
           test "v${version}" = "${GITHUB_REF_NAME}" || {
             echo "tag ${GITHUB_REF_NAME} does not match version ${version}"; exit 1; }
