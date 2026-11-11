@@ -249,7 +249,9 @@ class LandingPages:
             text_size: Annotated[int, Form()] = 0,
             graph_labels: Annotated[int, Form()] = 0,
             title_effect: Annotated[str, Form()] = "",
-            board: Annotated[str, Form()] = "",
+            board_color: Annotated[str, Form()] = "",
+            board_font: Annotated[str, Form()] = "",
+            said_font: Annotated[str, Form()] = "",
         ) -> Response:
             quiet = _wants_json(request)
             if not self._form_ok(request, csrf):
@@ -274,8 +276,9 @@ class LandingPages:
                     graph_labels, LABEL_SIZE_MIN, LABEL_SIZE_MAX, now.graph_labels
                 ),
                 title_effect=title_effect_named(title_effect, now.title_effect),
-                board_color=board_color_named(board.partition(".")[0], now.board_color),
-                board_font=board_font_named(board.partition(".")[2], now.board_font),
+                board_color=board_color_named(board_color, now.board_color),
+                board_font=board_font_named(board_font, now.board_font),
+                said_font=board_font_named(said_font, now.said_font),
             )
             self.store.save(chosen)
             if quiet:

@@ -527,22 +527,40 @@ def test_profile_picture_forms_need_the_token(client: TestClient, tmp_path: Path
     assert not (tmp_path / "data" / "avatar").exists()
 
 
-def test_chalkboard_choice_reaches_the_theme(client: TestClient) -> None:
+def test_chalkboard_and_bubble_choices_reach_the_theme(client: TestClient) -> None:
     theme = client.get("/theme.css").text
     assert "--board-bg: var(--board-green-bg);" in theme
     assert "--board-font: var(--font-caveat);" in theme
+    assert "--said-font: var(--font-patrick-hand);" in theme
     page = client.get("/appearance").text
-    assert page.count('name="board"') == 9
-    assert 'value="green.caveat" checked' in page
+    assert page.count('name="board_color"') == 3
+    assert page.count('name="board_font"') == 3
+    assert page.count('name="said_font"') == 3
+    assert 'class="board-preview' in page
 
     token = form_token(client)
-    client.post("/appearance", data={"csrf": token, "board": "white.gochi-hand"})
+    client.post(
+        "/appearance",
+        data={
+            "csrf": token,
+            "board_color": "white",
+            "board_font": "gochi-hand",
+            "said_font": "caveat",
+        },
+    )
     theme = client.get("/theme.css").text
     assert "--board-bg: var(--board-white-bg);" in theme
     assert "--board-ink: var(--board-white-ink);" in theme
     assert "--board-font: var(--font-gochi-hand);" in theme
-    assert 'value="white.gochi-hand" checked' in client.get("/appearance").text
+    assert "--said-font: var(--font-caveat);" in theme
+    page = client.get("/appearance").text
+    assert 'name="board_color" value="white" checked' in page
+    assert 'name="said_font" value="caveat" checked' in page
 
-    # Anything else keeps the current board.
-    client.post("/appearance", data={"csrf": token, "board": "pink.comic-sans"})
-    assert "--board-font: var(--font-gochi-hand);" in client.get("/theme.css").text
+    # Anything else keeps the current choice.
+    client.post(
+        "/appearance", data={"csrf": token, "board_color": "pink", "board_font": "comic-sans"}
+    )
+    theme = client.get("/theme.css").text
+    assert "--board-bg: var(--board-white-bg);" in theme
+    assert "--board-font: var(--font-gochi-hand);" in theme

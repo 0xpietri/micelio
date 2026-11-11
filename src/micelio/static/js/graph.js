@@ -34,6 +34,8 @@ function look(data) {
   const neutral = mix(pal.thread, pal.ink, 0.45);
   return {
     pal,
+    /** The viewer's own color for the threads (graph-settings.js), or "" for the theme's. */
+    threads: "",
     paint: painter(pal),
     color: (key) => (key && cats[key] ? cats[key].color : neutral),
     species: (key) => (key && cats[key] ? cats[key].species : UNCATEGORIZED_SPECIES),
@@ -478,11 +480,11 @@ function thread(a, b, L) {
   const p = a.type === "project" ? a : b;
   const bridge = a.bridge || b.bridge;
   const look = {
-    member: { color: kind === "member" ? L.projectColor(p) : "", width: 1.8, dash: "", opacity: 0.8 },
+    member: { color: kind === "member" ? L.threads || L.projectColor(p) : "", width: 1.8, dash: "", opacity: 0.8 },
     journal: { color: L.pal.spore, width: 1.6, dash: "0.1 5", opacity: 0.85 },
     source: { color: L.pal.crystals ? L.pal.crystals[0] : L.pal.thread, width: 1.3, dash: "7 5", opacity: 0.75 },
-    link: { color: L.pal.thread, width: bridge ? 1.6 : 1, dash: "", opacity: bridge ? 0.5 : 0.32 },
-    ghost: { color: L.pal.thread, width: 1, dash: "3 6", opacity: 0.4 },
+    link: { color: L.threads || L.pal.thread, width: bridge ? 1.6 : 1, dash: "", opacity: bridge ? 0.5 : 0.32 },
+    ghost: { color: L.threads || L.pal.thread, width: 1, dash: "3 6", opacity: 0.4 },
   }[kind];
   const dash = look.dash ? ` stroke-dasharray="${look.dash}"` : "";
   return { kind, attrs: `stroke="${look.color}" stroke-width="${look.width}" stroke-opacity="${look.opacity}"${dash}` };
@@ -505,7 +507,7 @@ function drawFree(layer, laid, L, strings, opts) {
     const cls = ["hypha", `k-${t.kind}`, l.faded ? "faded" : "", dimmed(a) && dimmed(b) ? "dim" : ""].join(" ").trim();
     markup += `<path class="${cls}" d="${d}" ${t.attrs}/>`;
     if (!ghost) {
-      pulses.push({ d, color: a.type === "project" ? L.projectColor(a) : b.type === "project" ? L.projectColor(b) : L.pal.spore });
+      pulses.push({ d, color: L.threads && t.kind !== "journal" ? L.threads : a.type === "project" ? L.projectColor(a) : b.type === "project" ? L.projectColor(b) : L.pal.spore });
     }
   }
   hyphae.appendChild(fragment(markup));
@@ -611,7 +613,7 @@ function drawForest(svg, data, L, strings, state, settings, zoom = 1) {
     const look = thread(s, t, L);
     markup += `<path class="hypha k-${look.kind}${l.faded ? " faded" : ""}" d="${d}" ${look.attrs}/>`;
     if (!ghost) {
-      pulses.push({ d, color: s.type === "project" ? L.projectColor(s) : L.pal.spore });
+      pulses.push({ d, color: L.threads && look.kind !== "journal" ? L.threads : s.type === "project" ? L.projectColor(s) : L.pal.spore });
     }
   }
   const marks = el("g");
@@ -752,6 +754,7 @@ export async function mountGraph(host) {
   const L = look(data);
   const state = { timer: null };
   const settings = load();
+  L.threads = settings.threadColor;
   const svg = el("svg", { class: "graph-svg pannable", role: "group", "aria-label": host.getAttribute("aria-label") || "" });
   host.removeAttribute("role");
   host.prepend(svg);
@@ -872,7 +875,8 @@ export async function mountGraph(host) {
   window.addEventListener("micelio:graph-settings", (e) => {
     const key = e.detail && e.detail.key;
     const fresh = load();
-    for (const k of ["spacing", "labels", "shorten", "length"]) settings[k] = fresh[k];
+    for (const k of ["spacing", "labels", "shorten", "length", "threadColor", "threadFrom"]) settings[k] = fresh[k];
+    L.threads = settings.threadColor;
     if (key === "labels") { labelZoom(); return redraw(); }
     if (key === "spacing" && laid) laid = layoutFree(data, settings.spacing);
     redraw();

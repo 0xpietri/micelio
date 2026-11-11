@@ -16,6 +16,7 @@ from fastapi.templating import Jinja2Templates
 from markupsafe import Markup
 
 from micelio.appearance import (
+    PALETTES,
     Appearance,
     AppearanceStore,
     category_colors,
@@ -124,6 +125,7 @@ def theme_css(colors: dict[str, str], appearance: Appearance) -> str:
         f"--board-bg: var(--board-{board}-bg); --board-ink: var(--board-{board}-ink); "
         f"--board-title: var(--board-{board}-title); "
         f"--board-font: var(--font-{appearance.board_font}); "
+        f"--said-font: var(--font-{appearance.said_font}); "
         "}"
     ]
     if appearance.avatar_type:
@@ -473,6 +475,16 @@ class Pages:
                 for category in data["categories"]:
                     category["color"] = colors[category["key"]]
             return JSONResponse(dict(data), headers={"Cache-Control": "no-store"})
+
+        @router.get("/api/palettes", include_in_schema=False)
+        def palettes() -> Response:
+            """The themes' palettes, for the threads' color in a graph's ⚙ panel: names
+            and colors only, the same for everyone."""
+            body = [
+                {"key": p.key, "name": p.name, "colors": p.thread_colors()}
+                for p in PALETTES.values()
+            ]
+            return JSONResponse(body, headers={"Cache-Control": "no-cache"})
 
         @router.get("/explore", include_in_schema=False)
         def explore(request: Request) -> Response:

@@ -6,6 +6,7 @@ import {
   DEFS, SVG_NS, cloud, el, f1, fragment, hyphaPath, lighter, loadStrings, painter, rampFilter,
   reduced, seededRandom, shade, tr,
 } from "./draw.js";
+import { load as loadGraphSettings } from "./graph-settings.js";
 
 function viewWindow(svg, soil) {
   const r = svg.getBoundingClientRect();
@@ -81,7 +82,10 @@ function layout(data, V, soil, k) {
 }
 
 function draw(svg, data, strings, state) {
+  // The threads' color a viewer chose in a graph's ⚙ (kept in this browser) holds here too.
+  const own = loadGraphSettings().threadColor;
   const pal = data.palette;
+  if (own) svg.style.setProperty("--thread", own);
   const paint = painter(pal);
   const soil = Math.round((1024 * data.background.soil) / 100);
   const V = viewWindow(svg, soil);
@@ -105,7 +109,7 @@ function draw(svg, data, strings, state) {
     const start = 0.2 + (l.kind === "member" ? 0 : 1.2) + i * 0.02;
     hyphae += `<path class="hypha" pathLength="1" d="${d}" stroke-width="${width}" ${delay(start)}/>`;
     for (const twig of twigs) hyphae += `<path class="hypha twig" pathLength="1" d="${twig}" stroke-width="1" ${delay(start + 1.2)}/>`;
-    pulses.push({ d, color: l.kind === "member" ? byId[a.id].color : pal.thread });
+    pulses.push({ d, color: l.kind === "member" && !own ? byId[a.id].color : own || pal.thread });
   });
 
   const degree = {};

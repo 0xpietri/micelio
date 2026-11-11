@@ -11,8 +11,16 @@ All notable changes to this project are documented here. The format follows
 - Two callouts for study notes. `> [!said]` shows the owner's own words in a speech bubble
   pointing at the speaker: a little mushroom in the category's color, or the owner's profile
   picture. `> [!takeaway]` closes a concept under "What you should know", handwritten in chalk on
-  a chalkboard framed by logs, leaves and fly agarics. The Appearance page picks the board
-  (black, green or white) and the handwriting (three hands); the chalk follows the palette.
+  a chalkboard framed by logs, leaves and fly agarics. The Appearance page picks the board's
+  color (black, green or white), its handwriting and the bubbles' handwriting (three hands)
+  with a live preview; the chalk follows the palette. The owner's words go between quotes.
+- The threads' color in each graph's ⚙: "Change color" opens the four themes (Psychedelic,
+  Tokyo Night, Catppuccin Mocha, Rosé Pine) with their colors, plus a custom color. The choice
+  is kept in the browser, stays when the theme changes, and colors the mushrooms' threads on
+  the landing and on the project cards too.
+- The mushrooms on Projects are alive: each sways on its own beat (faster under the pointer),
+  its threads grow in with glowing tips and spores rise from its cap.
+- The guide beside each note links back to its project's home.
 - A profile picture on the Appearance page (PNG, JPEG or WebP, cut to a circle); without one,
   the little mushroom.
 - The guide is a numbered outline: sections and sub-sections (1, 1.1, 1.1.1) come from the
