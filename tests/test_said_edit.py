@@ -130,11 +130,12 @@ def test_line_endings_permissions_and_no_temporary_files(editor: SaidEditor) -> 
     path = editor.root / "notes" / "n.md"
     path.write_bytes(NOTE.replace("\n", "\r\n").encode())
     path.chmod(0o640)
+    mode = path.stat().st_mode & 0o777  # 0o640 on POSIX; Windows keeps only read-only
     apply(editor, Edit("insert", at=8, text="x"))
     raw = path.read_bytes()
     assert b"\r\n> [!said]\r\n> x\r\n" in raw
     assert raw.count(b"\n") == raw.count(b"\r\n")
-    assert path.stat().st_mode & 0o777 == 0o640
+    assert path.stat().st_mode & 0o777 == mode
     assert sorted(p.name for p in path.parent.iterdir()) == ["n.md"]
 
 
