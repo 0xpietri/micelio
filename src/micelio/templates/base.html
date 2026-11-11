@@ -8,7 +8,7 @@
   <title>{% block title %}{{ site_name() }}{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', path='css/fonts.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', path='css/micelio.css') }}">
-  <link rel="stylesheet" href="/theme.css">
+  <link rel="stylesheet" href="/theme.css?v={{ theme_version() }}">
   {% if visitor %}
   {#- A visitor's own look, kept in their browser: applied before the page paints. #}
   <script src="/static/js/look-early.js"></script>

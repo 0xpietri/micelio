@@ -196,3 +196,14 @@ form .check, .check {
 @media (prefers-reduced-motion: reduce) {
   .sway, .focus-ring { animation: none; }
 }
+
+/* The owner's look editor for a project's mushroom or a source's mineral (node-look.js) */
+.look-editor { top: 3.2rem; right: 0.5rem; z-index: 4; display: grid; gap: 0.55rem; }
+.scene-page .hero-scene .look-editor { top: calc(var(--top-room) + 2.6rem); }
+.look-editor .menu-heading { margin: 0 0 0.2rem; font-size: 0.95rem; }
+.look-editor .look-range { display: grid; gap: 0.25rem; margin: 0; }
+.look-editor select { width: 100%; }
+.look-editor .look-color { grid-template-columns: 1fr auto; align-items: center; }
+.look-editor input[type="color"] { width: 3rem; height: 2rem; padding: 0; border: 2px solid var(--ink); border-radius: 8px; background: none; cursor: pointer; }
+.look-editor .muted.small { margin: 0; }
+.dress-hint { margin: 0.3rem 0 0; }

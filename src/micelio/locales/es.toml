@@ -293,6 +293,33 @@ length = "Nombre más largo"
 chars = "{count} letras"
 settings_note = "Pasá el cursor por un nodo para leer el nombre completo. Se guarda solo en este navegador."
 reset = "Restablecer"
+dress_project = "El hongo de este proyecto"
+dress_source = "El mineral de esta fuente"
+dress_species = "Especie"
+dress_mineral = "Mineral"
+dress_color = "Color"
+dress_size = "Tamaño"
+dress_default = "Volver al de siempre"
+dress_saved = "Guardado"
+dress_failed = "No se pudo guardar"
+dress_hint = "Hacé clic para elegir cómo se ve."
+
+[species]
+fly-agaric = "Amanita"
+shaggy-inkcap = "Barbuda"
+morel = "Colmenilla"
+chanterelle = "Rebozuelo"
+liberty-caps = "Mongui"
+coral = "Hongo coral"
+parasol = "Parasol"
+glowing-bonnets = "Micenas luminosas"
+
+[mineral]
+diamond = "Diamante"
+emerald = "Esmeralda"
+amber = "Ámbar"
+quartz = "Cuarzo"
+amethyst = "Amatista"
 
 [font]
 shrikhand = "Shrikhand"

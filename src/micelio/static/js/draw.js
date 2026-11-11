@@ -10,6 +10,13 @@ export const reduced = () => window.matchMedia("(prefers-reduced-motion: reduce)
 /** The kinds of mineral a source can be, and the color each has unless chosen (§7c). */
 export const MINERALS = { diamond: "#7fe7ff", emerald: "#3ddc84", amber: "#ffb020", quartz: "#f1ecff", amethyst: "#b07cff" };
 
+/** A project's own shade of its category's color, the same on every page: two projects
+ * of one category are told apart until the owner picks a color (§7c). */
+export function shade(id, base, pal) {
+  const turn = Math.floor(seededRandom(id)() * 5);
+  return [base, lighter(base, 0.3), mix(base, pal.sun, 0.4), mix(base, pal.accent, 0.4), mix(base, "#000000", 0.25)][turn];
+}
+
 export function seededRandom(seed) {
   // mulberry32 over a string hash
   let a = 0;

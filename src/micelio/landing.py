@@ -29,7 +29,7 @@ class ProjectData(TypedDict):
     color: str
     status: str
     notes: int
-    size: float
+    scale: float
     shade: bool
 
 
@@ -111,7 +111,7 @@ class LandingBuilder:
                     or (colors[category.key] if category else palette.spare[3]),
                     "status": project.status if project.status in _GROWTH else "active",
                     "notes": sum(1 for m in members if notes[m].type == "note"),
-                    "size": look.get("size", 1.0),
+                    "scale": look.get("size", 1.0),
                     # No color chosen: the page shifts the category's a little (§7c).
                     "shade": "color" not in look,
                 }

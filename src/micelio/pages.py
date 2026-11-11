@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import hmac
 from collections import Counter
 from collections.abc import Mapping
@@ -19,7 +20,7 @@ from micelio.formatting import Dates
 from micelio.graph import GraphBuilder, ScopeError, UnknownNodeError, parse_scope
 from micelio.i18n import active_language, category_names
 from micelio.landing import background_url
-from micelio.looks import NodeLooks, clean_look
+from micelio.looks import Look, NodeLooks, clean_look
 from micelio.render import Renderer, href_for
 from micelio.vault.index import IndexView, Note, VaultIndex
 from micelio.vault.public import PublicView
@@ -117,9 +118,21 @@ class Pages:
             excerpt=self.everything.renderer.excerpt,
             backdrop=self.backdrop,
             looks_token=self.looks_token,
+            node_look=self.node_look,
+            theme_version=self.theme_version,
         )
 
     # -- helpers ---------------------------------------------------------------------
+
+    def node_look(self, slug: str) -> Look:
+        return self.node_looks.get(slug) or {}
+
+    def theme_version(self) -> str:
+        """A short fingerprint of the theme, so ``/theme.css?v=…`` is a new address after
+        every Appearance change: a cache in front (Cloudflare) can never serve old colors."""
+        look = self.looks.current()
+        css = theme_css(category_colors(self.config, look.colors), look)
+        return hashlib.sha256(css.encode("utf-8")).hexdigest()[:10]
 
     def looks_token(self, request: Request) -> str:
         """The owner's key for dressing nodes; empty for visitors, who only look."""
@@ -214,7 +227,8 @@ class Pages:
             return PlainTextResponse(
                 theme_css(category_colors(self.config, look.colors), look),
                 media_type="text/css",
-                headers={"Cache-Control": "no-cache"},
+                # Never kept by a shared cache: the address changes with the theme anyway.
+                headers={"Cache-Control": "private, no-cache", "CDN-Cache-Control": "no-store"},
             )
 
         @router.get("/projects", include_in_schema=False)

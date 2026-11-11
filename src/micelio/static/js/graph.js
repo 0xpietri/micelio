@@ -5,10 +5,11 @@
 
 import {
   DEFS, MINERALS, SVG_NS, cloud, el, f1, fold, fragment, hyphaPath, lighter, loadStrings, mix, painter,
-  paletteFromCss, rampFilter, reduced, seededRandom, tr,
+  paletteFromCss, rampFilter, reduced, seededRandom, shade, tr,
 } from "./draw.js";
 import { labelText, lengthFor, load, save } from "./graph-settings.js";
 import { graphSection } from "./graph-panel.js";
+import { lookKey, openLookPanel } from "./node-look.js";
 
 export { fold, loadStrings, tr };
 
@@ -40,9 +41,7 @@ function look(data) {
      * projects of one category are told apart (the owner may choose it, ``node.look``). */
     projectColor(node) {
       if (node.look && node.look.color) return node.look.color;
-      const base = this.color(node.category);
-      const turn = Math.floor(seededRandom(node.id)() * 5);
-      return [base, lighter(base, 0.3), mix(base, pal.sun, 0.4), mix(base, pal.accent, 0.4), mix(base, "#000000", 0.25)][turn];
+      return shade(node.id, this.color(node.category), pal);
     },
     projectSpecies(node) { return (node.look && node.look.species) || this.species(node.category); },
     mineral(node) {
@@ -750,6 +749,26 @@ export async function mountGraph(host) {
     onZoom: (f) => view.zoom(f),
     onFit: () => { rememberZoom(1); place(); },
   });
+  // On its own page the owner dresses the project or source: clicking its mushroom or
+  // mineral opens the look editor instead of reloading the page.
+  if (lookKey()) {
+    svg.addEventListener("click", (e) => {
+      const a = e.target.closest && e.target.closest("a.node");
+      const node = a && nodesById[a.dataset.id];
+      if (!node || !node.focus || (node.type !== "project" && node.type !== "source")) return;
+      if (e.ctrlKey || e.metaKey || e.shiftKey) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const now = node.type === "project"
+        ? { species: L.projectSpecies(node), color: L.projectColor(node), size: (node.look && node.look.size) || 1 }
+        : (() => { const m = L.mineral(node); return { mineral: m.kind, color: m.color }; })();
+      openLookPanel(host, node, now, strings, (lookNow) => {
+        node.look = lookNow;
+        if (laid) for (const n of laid.nodes) if (n.id === node.id) n.look = lookNow;
+        redraw();
+      });
+    });
+  }
   // A ⚙ panel saved new settings: take them and draw again as needed.
   window.addEventListener("micelio:graph-settings", (e) => {
     const key = e.detail && e.detail.key;

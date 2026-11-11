@@ -15,6 +15,7 @@
       {{ status_badge(note.status) }}
     </p>
     <h1>{{ note.title }}</h1>
+    {% if looks_token(request) %}<p class="muted small dress-hint">{{ t("graph.dress_hint") }}</p>{% endif %}
   </div>
 </section>
 <div class="project-page">

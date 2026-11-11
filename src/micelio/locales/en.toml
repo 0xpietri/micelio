@@ -294,6 +294,33 @@ length = "Longest name shown"
 chars = "{count} letters"
 settings_note = "Point at a node to read its whole name. Saved in this browser only."
 reset = "Reset"
+dress_project = "This project's mushroom"
+dress_source = "This source's mineral"
+dress_species = "Species"
+dress_mineral = "Mineral"
+dress_color = "Color"
+dress_size = "Size"
+dress_default = "Back to the default"
+dress_saved = "Saved"
+dress_failed = "Could not save"
+dress_hint = "Click it to choose its look."
+
+[species]
+fly-agaric = "Fly agaric"
+shaggy-inkcap = "Shaggy ink cap"
+morel = "Morel"
+chanterelle = "Chanterelle"
+liberty-caps = "Liberty caps"
+coral = "Coral fungus"
+parasol = "Parasol"
+glowing-bonnets = "Glowing bonnets"
+
+[mineral]
+diamond = "Diamond"
+emerald = "Emerald"
+amber = "Amber"
+quartz = "Quartz"
+amethyst = "Amethyst"
 
 [font]
 shrikhand = "Shrikhand"

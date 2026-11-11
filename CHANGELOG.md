@@ -29,6 +29,10 @@ All notable changes to this project are documented here. The format follows
   "What's new": the changes since the last version, unfolded with a click. `/changes` lists every
   change, newest first. The changelog ships inside the package and the image, so the
   site never asks GitHub.
+- On a project's page the owner clicks its mushroom to choose its species, color and
+  size; on a source's page, its mineral (diamond, emerald, amber, quartz, amethyst) and
+  color. Saved at once in the data folder, never in the notes, and shown on every graph,
+  the project list and the landing.
 
 ### Changed
 
@@ -54,6 +58,10 @@ All notable changes to this project are documented here. The format follows
   do nothing. Static files now carry a hash of their content and are checked each time,
   and the first page from a new build tells the browser to drop what it cached before
   (`Clear-Site-Data`), so nobody needs to force a reload.
+- The site's name and the titles kept the old palette's colors after a change on the
+  Appearance page: a cache in front of the site kept `/theme.css`. Its address now
+  changes with the theme. Project names in the list take the palette's title color
+  instead of the link color, which was a light blue in every palette.
 
 ## [0.1.0] - 2026-11-10
 

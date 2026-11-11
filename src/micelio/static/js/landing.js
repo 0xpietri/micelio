@@ -4,7 +4,7 @@
 
 import {
   DEFS, SVG_NS, cloud, el, f1, fragment, hyphaPath, lighter, loadStrings, painter, rampFilter,
-  reduced, seededRandom, tr,
+  reduced, seededRandom, shade, tr,
 } from "./draw.js";
 
 function viewWindow(svg, soil) {
@@ -29,8 +29,8 @@ function layout(data, V, soil, k) {
   const projects = data.projects.map((p, i) => {
     const rand = seededRandom(p.id);
     const x = count === 1 ? (left + right) / 2 : left + step * i + (rand() - 0.5) * step * 0.3;
-    const size = k * crowd * Math.min(1.6, 0.78 + 0.17 * Math.sqrt(p.notes));
-    return { ...p, x, size };
+    const size = k * crowd * Math.min(1.6, 0.78 + 0.17 * Math.sqrt(p.notes)) * (p.scale || 1);
+    return { ...p, x, size, color: p.shade ? shade(p.id, p.color, data.palette) : p.color };
   });
   const byId = Object.fromEntries(projects.map((p) => [p.id, p]));
 
