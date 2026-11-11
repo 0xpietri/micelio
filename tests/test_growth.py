@@ -93,3 +93,17 @@ def test_threads_show_what_they_join() -> None:
     for kind in ("member", "journal", "source", "link", "ghost"):
         assert f"{kind}: {{ color" in script
     assert "k-${t.kind}" in script
+
+
+def test_project_scene_grows_down_and_zooms_only_underground() -> None:
+    from pathlib import Path
+
+    static = Path(__file__).resolve().parents[1] / "src" / "micelio" / "static"
+    script = (static / "js" / "graph.js").read_text("utf-8")
+    assert "--scene-h" in script
+    assert "depthZoom" in script
+    assert 'mode === "forest" ? null : panZoom(' in script  # the sky never zooms
+    css = (static / "css" / "graph.css").read_text("utf-8")
+    assert ".scene-page .hero-scene.sized { height: var(--scene-h); }" in css
+    assert ".hero-scene.has-soil .graph-tools" in css
+    assert ".stage-fruiting .growth-shroom-body" in css

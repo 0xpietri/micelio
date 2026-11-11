@@ -10,7 +10,12 @@ All notable changes to this project are documented here. The format follows
 
 - The site's name and a project's title sit on a small sign in the theme's colors, so
   they read on any background and palette.
-- A project's growth card stands on the soil line, beside the mushrooms (wide screens).
+- A project's growth card stands on the soil line, beside the mushrooms (on a phone it
+  sits under the title), with a small mushroom that grows with the stage and breathes.
+- A project's scene grows down with its underground: more notes or more spacing make it
+  taller. Its + / − / ⚙ sit on the soil line, and + / − spread the notes and threads
+  apart (names keep their size) while the sky and the mushrooms stay put.
+- A project's title is smaller than the site's name, on one line when it fits.
 - In the graphs a thread shows what it joins: a project's notes hang on solid threads in
   its color, journal entries on gold dots, sources on dashes, and links between notes are
   thin and faint. The threads no longer glow, so names read better.

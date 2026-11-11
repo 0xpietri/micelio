@@ -16,7 +16,18 @@
   {#- How the project grows: a stage and twelve weeks of notes (§7c). #}
   <div class="growth glass stage-{{ growth.stage }}{% if category %} cat-{{ category.key }}{% endif %}" title="{{ t('growth.score', score=growth.score) }}">
     <p class="growth-head">
-      <strong>{{ t("growth." ~ growth.stage) }}</strong>
+      <strong>
+        {#- A small mushroom that grows with the stage; it breathes while the project is alive. #}
+        <svg class="growth-shroom" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <g class="growth-shroom-body">
+            <path class="stem" d="M10 13.5h4l.8 8.5h-5.6z"/>
+            <path class="cap" d="M3 14c0-5.2 4-9 9-9s9 3.8 9 9z"/>
+            <circle class="dot" cx="9" cy="9.5" r="1.3"/><circle class="dot" cx="14.5" cy="8" r="1.1"/><circle class="dot" cx="16" cy="11.5" r="1"/>
+          </g>
+          <circle class="spore s1" cx="7" cy="4" r="0.9"/><circle class="spore s2" cx="17" cy="3" r="0.8"/>
+        </svg>
+        {{ t("growth." ~ growth.stage) }}
+      </strong>
       <span class="muted">{{ t("growth.added", count=growth.added) }}</span>
     </p>
     <svg class="growth-weeks" viewBox="0 0 120 30" preserveAspectRatio="none" role="img" aria-label="{{ t('growth.weeks') }}">
