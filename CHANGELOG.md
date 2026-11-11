@@ -38,7 +38,9 @@ All notable changes to this project are documented here. The format follows
 
 - After a deploy, browsers kept the previous build's styles and scripts for months (every
   build's files have the same date), so pages could look broken and the graph settings
-  do nothing. Static files now carry a hash of their content and are checked each time.
+  do nothing. Static files now carry a hash of their content and are checked each time,
+  and the first page from a new build tells the browser to drop what it cached before
+  (`Clear-Site-Data`), so nobody needs to force a reload.
 
 ## [0.1.0] - 2026-11-10
 
