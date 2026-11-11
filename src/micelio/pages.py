@@ -23,7 +23,7 @@ from micelio.appearance import (
 )
 from micelio.auth.web import SignIn
 from micelio.config import NOTE_TYPES, STATUSES, Category, Config
-from micelio.formatting import Dates
+from micelio.formatting import Dates, authors
 from micelio.graph import GraphBuilder, ScopeError, UnknownNodeError, parse_scope
 from micelio.growth import growth
 from micelio.guide import Guide, GuideBuilder
@@ -153,6 +153,7 @@ class Pages:
         templates.env.globals.update(
             href=href_for,
             show_date=dates.show,
+            authors=authors,
             short_date=dates.short,
             created=dates.created,
             updated=dates.updated,
@@ -246,6 +247,12 @@ class Pages:
             raise HTTPException(status_code=404)
         return note
 
+    def _guide(self, vault: IndexView, project: Note) -> Guide:
+        members = vault.members.get(project.slug, set())
+        return self.guides.build(
+            vault, project, self._journals_touching(vault, {project.slug, *members})
+        )
+
     def _guide_for(self, vault: IndexView, note: Note, wanted: str) -> Guide | None:
         """The guide shown beside a note: the project asked for (``?guide=``) when the
         note belongs to it, else its first project by name."""
@@ -256,7 +263,7 @@ class Pages:
         if not projects:
             return None
         project = next((p for p in projects if p.slug == wanted), projects[0])
-        guide = self.guides.build(vault, project)
+        guide = self._guide(vault, project)
         return replace(guide, others=[p for p in projects if p is not project])
 
     def _journals_touching(self, vault: IndexView, slugs: set[str]) -> list[Note]:
@@ -331,7 +338,7 @@ class Pages:
             context = {
                 "note": note,
                 "body": reader.renderer.html(note),
-                "guide": self.guides.build(vault, note),
+                "guide": self._guide(vault, note),
                 "members": [m for m in members if m.type != "journal"],
                 "journals": self._journals_touching(vault, {slug, *member_slugs})[:10],
                 "growth": growth(
@@ -368,7 +375,7 @@ class Pages:
                 "body": reader.renderer.html(note),
                 "backlinks": [b for b in backlinks if b.type != "project"],
                 "projects": projects,
-                "guide": self._guide_for(vault, note, guide) if note.type != "journal" else None,
+                "guide": self._guide_for(vault, note, guide),
                 "nav": "journal" if note.type == "journal" else "",
             }
             return render(request, "note.html", context, reader)

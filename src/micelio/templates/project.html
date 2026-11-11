@@ -85,6 +85,14 @@
 <div class="project-page guided">
 {{ guide_box(guide) }}
 <article class="page{% if category %} cat-{{ category.key }}{% endif %}">
+  {% set by = authors(note) %}
+  {% if by[0] or by[1] or note.tags %}
+  <p class="authors small">
+    {%- if by[0] %}<span class="author-chip{% if by[0].startswith('Claude') %} model{% endif %}">{{ t("note.created_by", name=by[0]) }}</span>{% endif %}
+    {%- if by[1] %} <span class="author-chip{% if by[1].startswith('Claude') %} model{% endif %}">{{ t("note.edited_by", name=by[1]) }}</span>{% endif %}
+    {%- for tag in note.tags %} <a class="tag" href="/explore?tag={{ tag | urlencode }}" title="{{ t('note.tag_graph', tag=tag) }}">#{{ tag }}</a>{% endfor %}
+  </p>
+  {% endif %}
   <div class="prose">{{ body }}</div>
 
   <section>

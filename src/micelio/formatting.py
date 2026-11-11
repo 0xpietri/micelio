@@ -48,3 +48,25 @@ class Dates:
 
     def show(self, value: date) -> str:
         return format_date(value, format="medium", locale=active_language(self.language))
+
+
+_MODEL_ID = re.compile(r"^claude-([a-z]+)-(\d+(?:-\d+)*)$")
+
+
+def author_name(value: object) -> str:
+    """Who wrote a note (``created_by`` / ``edited_by``), for people: a model id such as
+    ``claude-opus-5-5`` reads "Claude Opus 5.5"; anything else is shown as written."""
+    if not isinstance(value, str):
+        return ""
+    text = value.strip()
+    match = _MODEL_ID.match(text.lower())
+    if match:
+        return f"Claude {match[1].capitalize()} {match[2].replace('-', '.')}"
+    return text
+
+
+def authors(note: Note) -> tuple[str, str]:
+    """``(created_by, edited_by)`` for people; edited_by is empty when it is the same."""
+    created = author_name(note.frontmatter.get("created_by"))
+    edited = author_name(note.frontmatter.get("edited_by"))
+    return created, "" if edited == created else edited

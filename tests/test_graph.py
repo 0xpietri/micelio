@@ -473,7 +473,7 @@ def test_graph_json_is_plain(client: TestClient) -> None:
     data = client.get("/api/graph").json()
     json.dumps(data)
     keys = {
-        "id", "title", "type", "category", "categories", "bridge", "status",
+        "id", "title", "type", "category", "categories", "bridge", "status", "tags",
         "degree", "public", "href", "ghost", "faded", "focus", "look",
     }  # fmt: skip
     assert all(set(n) == keys for n in data["nodes"])
