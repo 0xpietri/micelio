@@ -21,7 +21,7 @@ PUBLIC = "open-garden"  # public: true in its own frontmatter
 
 def share_form(site: Site, slug: str = PRIVATE) -> dict[str, str]:
     page = site.client.get(f"/projects/{slug}").text
-    form = re.search(r'<form class="share-switch".*?</form>', page, re.S)
+    form = re.search(r'<form class="share-switch[^"]*".*?</form>', page, re.S)
     assert form, "the owner's project page carries the Share switch"
     fields = dict(re.findall(r'name="(\w+)" value="([^"]*)"', form.group(0)))
     return fields
@@ -85,7 +85,11 @@ def test_sharing_a_project_opens_it_and_its_notes_to_visitors(site_for: SiteFor)
     assert page.status_code == 200
     assert "Secret xq plan" in page.text
     assert "Lonely xq" in page.text
-    assert 'class="share-switch"' not in page.text, "visitors only look"
+    assert "<form" not in page.text, "visitors only look"
+    assert "share-switch" in page.text, "and they see the mushroom"
+    assert 'class="growth' in page.text, "and the growth card"
+    assert "anyone can read it, no account needed" in page.text
+    assert "Spores in the air" in page.text
     assert "badge shared" not in site.client.get("/projects").text
     assert site.client.get("/notes/lonely-xq").status_code == 200
     nodes = {n["id"] for n in site.client.get("/api/graph").json()["nodes"]}
@@ -114,10 +118,14 @@ def test_a_project_public_in_its_note_shows_as_shared(site_for: SiteFor) -> None
     site = site_for(VAULT)
     site.sign_in()
     page = site.client.get(f"/projects/{PUBLIC}").text
-    form = re.search(r'<form class="share-switch".*?</form>', page, re.S)
+    form = re.search(r'<form class="share-switch[^"]*".*?</form>', page, re.S)
     assert form
     assert "<button" not in form.group(0), "set in the vault, not here"
     assert "public: true" in form.group(0)
+    as_visitor(site)
+    page = site.client.get(f"/projects/{PUBLIC}").text
+    assert re.search(r'class="share-switch[^"]* on"', page)
+    assert "<form" not in page
 
 
 def test_only_the_owner_can_share(site_for: SiteFor) -> None:

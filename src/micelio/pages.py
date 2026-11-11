@@ -161,10 +161,14 @@ class Pages:
         return self.node_looks.get(slug) or {}
 
     def share_switch(self, request: Request, note: Note) -> dict[str, object] | None:
-        """The owner's Share switch on a project's page (§9); nothing for visitors."""
-        if not self.sign_in.sees_everything(request) or note.type != "project":
+        """The Share switch on a project's page (§9). The owner can flip it; a visitor only
+        ever sees it shared (a private project is not there for them) and cannot touch it."""
+        if note.type != "project":
             return None
+        if not self.sign_in.sees_everything(request):
+            return {"owner": False, "shared": True, "in_note": False, "token": ""}
         return {
+            "owner": True,
             "shared": self.shared.is_shared(note.slug),
             # Public in its own frontmatter: shown, and visitors already see it.
             "in_note": note.public,

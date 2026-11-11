@@ -266,11 +266,45 @@ form .check, .check {
 .growth-dates { margin: 0.4rem 0 0; font-size: 0.72rem; font-variant-numeric: tabular-nums; }
 .graph-tip-hint { display: block; margin-top: 0.25rem; color: var(--sun); font-size: 0.78rem; }
 
-/* The owner's Share switch under a project's title (§9). */
-.share-switch { margin: 0.4rem 0 0; pointer-events: auto; }
-.share-toggle { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.2rem 0.75rem 0.2rem 0.35rem; border: 1px solid color-mix(in srgb, var(--text) 35%, transparent); border-radius: 999px; background: color-mix(in srgb, var(--ink) 80%, transparent); color: var(--text); font: inherit; font-size: 0.85rem; cursor: pointer; }
-.share-toggle:hover, .share-toggle:focus-visible { border-color: var(--accent); }
-.share-box { display: inline-grid; place-items: center; width: 1.05rem; height: 1.05rem; border: 1.5px solid currentColor; border-radius: 0.3rem; font-size: 0.75rem; line-height: 1; }
-.share-toggle.on { border-color: var(--accent); }
-.share-toggle.on .share-box { background: var(--accent); border-color: var(--accent); color: var(--ink); }
+/* The Share switch (§9): a dark card at the right of a project's scene, standing on the soil
+   line like the growth card on the left. Inside, a neon mushroom over its mycelium when the
+   project is shared, only the mycelium under a faint soil line when it is private. */
+.share-switch { position: absolute; z-index: 3; right: max(1rem, env(safe-area-inset-right, 0px)); bottom: 1rem; margin: 0; }
+@media (min-width: 720px) {
+  .hero-scene.has-soil .share-switch { bottom: auto; top: calc(var(--soil-y) - 0.5rem); transform: translateY(-100%); }
+}
+.share-toggle { display: flex; flex-direction: column; align-items: center; gap: 0.1rem; margin: 0; padding: 0.45rem 0.7rem 0.5rem; border: 1px solid color-mix(in srgb, var(--cat, var(--accent)) 45%, transparent); border-radius: var(--radius); background: color-mix(in srgb, #000 55%, var(--ink)); box-shadow: 0 0 18px color-mix(in srgb, var(--cat, var(--accent)) 35%, transparent), inset 0 0 22px rgba(0, 0, 0, 0.6); color: var(--text); font: inherit; cursor: pointer; }
 span.share-toggle { cursor: default; }
+.share-toggle:hover, .share-toggle:focus-visible { border-color: var(--cat, var(--accent)); box-shadow: 0 0 26px color-mix(in srgb, var(--cat, var(--accent)) 60%, transparent), inset 0 0 22px rgba(0, 0, 0, 0.6); }
+.share-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.share-caption { color: var(--muted); font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
+.share-switch.on .share-caption { color: var(--pal-spore, var(--sun)); text-shadow: 0 0 6px var(--pal-spore, var(--sun)); }
+.share-art { order: -1; width: 6.4rem; height: 6.4rem; overflow: visible; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.share-soil { stroke: color-mix(in srgb, var(--text) 25%, transparent); stroke-width: 0.6; stroke-dasharray: 1.5 2.5; }
+/* The mycelium: threads in the category's neon, knots in the theme's second button color. */
+.share-roots path { stroke: var(--cat, var(--accent)); stroke-width: 1.4; filter: drop-shadow(0 0 1.5px var(--cat, var(--accent))) drop-shadow(0 0 4px var(--cat, var(--accent))); }
+.share-roots circle { fill: var(--link); filter: drop-shadow(0 0 2px var(--link)) drop-shadow(0 0 4px var(--link)); }
+.share-switch:not(.on) .share-roots { animation: share-pulse 3.4s ease-in-out infinite; }
+/* The mushroom: a dark cap outlined in the category's neon, spots and gills in the theme's colors. */
+.share-shroom .cap { fill: color-mix(in srgb, var(--cat, var(--accent)) 18%, #000); stroke: var(--cat, var(--accent)); stroke-width: 1.5; filter: drop-shadow(0 0 2px var(--cat, var(--accent))) drop-shadow(0 0 6px var(--cat, var(--accent))); }
+.share-shroom .spot { fill: none; stroke: var(--pal-spore, var(--sun)); stroke-width: 1.1; filter: drop-shadow(0 0 2px var(--pal-spore, var(--sun))); }
+.share-shroom .gills, .share-shroom .stem-line { stroke: var(--pal-spore, var(--sun)); stroke-width: 0.7; opacity: 0.9; }
+.share-shroom .stem { fill: color-mix(in srgb, var(--cat, var(--accent)) 14%, #000); stroke: var(--link); stroke-width: 1.2; filter: drop-shadow(0 0 2px var(--link)) drop-shadow(0 0 5px var(--link)); }
+.share-shroom .ring { fill: var(--cat, var(--accent)); stroke: var(--pal-spore, var(--sun)); stroke-width: 0.6; filter: drop-shadow(0 0 3px var(--cat, var(--accent))); }
+.share-shroom .small { stroke-width: 1; }
+.share-shroom .glow { fill: var(--link); filter: drop-shadow(0 0 2px var(--link)) drop-shadow(0 0 5px var(--link)); animation: share-twinkle 2.6s ease-in-out infinite; }
+.share-shroom .glow:nth-of-type(2n) { animation-delay: 1.3s; }
+.share-art { transition: transform 0.2s ease; transform-origin: 50% 62.5%; }
+button.share-toggle:hover .share-art { transform: scale(1.04); }
+@keyframes share-pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+@keyframes share-twinkle { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .share-roots, .share-shroom .glow { animation: none !important; }
+}
+/* On a phone the growth card is in the sky; the share card stands small on the soil line. */
+@media (max-width: 719px) {
+  .hero-scene.has-soil .share-switch { bottom: auto; top: calc(var(--soil-y) - 0.3rem); transform: translateY(-100%); }
+  .share-toggle { padding: 0.3rem 0.5rem 0.35rem; }
+  .share-art { width: 4.2rem; height: 4.2rem; }
+  .share-caption { font-size: 0.7rem; }
+}

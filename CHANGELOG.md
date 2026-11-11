@@ -8,9 +8,11 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
-- A Share switch on each project's page, for the owner: a shared project and the notes it
-  links to can be read by anyone without signing in. Switch it off to make them private
-  again. Shared projects carry a "Shared" badge on the projects list.
+- A Share switch on each project's page, on the soil line at the right: a neon mushroom
+  ("Spores in the air") when the project is shared, only its mycelium ("Underground") when
+  it is private, in the theme's colors. The owner clicks it to share a project and the notes
+  it links to with anyone, no account needed; visitors see the mushroom. Shared projects
+  carry a badge on the projects list.
 
 ### Changed
 
