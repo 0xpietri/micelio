@@ -248,6 +248,7 @@ sign_in_help = "Si este cuaderno es tuyo, iniciá sesión para ver todas las not
 back = "Volver a los proyectos"
 
 [growth]
+dates = "Creado {created} · Editado {updated}"
 dormant = "Dormido"
 germinating = "Germinando"
 growing = "Creciendo"

@@ -249,6 +249,7 @@ sign_in_help = "If this notebook is yours, sign in to see every note."
 back = "Back to the projects"
 
 [growth]
+dates = "Created {created} · Updated {updated}"
 dormant = "Dormant"
 germinating = "Germinating"
 growing = "Growing"

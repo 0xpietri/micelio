@@ -407,4 +407,3 @@ form.inline { display: inline; }
   border-radius: 14px;
 }
 .brand, .hero-heading h1, .explore-panel h1 { display: inline-block; }
-.hero-heading .dress-hint { display: inline-block; margin-top: 0.5rem; padding: 0.15rem 0.6rem; border-radius: 999px; background: color-mix(in srgb, var(--ink) 80%, transparent); color: var(--text); }

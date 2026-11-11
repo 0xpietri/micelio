@@ -139,7 +139,9 @@ def test_signed_in_owner_gets_the_key_and_hint(site_for: SiteFor) -> None:
     site.sign_in()
     page = site.client.get("/projects/open-garden").text
     assert 'name="micelio-looks"' in page
-    assert "Click the mushroom to change its species" in page
+    # The hint is the mushroom's hover text (graph.js), not a line on the page.
+    assert "Click the mushroom to change its species" not in page
+    assert "graph.dress_hint" in (STATIC / "js" / "graph.js").read_text("utf-8")
     token = key(site.client, "/projects/open-garden")
     answer = site.client.post(
         "/api/looks/open-garden", json={"species": "coral"}, headers={"X-Micelio-Form": token}

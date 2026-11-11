@@ -208,7 +208,6 @@ form .check, .check {
 .look-editor .look-color { grid-template-columns: 1fr auto; align-items: center; }
 .look-editor input[type="color"] { width: 3rem; height: 2rem; padding: 0; border: 2px solid var(--ink); border-radius: 8px; background: none; cursor: pointer; }
 .look-editor .muted.small { margin: 0; }
-.dress-hint { margin: 0.3rem 0 0; }
 
 /* How a project grows: a small glass card in the scene's bottom left corner. */
 .growth { position: absolute; z-index: 2; left: max(1rem, env(safe-area-inset-left, 0px)); bottom: 1rem; width: min(19rem, calc(100% - 2rem)); padding: 0.55rem 0.8rem 0.6rem; font-size: 0.8rem; }
@@ -264,3 +263,5 @@ form .check, .check {
 @media (max-width: 719px) {
   .graph-tools:not(.open) > :not(.graph-gear):not(.graph-panel) { display: none; }
 }
+.growth-dates { margin: 0.4rem 0 0; font-size: 0.72rem; font-variant-numeric: tabular-nums; }
+.graph-tip-hint { display: block; margin-top: 0.25rem; color: var(--sun); font-size: 0.78rem; }

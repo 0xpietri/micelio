@@ -18,8 +18,9 @@ All notable changes to this project are documented here. The format follows
   theme's colors. "Poster" stays the default.
 - On a phone a graph's corner shows only the ⚙; opening it brings + / − / Fit.
 - The Appearance page has a button to put the soil line back where it started.
-- The owner's hint on a project or source page says what clicking the mushroom or the
-  mineral does.
+- The owner's hint on a project or source page moved into the mushroom's (or mineral's)
+  hover text and says what a click does.
+- A project's created and updated dates moved into its growth card, in numbers.
 - In the graphs a thread shows what it joins: a project's notes hang on solid threads in
   its color, journal entries on gold dots, sources on dashes, and links between notes are
   thin and faint. The threads no longer glow, so names read better.

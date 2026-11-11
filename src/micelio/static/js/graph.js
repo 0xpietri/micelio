@@ -309,6 +309,13 @@ function tooltips(host, svg, nodesById, strings) {
     const span = document.createElement("span");
     span.textContent = describe(node, strings);
     tip.replaceChildren(strong, span);
+    // The owner, on the project's or source's own page: what a click does.
+    if (node.focus && lookKey() && (node.type === "project" || node.type === "source")) {
+      const hint = document.createElement("em");
+      hint.className = "graph-tip-hint";
+      hint.textContent = tr(strings, node.type === "project" ? "graph.dress_hint" : "graph.dress_hint_source");
+      tip.appendChild(hint);
+    }
     tip.hidden = false;
     const box = host.getBoundingClientRect();
     let x;

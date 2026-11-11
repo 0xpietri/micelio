@@ -138,6 +138,7 @@ class Pages:
         templates.env.globals.update(
             href=href_for,
             show_date=dates.show,
+            short_date=dates.short,
             created=dates.created,
             updated=dates.updated,
             category_of=self.category_of,

@@ -120,3 +120,10 @@ def test_title_effects_and_soil_reset(client: TestClient) -> None:
     assert 'class="link soil-reset" data-default="52"' in page
     theme = client.get("/theme.css").text
     assert "--title-plate-bg: transparent" in theme  # poster by default
+
+
+def test_growth_card_holds_the_dates_in_numbers(client: TestClient) -> None:
+    html = client.get("/projects/learning-bayesian-statistics").text
+    card = html.split('class="growth glass')[1].split("</section>")[0]
+    assert "Created 10/1/2026 · Updated" in card
+    assert "Created:" not in html
