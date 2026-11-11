@@ -35,7 +35,7 @@ from micelio.i18n import (
 from micelio.landing_web import LandingPages
 from micelio.pages import Pages
 from micelio.sharing import SharedProjects
-from micelio.static_files import ClearStaleCache, FreshStaticFiles, fingerprint
+from micelio.static_files import FreshStaticFiles
 from micelio.vault import PublicView, VaultIndex
 
 PACKAGE = Path(str(files("micelio")))
@@ -151,8 +151,6 @@ def create_app(
             body["notes"] = len(vault.notes)
         return body
 
-    # Browsers that kept an older build's CSS and JS drop them on their next page.
-    app.add_middleware(ClearStaleCache, build=fingerprint(PACKAGE / "static"))
     # Outermost, so the visitor's language is set before anything else runs.
     app.add_middleware(LanguageMiddleware, languages=available_languages())
     return app

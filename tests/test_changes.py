@@ -128,25 +128,12 @@ def test_static_files_are_checked_again_by_their_content() -> None:
     assert stale.status_code == 200
 
 
-def test_a_new_build_tells_browsers_to_drop_their_old_cache() -> None:
+def test_no_page_asks_the_browser_to_clear_its_cache() -> None:
+    # Chrome on Android can hang a page for minutes while it clears a big HTTP cache
+    # for `Clear-Site-Data: "cache"`, so no answer may carry that header.
     client = client_for("en")
     client.cookies.clear()
-    first = client.get("/projects")
-    assert first.headers["clear-site-data"] == '"cache"'
-    assert "micelio_static=" in first.headers["set-cookie"]
-    again = client.get("/explore")  # the cookie came back: nothing to clear
-    assert "clear-site-data" not in again.headers
-    assert "clear-site-data" not in client.get("/static/css/micelio.css").headers
-    client.cookies.clear()
-    client.cookies.set("micelio_static", "an-older-build")
-    assert client.get("/journal").headers["clear-site-data"] == '"cache"'
-
-
-def test_the_fingerprint_follows_the_files(tmp_path: Path) -> None:
-    from micelio.static_files import fingerprint
-
-    (tmp_path / "a.css").write_text("a {}", "utf-8")
-    before = fingerprint(tmp_path)
-    assert fingerprint(tmp_path) == before
-    (tmp_path / "a.css").write_text("a { color: red }", "utf-8")
-    assert fingerprint(tmp_path) != before
+    for path in ("/", "/projects", "/explore", "/static/css/micelio.css"):
+        response = client.get(path)
+        assert "clear-site-data" not in response.headers
+        assert "micelio_static" not in response.headers.get("set-cookie", "")
