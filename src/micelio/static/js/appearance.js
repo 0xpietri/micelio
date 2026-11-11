@@ -51,11 +51,10 @@ function livePreview() {
     root.setProperty("--text-size", `${value("text_size")}px`);
     root.setProperty("--label-scale", String(Number(value("graph_labels")) / 100));
     for (const [name, v] of Object.entries(titleLook(value("title_effect")))) root.setProperty(name, v);
-    const [board, hand] = value("board").split(".");
-    if (board && hand) {
-      for (const part of ["bg", "ink", "title"]) root.setProperty(`--board-${part}`, `var(--board-${board}-${part})`);
-      root.setProperty("--board-font", `var(--font-${hand})`);
-    }
+    const board = value("board_color");
+    if (board) for (const part of ["bg", "ink", "title"]) root.setProperty(`--board-${part}`, `var(--board-${board}-${part})`);
+    if (value("board_font")) root.setProperty("--board-font", `var(--font-${value("board_font")})`);
+    if (value("said_font")) root.setProperty("--said-font", `var(--font-${value("said_font")})`);
     for (const range of form.querySelectorAll('input[type="range"][data-unit]')) {
       const out = document.getElementById(`${range.id}-value`);
       if (out) out.textContent = `${range.value} ${range.dataset.unit}`;

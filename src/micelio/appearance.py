@@ -213,6 +213,7 @@ class Appearance:
     title_effect: TitleEffect = "poster"
     board_color: BoardColor = "green"
     board_font: BoardFont = "caveat"
+    said_font: BoardFont = "patrick-hand"  # the hand of the owner's words in `> [!said]`
     avatar_type: ImageType | None = None  # the owner's picture, set while one exists
     avatar_version: int = 0  # bumps on each upload, for cache busting
 
@@ -476,6 +477,7 @@ class AppearanceStore:
             title_effect=title_effect_named(saved.get("title_effect"), type_defaults.title_effect),
             board_color=board_color_named(saved.get("board_color"), "green"),
             board_font=board_font_named(saved.get("board_font"), "caveat"),
+            said_font=board_font_named(saved.get("said_font"), "patrick-hand"),
             avatar_type=avatar_type,
             avatar_version=avatar_version if isinstance(avatar_version, int) else 0,
         )

@@ -124,6 +124,7 @@ def theme_css(colors: dict[str, str], appearance: Appearance) -> str:
         f"--board-bg: var(--board-{board}-bg); --board-ink: var(--board-{board}-ink); "
         f"--board-title: var(--board-{board}-title); "
         f"--board-font: var(--font-{appearance.board_font}); "
+        f"--said-font: var(--font-{appearance.said_font}); "
         "}"
     ]
     if appearance.avatar_type:

@@ -308,8 +308,13 @@ a.tag:hover { background: color-mix(in srgb, var(--pal-button-alt, #22d3ee) 30%,
   border: 2px solid color-mix(in srgb, var(--cat) 70%, var(--text));
   border-radius: 18px;
   background: color-mix(in srgb, var(--cat) 16%, var(--surface));
-  font-size: 1.05em;
+  font-family: var(--said-font, var(--font-patrick-hand));
+  font-size: 1.3em;
+  line-height: 1.35;
 }
+/* The owner's words between quotes */
+.callout-said > p:first-child::before { content: "\201C"; }
+.callout-said > p:last-child::after { content: "\201D"; }
 .callout-said::before {
   content: "";
   position: absolute;
@@ -363,7 +368,7 @@ a.tag:hover { background: color-mix(in srgb, var(--pal-button-alt, #22d3ee) 30%,
 .chalk-patrick-hand { --board-font: var(--font-patrick-hand); }
 .chalk-gochi-hand { --board-font: var(--font-gochi-hand); }
 
-.callout-takeaway, .board-sample {
+.callout-takeaway {
   border: 24px solid transparent;
   border-image: url("../img/log-frame.webp") 100 125 130 125 / 58px 72px 75px 72px / 6px stretch;
   border-radius: 0;
@@ -395,16 +400,19 @@ a.tag:hover { background: color-mix(in srgb, var(--pal-button-alt, #22d3ee) 30%,
 @media (max-width: 600px) {
   .callout-takeaway { margin-left: 0; margin-right: 0; padding: 1.3rem 1.1rem 1.6rem; font-size: 1.3em; }
 }
-/* The nine boards on the Appearance page */
-.board-sample {
-  display: block;
-  min-height: 6.5rem;
-  padding: 0.5rem 0.7rem;
-  border-width: 14px;
-  border-image-width: 29px 36px 38px 36px;
-  border-image-outset: 3px;
-  font-size: 1.35rem;
-}
+/* The board settings on the Appearance page: one live preview, two rows of choices */
+.board-setup { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 1.25rem; align-items: start; margin-bottom: 1rem; }
+.board-preview .callout-takeaway { margin: 1rem 0 0.5rem; font-size: 1.25em; }
+.board-preview .callout-said { margin-top: 0.5rem; }
+.board-options h4 { margin: 0.6rem 0 0.4rem; }
+.pills { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.pill { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.35rem 0.75rem; border: 1px solid var(--line); border-radius: 999px; background: var(--glass); cursor: pointer; }
+.pill:has(input:checked) { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.pill input { position: absolute; opacity: 0; pointer-events: none; }
+.pill .swatch { width: 1.1rem; height: 1.1rem; border-radius: 4px; background: var(--board-bg); border: 1px solid var(--line); }
+.pill .hand { font-family: var(--board-font); font-size: 1.25em; }
+.pill:has(input:focus-visible) { outline: 3px solid var(--link); outline-offset: 2px; }
+@media (max-width: 700px) { .board-setup { grid-template-columns: 1fr; } }
 
 /* Forms */
 form label { display: block; margin-bottom: 1rem; color: var(--muted); }
