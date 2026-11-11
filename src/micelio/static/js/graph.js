@@ -180,12 +180,47 @@ function panZoom(svg, onChange, opt = {}) {
     e.preventDefault();
     zoomAt(e.clientX, e.clientY, e.deltaY > 0 ? 1.12 : 1 / 1.12);
   }, { passive: false });
+  // One pointer drags; two (fingers on a phone or tablet) pinch to zoom and move together.
+  const touches = new Map();
   let drag = null;
+  let pinch = null;
+  const startPinch = () => {
+    const [a, b] = [...touches.values()];
+    pinch = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2, vb: { ...vb } };
+    drag = null;
+    svg.classList.add("dragging");
+    svg.dataset.dragged = "1";
+  };
   svg.addEventListener("pointerdown", (e) => {
-    if (e.button !== 0) return;
-    drag = { x: e.clientX, y: e.clientY, vb: { ...vb }, moved: false, id: e.pointerId };
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (touches.size === 2) {
+      for (const id of touches.keys()) { try { svg.setPointerCapture(id); } catch { /* gone */ } }
+      startPinch();
+      return;
+    }
+    if (touches.size === 1) drag = { x: e.clientX, y: e.clientY, vb: { ...vb }, moved: false, id: e.pointerId };
   });
   svg.addEventListener("pointermove", (e) => {
+    if (!touches.has(e.pointerId)) return;
+    touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pinch && touches.size >= 2) {
+      const [a, b] = [...touches.values()];
+      const r = rect();
+      const d = Math.hypot(a.x - b.x, a.y - b.y) || 1;
+      const nw = Math.min(home.w * maxOut, Math.max(home.w / 8, (pinch.vb.w * pinch.d) / d));
+      const k = nw / pinch.vb.w;
+      // The point under the fingers' first midpoint stays under their midpoint now.
+      const px = pinch.vb.x + ((pinch.mx - r.left) / r.width) * pinch.vb.w;
+      const py = pinch.vb.y + ((pinch.my - r.top) / r.height) * pinch.vb.h;
+      const mx = (a.x + b.x) / 2;
+      const my = (a.y + b.y) / 2;
+      const w = pinch.vb.w * k;
+      const h = pinch.vb.h * k;
+      vb = { x: px - ((mx - r.left) / r.width) * w, y: py - ((my - r.top) / r.height) * h, w, h };
+      apply();
+      return;
+    }
     if (!drag) return;
     const dx = e.clientX - drag.x;
     const dy = e.clientY - drag.y;
@@ -199,7 +234,22 @@ function panZoom(svg, onChange, opt = {}) {
     vb = { ...vb, x: drag.vb.x - (dx / r.width) * vb.w, y: drag.vb.y - (dy / r.height) * vb.h };
     apply();
   });
-  const end = () => {
+  const end = (e) => {
+    touches.delete(e.pointerId);
+    if (pinch) {
+      if (touches.size < 2) {
+        pinch = null;
+        if (opt.onZoom) opt.onZoom(ratio());
+        // The finger left on the glass carries on as a drag, from where it is now.
+        const [rest] = [...touches.entries()];
+        drag = rest ? { x: rest[1].x, y: rest[1].y, vb: { ...vb }, moved: true, id: rest[0] } : null;
+        if (!rest) {
+          svg.classList.remove("dragging");
+          setTimeout(() => delete svg.dataset.dragged, 0);
+        }
+      }
+      return;
+    }
     if (drag && drag.moved) svg.dataset.dragged = "1";
     drag = null;
     svg.classList.remove("dragging");

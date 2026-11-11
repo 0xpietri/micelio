@@ -19,6 +19,7 @@ All notable changes to this project are documented here. The format follows
   Save buttons only remain without JavaScript. A chosen background uploads at once.
 - "Make your own background" is folded on the Appearance page.
 - A click outside the Appearance panel goes back to the previous page.
+- Pinch with two fingers to zoom any graph on a phone or tablet.
 
 ### Changed
 
