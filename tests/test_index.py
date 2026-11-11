@@ -23,7 +23,7 @@ def test_example_vault_counts(example_index: VaultIndex) -> None:
     assert types.count("project") == 5
     assert types.count("journal") == 2
     assert types.count("source") == 2
-    assert len(example_index.notes) == 27
+    assert len(example_index.notes) == 29
 
 
 def test_skips_hidden_folders_and_sync_conflicts(example_index: VaultIndex) -> None:

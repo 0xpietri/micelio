@@ -60,6 +60,11 @@ title_effect = "poster"              # poster (dark outline and colored shadow) 
 hide_by_default = ["journal", "source"]
 max_nodes = 400                      # over this, /explore draws only the most connected notes
 
+[guide]
+# The heading of a project's index that holds its guide: an ordered list of links,
+# with ### for its stretches. Without it the guide follows the order of the index's links.
+headings = ["Guide", "Guía"]
+
 [auth]
 mode = "local"                       # local | none (when a gateway in front handles sign-in)
 session_hours = 12

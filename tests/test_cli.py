@@ -17,7 +17,7 @@ from .conftest import EXAMPLE_VAULT
 def test_check_lists_issues(capsys: pytest.CaptureFixture[str]) -> None:
     assert cli.main(["check", "--vault", str(EXAMPLE_VAULT)]) == 1
     out = capsys.readouterr().out
-    assert out.startswith("27 notes, ")
+    assert out.startswith("29 notes, ")
     assert "broken-link" in out
 
 

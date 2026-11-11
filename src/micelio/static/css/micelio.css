@@ -407,3 +407,129 @@ form.inline { display: inline; }
   border-radius: 14px;
 }
 .brand, .hero-heading h1, .explore-panel h1 { display: inline-block; }
+
+/* A project's guide (§3.4): beside the page on a wide screen, folded above it on a phone. */
+.guided {
+  display: grid;
+  grid-template-columns: minmax(0, 48rem);
+  justify-content: center;
+  align-items: start;
+  column-gap: 1.25rem;
+}
+.guided > .page { width: 100%; margin-left: 0; margin-right: 0; }
+.guide {
+  margin: 0.75rem 0 0;
+  padding: 0.7rem 0.9rem 0.9rem;
+  border-color: color-mix(in srgb, var(--cat) 55%, var(--ink));
+}
+.guide summary { display: flex; flex-direction: column; cursor: pointer; list-style: none; }
+.guide summary::-webkit-details-marker { display: none; }
+.guide summary::after { content: "▾"; position: absolute; top: 0.6rem; right: 0.9rem; color: var(--muted); }
+.guide:not([open]) summary::after { content: "▸"; }
+.guide { position: relative; }
+.guide [hidden], .guide-pager[hidden] { display: none; }
+.guide-title { font-family: var(--display); font-size: 1.15rem; color: var(--cat); }
+.guide-projects { margin: 0.4rem 0 0; color: var(--muted); }
+.guide-orders { display: flex; gap: 0.35rem; margin: 0.6rem 0 0.4rem; }
+.guide .chip {
+  padding: 0.15rem 0.7rem;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ink) 40%, transparent);
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.guide .chip[aria-pressed="true"] { background: var(--text); color: var(--ink); }
+.guide-kinds { display: flex; flex-wrap: wrap; gap: 0.3rem; margin: 0 0 0.5rem; padding: 0; border: 0; }
+.guide-kinds .check { padding: 0.05rem 0.5rem; font-size: 0.75rem; }
+.guide-steps { margin: 0; padding: 0; list-style: none; counter-reset: step; }
+.guide-chapter {
+  margin: 0.7rem 0 0.2rem;
+  color: var(--sun);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.guide-step {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  padding: 0.18rem 0.35rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  line-height: 1.35;
+  counter-increment: step;
+}
+.guide-step::before { content: counter(step); min-width: 1.3em; color: var(--muted); font-size: 0.75rem; text-align: right; }
+.guide-step a { color: var(--text); text-decoration: none; }
+.guide-step a:hover { text-decoration: underline; }
+.guide-step.current { background: color-mix(in srgb, var(--cat) 28%, transparent); }
+.guide-step.current a { font-weight: 700; }
+.guide-step.question a { color: var(--muted); font-style: italic; }
+.guide-step.gap { border: 1px dashed color-mix(in srgb, var(--cat) 70%, transparent); margin: 0.12rem 0; }
+.guide-step.gap a, .guide-missing { color: color-mix(in srgb, var(--cat) 60%, var(--text)); }
+.guide-missing { cursor: help; opacity: 0.8; }
+.guide-hint { margin: 0.6rem 0 0; }
+@media (min-width: 1100px) {
+  .guided { grid-template-columns: 17rem minmax(0, 48rem); }
+  .guide { position: sticky; top: 0.75rem; max-height: calc(100vh - 1.5rem); overflow-y: auto; }
+}
+
+/* The marks of the guide's kinds, as in the graphs: a concept's dot, a question's drifting
+   spore, a gap's primordium (a mushroom's first knot, dashed: not out yet). */
+.guide-icon {
+  display: inline-block;
+  flex: none;
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 50%;
+  background: var(--cat);
+  border: 2px solid var(--ink);
+  align-self: flex-start;
+  margin-top: 0.32em;
+}
+.check .guide-icon { margin-top: 0; align-self: center; }
+.guide-icon.question, .spore-icon.question {
+  background: color-mix(in srgb, var(--cat) 70%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--text) 75%, transparent);
+  box-shadow: 0 0 0 1.5px var(--ink) inset;
+}
+.guide-icon.gap, .spore-icon.gap {
+  width: 0.8rem;
+  height: 0.85rem;
+  border-radius: 50% 50% 20% 20% / 65% 65% 35% 35%;
+  background: color-mix(in srgb, var(--cat) 22%, transparent);
+  border: 1.5px dashed var(--cat);
+}
+.guide-icon.journal { background: var(--pal-spore, #ffd23f); }
+.guide-icon.source { border-radius: 2px; transform: rotate(45deg) scale(0.85); background: linear-gradient(135deg, #fff 0 22%, #7fe7ff 23%); }
+
+/* Previous and next in the guide, at the foot of a note */
+.guide-pager {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 2rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--line);
+}
+.guide-pager .next { text-align: right; }
+
+/* A gap's page and a question's page say what they are */
+.type-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1rem 0 0;
+  padding: 0.5rem 0.8rem;
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.type-banner.gap { border: 1.5px dashed var(--cat); background: color-mix(in srgb, var(--cat) 10%, transparent); }
+.type-banner.question { border: 1px solid var(--line); background: var(--surface); }

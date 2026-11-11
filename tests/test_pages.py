@@ -86,7 +86,7 @@ def test_health(client: TestClient) -> None:
     html = client.get("/health").text
     assert "Link to a missing note" in html
     assert "A stray thought with no home" in html
-    assert "27 notes and 54 links." in html
+    assert "29 notes and 58 links." in html
 
 
 def test_health_all_good(tmp_path: Path) -> None:

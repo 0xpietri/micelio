@@ -1,9 +1,13 @@
 {% extends "base.html" %}
 {% from "_macros.html" import status_badge, category_dot, graph_head, graph_box, mushroom %}
+{% from "_guide.html" import guide_box, guide_pager %}
 {% block title %}{{ note.title }} · {{ site_name() }}{% endblock %}
 {% block head %}{{ graph_head("graph-embed.js") }}{% endblock %}
 {% block content %}
-<article class="page">
+{% if guide %}<div class="guided">
+{{ guide_box(guide, note.slug) }}{% endif %}
+{% set guide_category = category_of(guide.project.category) if guide else none %}
+<article class="page{% if note.type in ('gap', 'question') %} {{ note.type }}-page{% endif %}{% if guide_category %} cat-{{ guide_category.key }}{% endif %}">
   <p class="eyebrow">
     {{ t("type." ~ note.type) }} {{ status_badge(note.status) }}
     {% if vault.is_bridge(note.slug) %}<span class="badge bridge">⇄ {{ t("note.bridge") }}</span>{% endif %}
@@ -16,7 +20,15 @@
   <p class="tags" aria-label="{{ t('note.tags') }}">{% for tag in note.tags %}<span class="tag">#{{ tag }}</span> {% endfor %}</p>
   {% endif %}
 
+  {% if note.type == "gap" %}
+  <p class="type-banner gap"><span class="guide-icon gap" aria-hidden="true"></span> {{ t("gap.banner") }}</p>
+  {% elif note.type == "question" %}
+  <p class="type-banner question"><span class="guide-icon question" aria-hidden="true"></span> {{ t("question.banner") }}</p>
+  {% endif %}
+
   <div class="prose">{{ body }}</div>
+
+  {% if guide %}{{ guide_pager(guide, note.slug) }}{% endif %}
 
   <aside class="related">
     <section>
@@ -40,12 +52,14 @@
       {% if backlinks %}
       <ul class="rows">
         {% for other in backlinks %}
-        <li class="row"><span class="spore-icon{% if other.type == 'source' %} crystal{% elif other.type == 'journal' %} golden{% endif %}" aria-hidden="true"></span> <a href="{{ href(other) }}">{{ other.title }}</a>{% if other.type != "note" %} <span class="badge">{{ t("type." ~ other.type) }}</span>{% endif %}</li>
+        <li class="row"><span class="spore-icon{% if other.type == 'source' %} crystal{% elif other.type == 'journal' %} golden{% elif other.type in ('gap', 'question') %} {{ other.type }}{% endif %}" aria-hidden="true"></span> <a href="{{ href(other) }}">{{ other.title }}</a>{% if other.type != "note" %} <span class="badge">{{ t("type." ~ other.type) }}</span>{% endif %}</li>
         {% endfor %}
       </ul>
       {% else %}<p class="muted">{{ t("note.no_backlinks") }}</p>{% endif %}
     </section>
   </aside>
 </article>
+{% if guide %}</div>{% endif %}
 <script type="module" src="/static/js/specimens.js"></script>
+{% if guide %}<script type="module" src="/static/js/guide.js"></script>{% endif %}
 {% endblock %}

@@ -33,8 +33,12 @@ SPECIES: frozenset[str] = frozenset(
     }
 )
 
-NoteType = Literal["project", "note", "journal", "source"]
-NOTE_TYPES: tuple[NoteType, ...] = ("project", "note", "journal", "source")
+NoteType = Literal["project", "note", "question", "gap", "journal", "source"]
+# ``question`` is a side question the owner asked along the way: on topic, interesting,
+# but not a brick of the project's skeleton. ``gap`` is a primordium: something still
+# missing to understand a project, written by the model where it belongs in the
+# project's guide (§3.4).
+NOTE_TYPES: tuple[NoteType, ...] = ("project", "note", "question", "gap", "journal", "source")
 STATUSES: tuple[str, ...] = ("draft", "active", "paused", "closed")
 
 PaletteName = Literal["psychedelic", "tokyo-night", "catppuccin", "rose-pine"]
@@ -121,6 +125,8 @@ class VaultConfig(_Strict):
             "note": self.notes,
             "journal": self.journal,
             "source": self.sources,
+            "question": self.notes,
+            "gap": self.notes,
         }
         return folders[note_type]
 
@@ -184,6 +190,17 @@ class GraphConfig(_Strict):
     max_nodes: int = Field(default=400, ge=20, le=5000)
 
 
+def _default_guide_headings() -> list[str]:
+    return ["Guide", "Guía"]
+
+
+class GuideConfig(_Strict):
+    """The project guide (§3.4): which heading of a project's index holds its ordered
+    list of notes. Compared without case or accents."""
+
+    headings: list[str] = Field(default_factory=_default_guide_headings, min_length=1)
+
+
 class TypographyConfig(_Strict):
     """Defaults for titles and text on every page (§7b). The Appearance page can
     override them."""
@@ -223,6 +240,7 @@ class Config(_Strict):
     vault: VaultConfig = Field(default_factory=VaultConfig)
     categories: list[Category] = Field(default_factory=_default_categories)
     graph: GraphConfig = Field(default_factory=GraphConfig)
+    guide: GuideConfig = Field(default_factory=GuideConfig)
     landing: LandingConfig = Field(default_factory=LandingConfig)
     typography: TypographyConfig = Field(default_factory=TypographyConfig)
     auth: AuthConfig = Field(default_factory=AuthConfig)

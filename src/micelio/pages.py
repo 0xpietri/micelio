@@ -26,6 +26,7 @@ from micelio.config import NOTE_TYPES, STATUSES, Category, Config
 from micelio.formatting import Dates
 from micelio.graph import GraphBuilder, ScopeError, UnknownNodeError, parse_scope
 from micelio.growth import growth
+from micelio.guide import Guide, GuideBuilder
 from micelio.i18n import active_language, category_names
 from micelio.landing import background_url
 from micelio.looks import Look, NodeLooks, clean_look
@@ -137,12 +138,17 @@ class Pages:
         self.templates = templates
         self.dates = dates
         self.sign_in = sign_in
+        self.guides = GuideBuilder(config.guide.headings, dates.created)
         dress = self.node_looks.all
         self.everything = Reader(
-            index, Renderer(index), GraphBuilder(config, index, self.colors, dress)
+            index,
+            Renderer(index, guide_headings=config.guide.headings),
+            GraphBuilder(config, index, self.colors, dress),
         )
         self.public = Reader(
-            public, Renderer(public, ghosts=False), GraphBuilder(config, public, self.colors, dress)
+            public,
+            Renderer(public, ghosts=False, guide_headings=config.guide.headings),
+            GraphBuilder(config, public, self.colors, dress),
         )
         templates.env.globals.update(
             href=href_for,
@@ -240,6 +246,19 @@ class Pages:
             raise HTTPException(status_code=404)
         return note
 
+    def _guide_for(self, vault: IndexView, note: Note, wanted: str) -> Guide | None:
+        """The guide shown beside a note: the project asked for (``?guide=``) when the
+        note belongs to it, else its first project by name."""
+        projects = sorted(
+            (vault.notes[s] for s in vault.projects_of.get(note.slug, set())),
+            key=lambda n: n.title.lower(),
+        )
+        if not projects:
+            return None
+        project = next((p for p in projects if p.slug == wanted), projects[0])
+        guide = self.guides.build(vault, project)
+        return replace(guide, others=[p for p in projects if p is not project])
+
     def _journals_touching(self, vault: IndexView, slugs: set[str]) -> list[Note]:
         journals = [
             n
@@ -312,10 +331,12 @@ class Pages:
             context = {
                 "note": note,
                 "body": reader.renderer.html(note),
+                "guide": self.guides.build(vault, note),
                 "members": [m for m in members if m.type != "journal"],
                 "journals": self._journals_touching(vault, {slug, *member_slugs})[:10],
                 "growth": growth(
-                    [note, *(m for m in members if m.type != "journal")],
+                    # A gap is still to learn: it does not make the project grow.
+                    [note, *(m for m in members if m.type not in ("journal", "gap"))],
                     self._journals_touching(vault, {slug, *member_slugs}),
                     self.dates.created,
                     self.dates.updated,
@@ -326,7 +347,9 @@ class Pages:
             return render(request, "project.html", context, reader)
 
         @router.get("/notes/{slug}", include_in_schema=False)
-        def note_page(request: Request, slug: str) -> Response:
+        def note_page(
+            request: Request, slug: str, guide: str = Query("", max_length=200)
+        ) -> Response:
             reader = self.reader(request)
             vault = reader.vault
             note = self._note(vault, slug)
@@ -345,6 +368,7 @@ class Pages:
                 "body": reader.renderer.html(note),
                 "backlinks": [b for b in backlinks if b.type != "project"],
                 "projects": projects,
+                "guide": self._guide_for(vault, note, guide) if note.type != "journal" else None,
                 "nav": "journal" if note.type == "journal" else "",
             }
             return render(request, "note.html", context, reader)
