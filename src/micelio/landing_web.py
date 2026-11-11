@@ -12,6 +12,7 @@ from fastapi.templating import Jinja2Templates
 from starlette.exceptions import HTTPException
 
 from micelio.appearance import (
+    MAX_AVATAR_BYTES,
     MAX_NAME,
     MAX_UPLOAD_BYTES,
     MEDIA_TYPES,
@@ -173,6 +174,18 @@ class LandingPages:
                 headers={"Cache-Control": "private, max-age=31536000, immutable"},
             )
 
+        @router.get("/appearance/avatar", include_in_schema=False)
+        def avatar() -> Response:
+            # Public like the background: it shows beside the owner's words on every page.
+            appearance = self.store.current()
+            if not appearance.avatar_type:
+                raise HTTPException(status_code=404)
+            return FileResponse(
+                self.store.avatar_path(appearance.avatar_type),
+                media_type=MEDIA_TYPES[appearance.avatar_type],
+                headers={"Cache-Control": "private, max-age=31536000, immutable"},
+            )
+
         @router.get("/appearance", include_in_schema=False)
         def appearance_page(request: Request, done: str = "", error: str = "") -> Response:
             if not self.sign_in.sees_everything(request):  # signed-in only, never public
@@ -288,6 +301,28 @@ class LandingPages:
                 return _back(error="form")
             self.store.remove_background()
             return _back(done="removed")
+
+        @router.post("/appearance/avatar", include_in_schema=False)
+        async def upload_avatar(
+            request: Request,
+            image: Annotated[UploadFile | None, File()] = None,
+            csrf: Annotated[str, Form()] = "",
+        ) -> Response:
+            if not self._form_ok(request, csrf):
+                return _back(error="form")
+            data = await image.read(MAX_AVATAR_BYTES + 1) if image is not None else b""
+            try:
+                self.store.store_avatar(data)
+            except ImageError as exc:
+                return _back(error=exc.code)
+            return _back(done="avatar_uploaded")
+
+        @router.post("/appearance/avatar/remove", include_in_schema=False)
+        def remove_avatar(request: Request, csrf: Annotated[str, Form()] = "") -> Response:
+            if not self._form_ok(request, csrf):
+                return _back(error="form")
+            self.store.remove_avatar()
+            return _back(done="avatar_removed")
 
         return router
 

@@ -93,7 +93,7 @@
     {%- for tag in note.tags %} <a class="tag" href="/explore?tag={{ tag | urlencode }}" title="{{ t('note.tag_graph', tag=tag) }}">#{{ tag }}</a>{% endfor %}
   </p>
   {% endif %}
-  <div class="prose">{{ body }}</div>
+  <div class="prose">{{ body|callout_titles }}</div>
 
   <section>
     <h2>{{ t("project.notes") }}</h2>
@@ -128,5 +128,6 @@
 </article>
 </div>
 <script type="module" src="/static/js/specimens.js"></script>
+<script type="module" src="/static/js/callouts.js"></script>
 <script type="module" src="/static/js/guide.js"></script>
 {% endblock %}

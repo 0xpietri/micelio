@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import pytest
+from markupsafe import Markup
 
-from micelio.render import Renderer
+from micelio.render import Renderer, fill_callout_titles
 from micelio.vault import VaultIndex
 
 from .conftest import VaultFactory
@@ -135,8 +136,20 @@ def test_said_and_takeaway_callouts_have_no_heading(vault: VaultIndex) -> None:
     assert "<p>Exactly as I said it.</p>" in html
     assert '<div class="callout callout-takeaway">' in html
     assert "<p>Closing line.</p>" in html
-    assert "callout-title" not in html
+    # The bubble has no heading; the sign keeps a placeholder for its default one.
+    assert html.count("callout-title") == 2
+    assert '<p class="callout-title callout-title-takeaway"></p>' in html
     assert "<p></p>" not in html
+
+
+def test_takeaway_gets_its_default_title_in_the_readers_language(vault: VaultIndex) -> None:
+    html = render(vault, "> [!takeaway]\n> Closing line.\n\n> [!takeaway] Own title\n> More")
+    filled = fill_callout_titles(Markup(html), {"takeaway": "Lo que <tendrías> saber"})  # noqa: S704
+    assert (
+        '<p class="callout-title callout-title-takeaway">Lo que &lt;tendrías&gt; saber</p>'
+        in filled
+    )
+    assert '<p class="callout-title">Own title</p>' in filled
 
 
 def test_said_callout_keeps_a_given_heading(vault: VaultIndex) -> None:

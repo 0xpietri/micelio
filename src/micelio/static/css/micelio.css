@@ -298,8 +298,9 @@ a.tag:hover { background: color-mix(in srgb, var(--pal-button-alt, #22d3ee) 30%,
 .callout-question, .callout-help, .callout-faq { border-color: var(--sun); }
 .callout-quote, .callout-cite { border-color: var(--muted); }
 
-/* The owner's own words, `> [!said]`: a speech bubble whose tail points at a small
-   mushroom (the speaker), drawn in the category's color. */
+/* The owner's own words, `> [!said]`: a speech bubble whose tail points at the speaker,
+   a little mushroom in the category's color unless the owner uploaded a profile picture
+   (theme.css then swaps the picture in, §7b). */
 .callout-said {
   position: relative;
   margin: 1.5rem 0 1.5rem 3.4rem;
@@ -316,6 +317,8 @@ a.tag:hover { background: color-mix(in srgb, var(--pal-button-alt, #22d3ee) 30%,
   bottom: -0.2rem;
   width: 2.5rem;
   height: 2.5rem;
+}
+.callout-said::before, .avatar-mushroom {
   background:
     radial-gradient(circle at 34% 30%, var(--text) 0 6%, transparent 7%),
     radial-gradient(circle at 64% 22%, var(--text) 0 5%, transparent 6%),
@@ -335,31 +338,37 @@ a.tag:hover { background: color-mix(in srgb, var(--pal-button-alt, #22d3ee) 30%,
   border-bottom: inherit;
   transform: rotate(45deg) skew(12deg, 12deg);
 }
+.avatar-thumb { display: inline-block; width: 64px; height: 64px; border-radius: 50%; object-fit: cover; flex: none; }
+.avatar-mushroom { border-radius: 0; }
 
-/* The sign that closes a concept, `> [!takeaway]`: a small plate on two posts. */
+/* What you should know, `> [!takeaway]`: no fixed border; colored hyphae wrap the box
+   and sprout outwards in the theme's colors (static/js/callouts.js draws them). */
 .callout-takeaway {
   position: relative;
-  max-width: 34rem;
-  margin: 2rem auto 2.4rem;
-  padding: 0.85rem 1.15rem;
-  border: 2px solid color-mix(in srgb, var(--sun) 60%, var(--ink));
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--ink) 88%, #000);
-  box-shadow: 0.25rem 0.25rem 0 color-mix(in srgb, var(--accent) 70%, var(--ink));
-  text-align: center;
-  font-weight: 600;
+  isolation: isolate;
+  margin: 2.6rem 0.6rem 2.8rem;
+  padding: 1rem 1.25rem 1.1rem;
+  border: 0;
+  border-radius: 22px;
+  background: radial-gradient(ellipse at 50% 40%, color-mix(in srgb, var(--ink) 92%, #000) 55%, color-mix(in srgb, var(--ink) 70%, transparent) 100%);
+  box-shadow: 0 0 2.2rem color-mix(in srgb, var(--accent) 14%, transparent);
 }
-.callout-takeaway::before,
-.callout-takeaway::after {
-  content: "";
+.callout-takeaway > .callout-title {
+  margin-bottom: 0.4rem;
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: 1.15em;
+  color: var(--sun);
+}
+.callout-takeaway > p, .callout-takeaway > ul, .callout-takeaway > ol { position: relative; z-index: 1; }
+.takeaway-threads {
   position: absolute;
-  top: 100%;
-  width: 0.45rem;
-  height: 0.8rem;
-  background: color-mix(in srgb, var(--sun) 45%, var(--ink));
+  z-index: -1;
+  left: -34px;
+  top: -34px;
+  pointer-events: none;
+  overflow: visible;
 }
-.callout-takeaway::before { left: 22%; }
-.callout-takeaway::after { right: 22%; }
 
 /* Forms */
 form label { display: block; margin-bottom: 1rem; color: var(--muted); }

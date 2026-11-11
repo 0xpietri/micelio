@@ -163,6 +163,25 @@ title_effect = "{{ appearance.title_effect }}"</pre>
     {% endif %}
   </section>
 
+  <section class="upload avatar-upload">
+    <h2>{{ t("appearance.avatar") }}</h2>
+    <p class="muted small">{{ t("appearance.avatar_help") }}</p>
+    <div class="row">
+      {% if appearance.avatar_type %}<img class="avatar-thumb" src="/appearance/avatar?v={{ appearance.avatar_version }}" alt="" width="64" height="64">{% else %}<span class="avatar-thumb avatar-mushroom" aria-hidden="true"></span>{% endif %}
+      <form method="post" action="/appearance/avatar" enctype="multipart/form-data" class="row">
+        <input type="hidden" name="csrf" value="{{ form_token }}">
+        <input type="file" name="image" accept="image/png,image/jpeg,image/webp" aria-label="{{ t('appearance.avatar_upload') }}">
+        <button type="submit">{{ t("appearance.avatar_upload") }}</button>
+      </form>
+      {% if appearance.avatar_type %}
+      <form method="post" action="/appearance/avatar/remove">
+        <input type="hidden" name="csrf" value="{{ form_token }}">
+        <button type="submit" class="link">{{ t("appearance.avatar_remove") }}</button>
+      </form>
+      {% endif %}
+    </div>
+  </section>
+
   <details class="prompt" id="prompt" data-soil="{{ appearance.soil }}">
     <summary><h2>{{ t("prompt.title") }}</h2></summary>
     <p class="muted small">{{ t("prompt.help") }}</p>
