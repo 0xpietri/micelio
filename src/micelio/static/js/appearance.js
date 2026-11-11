@@ -1,5 +1,8 @@
-// The Appearance page (§7b): the soil value next to its slider and the prompt builder.
-// Without JavaScript the page still works; the prompt then shows the defaults.
+// The Appearance page (§7b): every change saves itself and repaints the page, the soil
+// value next to its slider, the prompt builder, and a click outside the panel goes back.
+// Without JavaScript the page still works with its Save buttons; the prompt then shows
+// the defaults.
+import { rampFilter } from "./draw.js";
 
 async function loadStrings() {
   const lang = document.documentElement.lang || "en";
@@ -59,8 +62,118 @@ function livePreview() {
   form.addEventListener("change", apply);
 }
 
+/** The theme and the painted background, redrawn after a save without reloading. */
+function repaint(look) {
+  const theme = document.querySelector('link[rel="stylesheet"][href^="/theme.css"]');
+  if (theme) {
+    // Swap once the new sheet has loaded, so the page never flashes unstyled.
+    const fresh = theme.cloneNode();
+    fresh.href = `/theme.css?v=${Date.now()}`;
+    fresh.addEventListener("load", () => theme.remove(), { once: true });
+    theme.after(fresh);
+  }
+  const backdrop = document.getElementById("backdrop");
+  if (!backdrop || !look) return;
+  const image = backdrop.querySelector("image");
+  if (image) image.setAttribute("href", look.url);
+  backdrop.dataset.soil = String(look.soil);
+  backdrop.dataset.ramp = look.ramp;
+  // The reading pages' "horizon" view: the soil line near the top (see base.html).
+  const top = Math.max(Math.round((1024 * look.soil) / 100) - 330, 0);
+  backdrop.setAttribute("viewBox", `0 ${top} 1536 ${1024 - top}`);
+  backdrop.querySelectorAll("defs").forEach((d) => d.remove());
+  if (look.ramp && image) {
+    const defs = new DOMParser().parseFromString(
+      `<svg xmlns="http://www.w3.org/2000/svg"><defs>${rampFilter(look.ramp.split(" ")).replace('id="bgmap"', 'id="bgmap-page"')}</defs></svg>`,
+      "image/svg+xml",
+    ).documentElement.firstElementChild;
+    backdrop.prepend(document.importNode(defs, true));
+    image.setAttribute("filter", "url(#bgmap-page)");
+  } else if (image) {
+    image.removeAttribute("filter");
+  }
+}
+
+/** Every change saves itself: no Save button. Text waits for a pause in typing. */
+function autosave() {
+  const form = document.querySelector("form[data-autosave]");
+  if (!form) return () => Promise.resolve();
+  const status = document.getElementById("autosave-status");
+  for (const button of document.querySelectorAll(".save-fallback")) button.hidden = true;
+  const say = (key, cls) => {
+    if (!status) return;
+    status.textContent = status.dataset[key] || "";
+    status.className = `autosave small ${cls}`;
+  };
+  let timer = null;
+  let running = Promise.resolve();
+  const send = () => {
+    clearTimeout(timer);
+    timer = null;
+    const body = new URLSearchParams(new FormData(form));
+    say("saving", "muted");
+    running = running.then(async () => {
+      try {
+        const r = await fetch(form.action, {
+          method: "POST",
+          body,
+          headers: { Accept: "application/json" },
+          credentials: "same-origin",
+        });
+        const answer = r.ok ? await r.json() : null;
+        if (!answer || !answer.ok) throw new Error(String(r.status));
+        repaint(answer.backdrop);
+        say("saved", "ok");
+      } catch {
+        say("failed", "error");
+      }
+    });
+    return running;
+  };
+  const later = (ms) => {
+    clearTimeout(timer);
+    timer = setTimeout(send, ms);
+  };
+  form.addEventListener("change", (e) => (e.target.type === "text" ? later(300) : send()));
+  form.addEventListener("input", (e) => { if (e.target.type === "text") later(800); });
+  form.addEventListener("submit", (e) => { e.preventDefault(); send(); });
+
+  // A chosen image uploads at once (a normal post: the page comes back with it).
+  const upload = document.getElementById("upload-form");
+  const file = upload && upload.querySelector('input[type="file"]');
+  if (file) file.addEventListener("change", () => { if (file.files.length) upload.submit(); });
+
+  /** Wait for any change still on its way. */
+  return () => (timer ? send() : running);
+}
+
+/** A click on the painting around the panel leaves the page, where the owner came from. */
+function clickOutsideLeaves(flush) {
+  const panel = document.querySelector(".page.look");
+  if (!panel) return;
+  const hint = document.querySelector(".leave-hint");
+  if (hint) hint.hidden = false;
+  document.addEventListener("click", async (e) => {
+    if (e.button !== 0 || e.defaultPrevented) return;
+    const target = e.target;
+    if (!(target instanceof Element) || panel.contains(target) || target.closest("header, a, button, input, label, summary")) return;
+    if (String(window.getSelection() || "")) return;
+    await flush();
+    let back = "/";
+    try {
+      const from = new URL(document.referrer);
+      if (from.origin === location.origin && !["/appearance", "/login"].includes(from.pathname)) back = from.pathname + from.search;
+    } catch {
+      // no referrer: the landing
+    }
+    location.assign(back);
+  });
+}
+
 async function start() {
   livePreview();
+  const flush = autosave();
+  clickOutsideLeaves(flush);
   const strings = await loadStrings();
   const soil = document.getElementById("soil");
   const soilValue = document.getElementById("soil-value");

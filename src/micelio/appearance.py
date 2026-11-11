@@ -193,7 +193,7 @@ class Appearance:
     recolor: bool | None = None  # None: on for the included painting, off for an upload
     soil: int = BUILTIN_SOIL
     headline: str = ""
-    tagline: str = ""
+    tagline: str | None = None  # None: the default; "" once saved empty: no tagline
     site_name: str = ""  # empty: the config's site.title
     title_font: TitleFont = "shrikhand"
     text_font: TextFont = "system"
@@ -401,7 +401,7 @@ class AppearanceStore:
             recolor=recolor if isinstance(recolor, bool) else None,
             soil=soil if isinstance(soil, int) and SOIL_MIN <= soil <= SOIL_MAX else defaults.soil,
             headline=clean_text(str(saved.get("headline", ""))),
-            tagline=clean_text(str(saved.get("tagline", ""))),
+            tagline=None if saved.get("tagline") is None else clean_text(str(saved["tagline"])),
             site_name=clean_text(str(saved.get("site_name", "")))[:MAX_NAME],
             title_font=title_font_named(saved.get("title_font"), type_defaults.title_font),
             text_font=text_font_named(saved.get("text_font"), type_defaults.text_font),

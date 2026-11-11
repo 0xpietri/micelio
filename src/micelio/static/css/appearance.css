@@ -74,3 +74,16 @@
 .look .range output { min-width: 4.5rem; font-variant-numeric: tabular-nums; color: var(--muted); }
 .look details.toml summary { cursor: pointer; color: var(--muted); }
 .look details.toml pre { overflow-x: auto; padding: 0.8rem 1rem; border: 2px solid var(--ink); border-radius: 10px; background: var(--surface); font: 0.82rem/1.5 ui-monospace, Menlo, Consolas, monospace; color: var(--muted); }
+
+/* Saved by itself: a quiet line under the lead says so. */
+.autosave { min-height: 1.4em; margin: 0.25rem 0 0; }
+.autosave:empty { visibility: hidden; }
+
+/* The prompt guide is folded: open it when making a background. */
+.look details.prompt { margin-top: 1.5rem; }
+.look details.prompt > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 0.5rem; }
+.look details.prompt > summary::-webkit-details-marker { display: none; }
+.look details.prompt > summary::before { content: "▸"; color: var(--accent); transition: transform 0.15s; }
+.look details.prompt[open] > summary::before { transform: rotate(90deg); }
+.look details.prompt > summary h2 { display: inline; margin: 0; }
+.look details.prompt[open] > summary { margin-bottom: 0.75rem; }

@@ -93,7 +93,7 @@ class LandingPages:
     def texts(self, appearance: Appearance) -> tuple[str, str]:
         return (
             appearance.headline or self.default_headline(),
-            appearance.tagline or self.default_tagline(),
+            self.default_tagline() if appearance.tagline is None else appearance.tagline,
         )
 
     def default_prompt(self, appearance: Appearance) -> dict[str, str]:
@@ -205,7 +205,10 @@ class LandingPages:
             graph_labels: Annotated[int, Form()] = 0,
             title_effect: Annotated[str, Form()] = "",
         ) -> Response:
+            quiet = _wants_json(request)
             if not self._form_ok(request, csrf):
+                if quiet:
+                    return JSONResponse({"ok": False, "error": "form"}, status_code=403)
                 return _back(error="form")
             now = self.store.current()
             chosen = replace(
@@ -227,6 +230,15 @@ class LandingPages:
                 title_effect=title_effect_named(title_effect, now.title_effect),
             )
             self.store.save(chosen)
+            if quiet:
+                # The page saved itself (autosave): it repaints the background in place.
+                ramp = chosen.colors.ramp if chosen.recolors else None
+                backdrop = {
+                    "url": background_url(chosen),
+                    "soil": chosen.soil,
+                    "ramp": " ".join(ramp) if ramp else "",
+                }
+                return JSONResponse({"ok": True, "backdrop": backdrop})
             return _back(done="saved")
 
         @router.post("/appearance/background", include_in_schema=False)
@@ -252,6 +264,11 @@ class LandingPages:
             return _back(done="removed")
 
         return router
+
+
+def _wants_json(request: Request) -> bool:
+    """The Appearance page's own script saving a change, not a plain form post."""
+    return "application/json" in request.headers.get("accept", "")
 
 
 def _back(*, done: str = "", error: str = "") -> Response:

@@ -15,6 +15,14 @@ All notable changes to this project are documented here. The format follows
   choices and the zoom are remembered in the browser (`localStorage`).
 - Every graph pans and zooms, with + / − / Fit buttons, including the note's neighborhood
   and the project's scene; inside a reading page the wheel zooms only with Ctrl or ⌘.
+- The Appearance page saves every change by itself and repaints the page at once; the
+  Save buttons only remain without JavaScript. A chosen background uploads at once.
+- "Make your own background" is folded on the Appearance page.
+- A click outside the Appearance panel goes back to the previous page.
+
+### Changed
+
+- An empty tagline on the Appearance page now shows no tagline instead of the default.
 
 ## [0.1.0] - 2026-11-10
 

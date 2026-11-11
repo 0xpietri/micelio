@@ -11,7 +11,7 @@
 <section class="scene" id="scene">
   <div class="hero">
     <h1 class="headline" id="headline">{{ headline }}</h1>
-    <p class="tagline">{{ tagline }}</p>
+    {% if tagline %}<p class="tagline">{{ tagline }}</p>{% endif %}
     {% set everything = request.state.signed_in is not defined or request.state.signed_in %}
     {% set bare = not data.projects and not data.notes and not data.sources and not data.journal %}
     {% if everything and not data.projects %}<p class="tagline empty">{{ t("landing.empty") }}</p>
