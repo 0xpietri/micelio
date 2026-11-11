@@ -2,6 +2,8 @@
 {% from "_macros.html" import status_badge, category_dot, graph_head, graph_box, mushroom %}
 {% block title %}{{ note.title }} · {{ site_name() }}{% endblock %}
 {% block head %}{{ graph_head("graph-embed.js") }}{% endblock %}
+{#- The scene starts at the very top, under the header, so the painting is one piece. #}
+{% block body_class %} class="scene-page"{% endblock %}
 {% block content %}
 {% set category = category_of(note.category) %}
 <section class="hero-scene" aria-labelledby="project-map">

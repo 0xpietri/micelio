@@ -114,6 +114,15 @@
 .hero-heading .eyebrow { display: inline-flex; padding: 0.1rem 0.7rem; border: 2px solid var(--ink); border-radius: 999px; background: color-mix(in srgb, var(--ink) 80%, transparent); color: var(--text); pointer-events: auto; }
 .hero-heading h1 { margin-top: 0.5rem; }
 .project-page { position: relative; margin-top: -1.2rem; }
+/* A project's page: the header floats over the scene, which starts at the very top. */
+.scene-page { --top-room: 4.6rem; }
+.scene-page .top { position: absolute; top: 0; left: 0; right: 0; }
+.scene-page .hero-scene { height: clamp(520px, calc(80vh + var(--top-room)), 940px); }
+.scene-page .hero-heading { padding-top: var(--top-room); }
+.scene-page .hero-scene .graph-tools { top: calc(var(--top-room) - 0.2rem); }
+@media (max-width: 720px) {
+  .scene-page { --top-room: 7.4rem; }
+}
 
 /* /explore: the graph over the underground, the panel as a glass slab */
 body.full { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }

@@ -1,5 +1,5 @@
-"""The header (§7c): one line with the sections, Appearance, the language flag (§5a), signing out or in
-as icons; and a visitor's own look, kept in their browser (§7b)."""
+"""The header (§7c): one line with the sections, Appearance, the language flag (§5a),
+signing out or in as icons; and a visitor's own look, kept in their browser (§7b)."""
 
 from __future__ import annotations
 

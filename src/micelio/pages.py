@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hmac
 from collections import Counter
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
@@ -18,6 +19,7 @@ from micelio.formatting import Dates
 from micelio.graph import GraphBuilder, ScopeError, UnknownNodeError, parse_scope
 from micelio.i18n import active_language, category_names
 from micelio.landing import background_url
+from micelio.looks import NodeLooks, clean_look
 from micelio.render import Renderer, href_for
 from micelio.vault.index import IndexView, Note, VaultIndex
 from micelio.vault.public import PublicView
@@ -93,13 +95,17 @@ class Pages:
     ) -> None:
         self.config = config
         self.looks = looks
+        self.node_looks = NodeLooks(looks)
         self.index = index
         self.templates = templates
         self.dates = dates
         self.sign_in = sign_in
-        self.everything = Reader(index, Renderer(index), GraphBuilder(config, index, self.colors))
+        dress = self.node_looks.all
+        self.everything = Reader(
+            index, Renderer(index), GraphBuilder(config, index, self.colors, dress)
+        )
         self.public = Reader(
-            public, Renderer(public, ghosts=False), GraphBuilder(config, public, self.colors)
+            public, Renderer(public, ghosts=False), GraphBuilder(config, public, self.colors, dress)
         )
         templates.env.globals.update(
             href=href_for,
@@ -110,9 +116,16 @@ class Pages:
             category_name=self.category_name,
             excerpt=self.everything.renderer.excerpt,
             backdrop=self.backdrop,
+            looks_token=self.looks_token,
         )
 
     # -- helpers ---------------------------------------------------------------------
+
+    def looks_token(self, request: Request) -> str:
+        """The owner's key for dressing nodes; empty for visitors, who only look."""
+        if not self.sign_in.sees_everything(request):
+            return ""
+        return self.sign_in.form_token(request, "looks")
 
     def colors(self) -> dict[str, str]:
         """Category colors from the palette chosen on the Appearance page (§7b)."""
@@ -264,6 +277,26 @@ class Pages:
                 reverse=True,
             )
             return render(request, "journal.html", {"entries": entries, "nav": "journal"}, reader)
+
+        @router.post("/api/looks/{slug}", include_in_schema=False)
+        async def dress(request: Request, slug: str) -> Response:
+            """The owner dresses a project or a source (§7c): kept in the data folder."""
+            if not self.sign_in.sees_everything(request):
+                raise HTTPException(status_code=404)
+            token = request.headers.get("x-micelio-form", "")
+            if not hmac.compare_digest(token, self.sign_in.form_token(request, "looks")):
+                return JSONResponse({"ok": False, "error": "form"}, status_code=403)
+            self.index.refresh()
+            note = self.index.notes.get(slug)
+            if note is None or note.type not in ("project", "source"):
+                raise HTTPException(status_code=404)
+            try:
+                body: object = await request.json()
+            except ValueError:
+                body = None
+            look = clean_look(body, note.type)
+            self.node_looks.save(slug, look)
+            return JSONResponse({"ok": True, "look": look})
 
         @router.get("/api/graph", include_in_schema=False)
         def graph(

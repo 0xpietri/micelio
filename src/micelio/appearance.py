@@ -429,6 +429,31 @@ class AppearanceStore:
                 (_KEY, json.dumps(data)),
             )
 
+    # -- other settings in the same table (looks.py) -----------------------------
+
+    def read_setting(self, key: str) -> object:
+        if self._db is None and not (self.folder / SITE_DB).is_file():
+            return None
+        with self._lock:
+            row = (
+                self._conn().execute("SELECT value FROM settings WHERE key = ?", (key,)).fetchone()
+            )
+        if row is None:
+            return None
+        try:
+            value: object = json.loads(row[0])
+        except ValueError:
+            return None
+        return value
+
+    def write_setting(self, key: str, value: object) -> None:
+        with self._lock:
+            self._conn().execute(
+                "INSERT INTO settings (key, value) VALUES (?, ?) "
+                "ON CONFLICT (key) DO UPDATE SET value = excluded.value",
+                (key, json.dumps(value)),
+            )
+
     # -- the uploaded background --------------------------------------------------
 
     def own_path(self, kind: str) -> Path:
