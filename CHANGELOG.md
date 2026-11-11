@@ -8,6 +8,14 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- The guide is a numbered outline: sections and sub-sections (1, 1.1, 1.1.1) come from the
+  project's `## Guide` list and renumber themselves when a line is inserted. The order is a
+  dropdown, previous / next skip the kinds you unticked, and the project's conversations
+  sit at the top of the guide.
+- Who wrote each note: `created_by` and `edited_by` (a Claude model or a person) in a small
+  card with the dates, at the right of the note's title.
+- Tags are pills that open the graph with every note carrying them.
+
 - A guide at the left of every project and of each of its notes: the project's notes in
   order, structured (the default, as the project's `## Guide` section lists them, in
   stretches) or by date, with checkboxes for concepts, questions and gaps, and previous /

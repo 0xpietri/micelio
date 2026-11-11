@@ -72,3 +72,19 @@ def drop_section(body: str, headings: Iterable[str]) -> str:
             continue
         kept.append(line)
     return "".join(kept)
+
+
+def section_outline(body: str, headings: Iterable[str]) -> list[tuple[int | None, str]] | None:
+    """The lines under the first ``## <heading>`` named in ``headings``, each with its
+    heading level (None for a line that is not a heading), or None when there is none."""
+    wanted = _wanted(headings)
+    found: list[tuple[int | None, str]] | None = None
+    for line, level, text in _lines(body):
+        if found is None:
+            if level == 2 and slugify(text) in wanted:
+                found = []
+            continue
+        if level is not None and level <= 2:
+            break
+        found.append((level, text if level is not None else line.rstrip("\r\n")))
+    return found

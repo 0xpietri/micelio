@@ -33,6 +33,7 @@ class NodeData(TypedDict):
     categories: list[str]
     bridge: bool
     status: str | None
+    tags: list[str]
     degree: int
     public: bool
     href: str | None
@@ -126,6 +127,7 @@ class GraphBuilder:
             "categories": categories,
             "bridge": len(categories) > 1,
             "status": note.status,
+            "tags": list(note.tags),
             "degree": self._degree(note.slug),
             "public": note.public,
             "href": href_for(note),
@@ -144,6 +146,7 @@ class GraphBuilder:
             "categories": [],
             "bridge": False,
             "status": None,
+            "tags": [],
             "degree": len(self.index.ghosts.get(target, ())),
             "public": False,
             "href": None,

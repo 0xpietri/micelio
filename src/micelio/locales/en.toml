@@ -215,6 +215,11 @@ hint_on = "Its spores are in the air: anyone can read this project and its notes
 in_note = "It fruits from the note itself (public: true); change it in the vault."
 
 [note]
+card_created = "Created"
+card_updated = "Edited"
+tag_graph = "Every note tagged #{tag}, in the graph"
+created_by = "Written by {name}"
+edited_by = "Last edited by {name}"
 created = "Created {date}"
 updated = "Updated {date}"
 projects = "Part of"
@@ -292,10 +297,13 @@ legend = "How to read it"
 legend_project = "Mushroom: a project, glowing in its own color. The species is its category, the growth its status."
 legend_note = "Dot: a note, in its category's color. A dashed ring marks a bridge."
 legend_journal = "Golden dot: a conversation in the journal."
+legend_question = "Drifting spore: a question asked along the way, outside the skeleton."
+legend_gap = "Dashed primordium: something still missing to understand the project."
 legend_source = "Mineral: a source."
 legend_thread = "Glowing threads are links; sparks run along them."
 
 [graph]
+tagged = "Notes tagged #{tag}: {count}"
 loading = "Loading the graph…"
 failed = "The graph could not be loaded."
 empty = "Nothing to draw here yet."
@@ -365,6 +373,7 @@ space-grotesk = "Space Grotesk"
 space-grotesk_help = "Geometric, a little technical"
 
 [guide]
+talks = "Conversations ({count})"
 title = "Guide"
 order = "Order of the guide"
 by_guide = "Structured"

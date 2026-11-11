@@ -1,23 +1,27 @@
 {#- A project's guide (§3.4), beside its page and beside each of its notes. Both orders are
-    in the page; guide.js shows one and filters the types, and remembers both in the browser.
-    Without JavaScript the structured order and every type show. #}
+    in the page; guide.js shows one, filters the kinds, keeps both choices in the browser
+    and moves previous / next to what is shown. Without JavaScript the structured order and
+    every kind show. #}
 {% macro guide_icon(step) -%}
 {%- if step.note is none %}<span class="guide-icon gap missing" aria-hidden="true"></span>
 {%- else %}<span class="guide-icon {{ step.note.type }}" aria-hidden="true"></span>{% endif -%}
 {%- endmacro %}
 
-{% macro step_kind(step) -%}{{ 'gap' if step.is_gap else ('question' if step.note.type == 'question' else 'note') }}{%- endmacro %}
-
-{% macro guide_list(guide, steps, order, current) %}
+{% macro guide_list(steps, order, current) %}
 <ol class="guide-steps" data-guide-list="{{ order }}"{% if order != "guide" %} hidden{% endif %}>
-  {%- set ns = namespace(chapter=none, unplaced=false) %}
+  {%- set ns = namespace(unplaced=false) %}
   {%- for step in steps %}
   {%- if order == "guide" and not step.placed and not ns.unplaced %}{% set ns.unplaced = true %}
-  <li class="guide-chapter" data-guide-chapter>{{ t("guide.unplaced") }}</li>
-  {%- elif order == "guide" and step.placed and step.chapter and step.chapter != ns.chapter %}{% set ns.chapter = step.chapter %}
-  <li class="guide-chapter" data-guide-chapter>{{ step.chapter }}</li>
+  <li class="guide-section depth-0 unplaced" data-kind="section" data-depth="0"><span class="guide-name">{{ t("guide.unplaced") }}</span></li>
   {%- endif %}
-  <li class="guide-step {{ step_kind(step) }}{% if current and step.slug == current %} current{% endif %}" data-kind="{{ step_kind(step) }}">
+  {%- set depth = step.depth if step.placed else 1 %}
+  {%- if step.section %}
+  <li class="guide-section depth-{{ [depth, 3] | min }}" data-kind="section" data-depth="{{ depth }}">
+    <span class="guide-number">{{ step.number }}</span> <span class="guide-name">{{ step.title }}</span>
+  </li>
+  {%- else %}
+  <li class="guide-step {{ step.kind }} depth-{{ [depth, 3] | min }}{% if current and step.slug == current %} current{% endif %}" data-kind="{{ step.kind }}" data-depth="{{ depth }}">
+    {%- if step.number and (order == "time" or step.placed) %}<span class="guide-number">{{ step.number }}</span>{% endif %}
     {{ guide_icon(step) }}
     {%- if step.href %}
     <a href="{{ step.href }}"{% if current and step.slug == current %} aria-current="page"{% endif %}>{{ step.title }}</a>
@@ -25,6 +29,7 @@
     <span class="guide-missing" title="{{ t('guide.missing') }}">{{ step.title }}</span>
     {%- endif %}
   </li>
+  {%- endif %}
   {%- endfor %}
 </ol>
 {% endmacro %}
@@ -41,19 +46,34 @@
     {% for other in guide.others %}<a href="?guide={{ other.slug }}">{{ other.title }}</a>{% if not loop.last %} · {% endif %}{% endfor %}
   </p>
   {% endif %}
-  <div class="guide-orders" role="group" aria-label="{{ t('guide.order') }}">
-    <button type="button" class="chip" data-guide-order="guide" aria-pressed="true">{{ t("guide.by_guide") }}</button>
-    <button type="button" class="chip" data-guide-order="time" aria-pressed="false">{{ t("guide.by_time") }}</button>
+  <div class="guide-controls">
+    <label class="guide-order small"><span class="visually-hidden">{{ t("guide.order") }}</span>
+      <select data-guide-order>
+        <option value="guide" selected>{{ t("guide.by_guide") }}</option>
+        <option value="time">{{ t("guide.by_time") }}</option>
+      </select>
+    </label>
+    <fieldset class="guide-kinds">
+      <legend class="visually-hidden">{{ t("guide.kinds") }}</legend>
+      <label class="check small" title="{{ t('guide.notes') }}"><input type="checkbox" data-guide-kind="note" checked> <span class="guide-icon note" aria-hidden="true"></span> {{ t("guide.notes") }}</label>
+      <label class="check small" title="{{ t('guide.questions') }}"><input type="checkbox" data-guide-kind="question" checked> <span class="guide-icon question" aria-hidden="true"></span> {{ t("guide.questions") }}</label>
+      <label class="check small" title="{{ t('guide.gaps') }}"><input type="checkbox" data-guide-kind="gap" checked> <span class="guide-icon gap" aria-hidden="true"></span> {{ t("guide.gaps") }}</label>
+    </fieldset>
   </div>
-  <fieldset class="guide-kinds">
-    <legend class="visually-hidden">{{ t("guide.kinds") }}</legend>
-    <label class="check small"><input type="checkbox" data-guide-kind="note" checked> <span class="guide-icon note" aria-hidden="true"></span> {{ t("guide.notes") }}</label>
-    <label class="check small"><input type="checkbox" data-guide-kind="question" checked> <span class="guide-icon question" aria-hidden="true"></span> {{ t("guide.questions") }}</label>
-    <label class="check small"><input type="checkbox" data-guide-kind="gap" checked> <span class="guide-icon gap" aria-hidden="true"></span> {{ t("guide.gaps") }}</label>
-  </fieldset>
+  {% if guide.journals %}
+  {#- The conversations that grew the project, newest first. #}
+  <details class="guide-talks">
+    <summary><span class="guide-icon journal" aria-hidden="true"></span> {{ t("guide.talks", count=guide.journals | length) }}</summary>
+    <ul>
+      {% for entry in guide.journals %}
+      <li{% if current and entry.slug == current %} class="current"{% endif %}><span class="muted small">{{ short_date(created(entry)) }}</span> <a href="{{ href(entry) }}"{% if current and entry.slug == current %} aria-current="page"{% endif %}>{{ entry.title }}</a></li>
+      {% endfor %}
+    </ul>
+  </details>
+  {% endif %}
   {% if guide.steps %}
-  {{ guide_list(guide, guide.steps, "guide", current) }}
-  {{ guide_list(guide, guide.by_time, "time", current) }}
+  {{ guide_list(guide.steps, "guide", current) }}
+  {{ guide_list(guide.by_time, "time", current) }}
   {% else %}
   <p class="muted small">{{ t("project.no_notes") }}</p>
   {% endif %}
@@ -61,16 +81,15 @@
 </details>
 {% endmacro %}
 
-{#- Previous and next in the guide, at the foot of a note: one pair per order. #}
+{#- Previous and next in the guide, at the foot of a note. The server writes them for the
+    structured order with every kind; guide.js rewrites them for what the guide shows. #}
 {% macro guide_pager(guide, current) %}
-{% for order in ("guide", "time") %}
-{% set pager = guide.pager(current, order) %}
+{% set pager = guide.pager(current, "guide") %}
 {% if pager.position %}
-<nav class="guide-pager" data-guide-pager="{{ order }}" aria-label="{{ t('guide.title') }}"{% if order != "guide" %} hidden{% endif %}>
-  {% if pager.previous %}<a class="prev" href="{{ pager.previous.href }}" rel="prev"><span aria-hidden="true">←</span> {{ pager.previous.title }}</a>{% else %}<span></span>{% endif %}
-  <span class="muted small">{{ t("guide.position", position=pager.position, total=pager.total) }}</span>
-  {% if pager.next %}<a class="next" href="{{ pager.next.href }}" rel="next">{{ pager.next.title }} <span aria-hidden="true">→</span></a>{% else %}<span></span>{% endif %}
+<nav class="guide-pager" data-guide-pager data-position="{{ t('guide.position', position='{position}', total='{total}') }}" aria-label="{{ t('guide.title') }}">
+  <a class="prev" href="{{ pager.previous.href if pager.previous else '' }}" rel="prev"{% if not pager.previous %} hidden{% endif %}><span aria-hidden="true">←</span> <span class="pager-title">{{ pager.previous.title if pager.previous else '' }}</span></a>
+  <span class="muted small pager-position">{{ t("guide.position", position=pager.position, total=pager.total) }}</span>
+  <a class="next" href="{{ pager.next.href if pager.next else '' }}" rel="next"{% if not pager.next %} hidden{% endif %}><span class="pager-title">{{ pager.next.title if pager.next else '' }}</span> <span aria-hidden="true">→</span></a>
 </nav>
 {% endif %}
-{% endfor %}
 {% endmacro %}

@@ -4,6 +4,7 @@ tags: [statistics]
 created: 2026-11-08
 updated: 2026-11-08
 public: true
+created_by: claude-opus-5-5
 ---
 
 # Conditional probability

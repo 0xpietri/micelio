@@ -28,11 +28,11 @@ How to reason with uncertainty and update beliefs with evidence.
 - [[McElreath - Statistical Rethinking]]
 
 ## Guide
-### The rule
-1. [[Bayes theorem in one line]]
-2. [[Priors are beliefs you can update]]
-3. [[Conditional probability]]
-### Building a model
-4. [[Likelihood is not a probability of the hypothesis]]
-5. [[Choosing a prior is a modelling decision]]
-6. [[Who was Thomas Bayes]]
+1. The rule
+   1. [[Bayes theorem in one line]]
+   2. [[Conditional probability]]
+   3. [[Priors are beliefs you can update]]
+2. Building a model
+   1. [[Likelihood is not a probability of the hypothesis]]
+   2. [[Choosing a prior is a modelling decision]]
+      1. [[Who was Thomas Bayes]]

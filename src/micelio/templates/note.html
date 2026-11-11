@@ -8,16 +8,25 @@
 {{ guide_box(guide, note.slug) }}{% endif %}
 {% set guide_category = category_of(guide.project.category) if guide else none %}
 <article class="page{% if note.type in ('gap', 'question') %} {{ note.type }}-page{% endif %}{% if guide_category %} cat-{{ guide_category.key }}{% endif %}">
-  <p class="eyebrow">
-    {{ t("type." ~ note.type) }} {{ status_badge(note.status) }}
-    {% if vault.is_bridge(note.slug) %}<span class="badge bridge">⇄ {{ t("note.bridge") }}</span>{% endif %}
-  </p>
-  <h1>{{ note.title }}</h1>
-  <p class="muted small">
-    {{ t("note.created", date=show_date(created(note))) }} · {{ t("note.updated", date=show_date(updated(note))) }}
-  </p>
+  {#- The title at the left, and at its right (below it when there is no room) a small card
+      like the project's growth card: dates and who wrote the note. #}
+  <header class="note-head">
+    <div class="note-heading">
+      <p class="eyebrow">
+        {{ t("type." ~ note.type) }} {{ status_badge(note.status) }}
+        {% if vault.is_bridge(note.slug) %}<span class="badge bridge">⇄ {{ t("note.bridge") }}</span>{% endif %}
+      </p>
+      <h1>{{ note.title }}</h1>
+    </div>
+    {% set by = authors(note) %}
+    <dl class="note-card glass">
+      <div><dt>{{ t("note.card_created") }}</dt><dd><time datetime="{{ created(note).isoformat() }}" title="{{ show_date(created(note)) }}">{{ short_date(created(note)) }}</time>{% if by[0] %} <span class="author-chip{% if by[0].startswith('Claude') %} model{% endif %}">{{ by[0] }}</span>{% endif %}</dd></div>
+      <div><dt>{{ t("note.card_updated") }}</dt><dd><time datetime="{{ updated(note).isoformat() }}" title="{{ show_date(updated(note)) }}">{{ short_date(updated(note)) }}</time>{% if by[1] %} <span class="author-chip{% if by[1].startswith('Claude') %} model{% endif %}">{{ by[1] }}</span>{% endif %}</dd></div>
+    </dl>
+  </header>
   {% if note.tags %}
-  <p class="tags" aria-label="{{ t('note.tags') }}">{% for tag in note.tags %}<span class="tag">#{{ tag }}</span> {% endfor %}</p>
+  {#- Each tag opens the graph with every note that carries it. #}
+  <p class="tags" aria-label="{{ t('note.tags') }}">{% for tag in note.tags %}<a class="tag" href="/explore?tag={{ tag | urlencode }}" title="{{ t('note.tag_graph', tag=tag) }}">#{{ tag }}</a> {% endfor %}</p>
   {% endif %}
 
   {% if note.type == "gap" %}

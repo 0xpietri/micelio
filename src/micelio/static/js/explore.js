@@ -39,6 +39,20 @@ function arrive(graph) {
     stage.classList.add("arriving");
     stage.addEventListener("animationend", () => stage.classList.remove("arriving"), { once: true });
   }
+  const tag = new URLSearchParams(window.location.search).get("tag");
+  if (tag) {
+    // Arriving from a note's tag: every note that carries it, lit and framed.
+    const key = fold(tag);
+    const tagged = graph.nodes.filter((n) => (n.tags || []).some((t) => fold(t) === key));
+    const result = panel.querySelector("#graph-search-result");
+    if (result) result.textContent = tr(graph.strings, "graph.tagged", { tag, count: tagged.length });
+    if (!tagged.length) return;
+    const ids = new Set(tagged.map((n) => n.id));
+    graph.highlight((n) => ids.has(n.id));
+    graph.fit(tagged);
+    graph.svg.addEventListener("pointerdown", () => graph.highlight(null), { once: true });
+    return;
+  }
   if (!slug) return;
   const node = graph.nodes.find((n) => n.id === slug);
   if (!node) return;
