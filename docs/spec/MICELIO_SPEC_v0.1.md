@@ -242,7 +242,8 @@ Decided by marcos on 2026-11-10: the landing's painting is part of the whole int
 - Links from a public note to a private one render as plain text, never as a link or a node, so a private title never leaks.
 - An anonymous visitor sees only public notes everywhere: the landing (§7a), `/explore`, `/projects`, `/journal`, `/api/graph`, `/api/landing`. Private notes do not exist for them, not even as counts: a private note's URL answers 404, and `/healthz` leaves out the number of notes.
 - Links to missing notes also render as plain text for visitors, with no ghost node, so a missing note and a private one look the same.
-- A note is public only when its own frontmatter says `public: true`; being linked from a public project does not make it public.
+- A note is public when its own frontmatter says `public: true`; being linked from a public project does not make it public.
+- **Shared projects.** The signed-in owner has a Share switch on each project's page (checked: shared, unchecked: private). Sharing a project makes it and the notes it links to readable by visitors, as if each said `public: true`; their other links to private notes still render as plain text. The choice is kept in the data folder (`site.sqlite3`), never written to the vault, and turning it off hides them again at once. A project already public in its frontmatter shows as shared and is changed in the vault.
 
 ## 10. Packaging
 
@@ -306,3 +307,4 @@ The deployment on factory (Caddy site, the notes MCP, the vault's Git timer, bac
 - 2026-11-10 (marcos): a settings panel on the graphs for spacing, name size, shortened names shown whole on hover, and zoom, remembered per browser (§7).
 - 2026-11-10 (marcos): before the first release the project is renamed from Mycelium to **Micelio** everywhere: code, command, environment variables, `micelio.toml`, the image `ghcr.io/0xpietri/micelio`, the PyPI package `micelio` (`mycelium` was taken there), the repository and the site `micelio.pietri.dev`.
 - 2026-11-11 (marcos): `miceliodeploy` installs what `main` has without a new version; `miceliodeploy edge` makes a new version from the changes gathered since the last one and installs it. The site lists each version's changes in a footer and at `/changes`.
+- 2026-11-11 (marcos): a Share switch on each project's page shares the project and its notes with visitors (§9), kept in the data folder so the vault stays read-only.

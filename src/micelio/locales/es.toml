@@ -204,6 +204,13 @@ bridge = "También en otra categoría"
 graph = "Mapa del proyecto"
 graph_label = "Grafo de este proyecto y sus notas. Las mismas notas están abajo como enlaces."
 
+[share]
+shared = "Compartido"
+private = "Privado"
+hint_off = "Solo vos ves este proyecto. Compartilo para que cualquiera lo lea, con sus notas, sin iniciar sesión."
+hint_on = "Cualquiera puede leer este proyecto y sus notas sin iniciar sesión. Tocá para volverlo privado."
+in_note = "Público en la nota misma (public: true); se cambia en el vault."
+
 [note]
 created = "Creación: {date}"
 updated = "Última edición: {date}"

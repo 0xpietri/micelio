@@ -11,6 +11,19 @@
   {{ graph_box("project:" ~ note.slug, t("project.graph_label"), mode="forest") }}
   <div class="hero-heading">
     <h1>{{ note.title }}</h1>
+    {#- The owner's Share switch (§9): visitors without an account can read a shared project. #}
+    {% set share = share_switch(request, note) %}
+    {% if share %}
+    <form class="share-switch" method="post" action="/projects/{{ note.slug }}/share">
+      <input type="hidden" name="csrf" value="{{ share.token }}">
+      {% if share.in_note %}
+      <span class="share-toggle on" title="{{ t('share.in_note') }}"><span class="share-box" aria-hidden="true">✓</span> {{ t("share.shared") }}</span>
+      {% else %}
+      <input type="hidden" name="shared" value="{{ '' if share.shared else 'on' }}">
+      <button type="submit" class="share-toggle{% if share.shared %} on{% endif %}" role="switch" aria-checked="{{ 'true' if share.shared else 'false' }}" title="{{ t('share.hint_on') if share.shared else t('share.hint_off') }}"><span class="share-box" aria-hidden="true">{% if share.shared %}✓{% endif %}</span> {{ t("share.shared") if share.shared else t("share.private") }}</button>
+      {% endif %}
+    </form>
+    {% endif %}
   </div>
   {#- How the project grows: a stage and twelve weeks of notes (§7c). #}
   <div class="growth glass stage-{{ growth.stage }}{% if category %} cat-{{ category.key }}{% endif %}" title="{{ t('growth.score', score=growth.score) }}">

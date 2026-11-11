@@ -8,8 +8,9 @@ from collections import Counter
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from datetime import date, datetime
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, Form, HTTPException, Query, Request
 from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
@@ -23,6 +24,7 @@ from micelio.i18n import active_language, category_names
 from micelio.landing import background_url
 from micelio.looks import Look, NodeLooks, clean_look
 from micelio.render import Renderer, href_for
+from micelio.sharing import SharedProjects
 from micelio.vault.index import IndexView, Note, VaultIndex
 from micelio.vault.public import PublicView
 
@@ -124,6 +126,7 @@ class Pages:
         self.config = config
         self.looks = looks
         self.node_looks = NodeLooks(looks)
+        self.shared = SharedProjects(looks)
         self.index = index
         self.templates = templates
         self.dates = dates
@@ -147,6 +150,8 @@ class Pages:
             backdrop=self.backdrop,
             looks_token=self.looks_token,
             node_look=self.node_look,
+            share_switch=self.share_switch,
+            is_shared=self.is_shared,
             theme_version=self.theme_version,
         )
 
@@ -154,6 +159,21 @@ class Pages:
 
     def node_look(self, slug: str) -> Look:
         return self.node_looks.get(slug) or {}
+
+    def share_switch(self, request: Request, note: Note) -> dict[str, object] | None:
+        """The owner's Share switch on a project's page (§9); nothing for visitors."""
+        if not self.sign_in.sees_everything(request) or note.type != "project":
+            return None
+        return {
+            "shared": self.shared.is_shared(note.slug),
+            # Public in its own frontmatter: shown, and visitors already see it.
+            "in_note": note.public,
+            "token": self.sign_in.form_token(request, "share"),
+        }
+
+    def is_shared(self, note: Note) -> bool:
+        """Visitors can read this project: shared from the site or public in its note."""
+        return note.public or self.shared.is_shared(note.slug)
 
     def theme_version(self) -> str:
         """A short fingerprint of the theme, so ``/theme.css?v=…`` is a new address after
@@ -346,6 +366,26 @@ class Pages:
             look = clean_look(body, note.type)
             self.node_looks.save(slug, look)
             return JSONResponse({"ok": True, "look": look})
+
+        @router.post("/projects/{slug}/share", include_in_schema=False)
+        def share(
+            request: Request,
+            slug: str,
+            csrf: Annotated[str, Form()] = "",
+            shared: Annotated[str, Form()] = "",
+        ) -> Response:
+            """The owner shares a project with visitors, or makes it private again (§9).
+            Kept in the data folder; the vault is never written."""
+            if not self.sign_in.sees_everything(request):
+                raise HTTPException(status_code=404)
+            if not hmac.compare_digest(csrf, self.sign_in.form_token(request, "share")):
+                raise HTTPException(status_code=403)
+            self.index.refresh()
+            note = self.index.notes.get(slug)
+            if note is None or note.type != "project":
+                raise HTTPException(status_code=404)
+            self.shared.set(slug, shared == "on")
+            return RedirectResponse(href_for(note), status_code=303)
 
         @router.get("/api/graph", include_in_schema=False)
         def graph(

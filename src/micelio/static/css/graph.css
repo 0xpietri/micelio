@@ -265,3 +265,12 @@ form .check, .check {
 }
 .growth-dates { margin: 0.4rem 0 0; font-size: 0.72rem; font-variant-numeric: tabular-nums; }
 .graph-tip-hint { display: block; margin-top: 0.25rem; color: var(--sun); font-size: 0.78rem; }
+
+/* The owner's Share switch under a project's title (§9). */
+.share-switch { margin: 0.4rem 0 0; pointer-events: auto; }
+.share-toggle { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.2rem 0.75rem 0.2rem 0.35rem; border: 1px solid color-mix(in srgb, var(--text) 35%, transparent); border-radius: 999px; background: color-mix(in srgb, var(--ink) 80%, transparent); color: var(--text); font: inherit; font-size: 0.85rem; cursor: pointer; }
+.share-toggle:hover, .share-toggle:focus-visible { border-color: var(--accent); }
+.share-box { display: inline-grid; place-items: center; width: 1.05rem; height: 1.05rem; border: 1.5px solid currentColor; border-radius: 0.3rem; font-size: 0.75rem; line-height: 1; }
+.share-toggle.on { border-color: var(--accent); }
+.share-toggle.on .share-box { background: var(--accent); border-color: var(--accent); color: var(--ink); }
+span.share-toggle { cursor: default; }

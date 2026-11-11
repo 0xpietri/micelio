@@ -6,6 +6,12 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- A Share switch on each project's page, for the owner: a shared project and the notes it
+  links to can be read by anyone without signing in. Switch it off to make them private
+  again. Shared projects carry a "Shared" badge on the projects list.
+
 ### Changed
 
 - A project's growth card stands on the soil line, beside the mushrooms (on a phone it
