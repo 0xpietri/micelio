@@ -44,6 +44,7 @@ from micelio.config import (
 )
 from micelio.i18n import Translate, active_language
 from micelio.landing import LandingBuilder, background_url
+from micelio.looks import NodeLooks
 from micelio.vault import PublicView, VaultIndex
 
 PROMPT_FIELDS = ("style", "sky", "horizon", "underground", "colors", "mood")
@@ -68,8 +69,9 @@ class LandingPages:
         self.templates = templates
         self.sign_in = sign_in
         self.t = t
-        self.everything = LandingBuilder(config, index)
-        self.public = LandingBuilder(config, public)
+        dress = NodeLooks(store).all
+        self.everything = LandingBuilder(config, index, dress)
+        self.public = LandingBuilder(config, public, dress)
         templates.env.globals["site_name"] = self.site_name
         templates.env.globals["look_choices"] = self.look_choices
 

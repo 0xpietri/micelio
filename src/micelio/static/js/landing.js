@@ -4,7 +4,7 @@
 
 import {
   DEFS, SVG_NS, cloud, el, f1, fragment, hyphaPath, lighter, loadStrings, painter, rampFilter,
-  reduced, seededRandom, tr,
+  reduced, seededRandom, shade, tr,
 } from "./draw.js";
 
 function viewWindow(svg, soil) {
@@ -29,8 +29,8 @@ function layout(data, V, soil, k) {
   const projects = data.projects.map((p, i) => {
     const rand = seededRandom(p.id);
     const x = count === 1 ? (left + right) / 2 : left + step * i + (rand() - 0.5) * step * 0.3;
-    const size = k * crowd * Math.min(1.6, 0.78 + 0.17 * Math.sqrt(p.notes));
-    return { ...p, x, size };
+    const size = k * crowd * Math.min(1.6, 0.78 + 0.17 * Math.sqrt(p.notes)) * (p.scale || 1);
+    return { ...p, x, size, color: p.shade ? shade(p.id, p.color, data.palette) : p.color };
   });
   const byId = Object.fromEntries(projects.map((p) => [p.id, p]));
 
@@ -229,10 +229,14 @@ function draw(svg, data, strings, state) {
 function fitHeadline() {
   const h = document.getElementById("headline");
   if (!h) return;
-  const hero = h.parentElement;
+  const hero = h.closest(".hero");
   h.style.fontSize = "";
   const cs = getComputedStyle(hero);
-  const avail = (hero.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)) * (window.innerWidth > 900 ? 0.62 : 1);
+  const inner = hero.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  // The buttons share the line on a wide screen (and the corner tools take the right).
+  const actions = hero.querySelector(".hero-line .actions");
+  const beside = actions && window.innerWidth > 900 ? actions.offsetWidth + 24 : 0;
+  const avail = window.innerWidth > 900 ? Math.min(inner * 0.72 - beside, inner - beside - 320) : inner;
   const max = parseFloat(getComputedStyle(h).fontSize);
   if (h.scrollWidth > avail) h.style.fontSize = `${Math.max(12, (max * avail) / h.scrollWidth).toFixed(1)}px`;
 }

@@ -25,20 +25,47 @@ All notable changes to this project are documented here. The format follows
   in their browser and never changes the site for anyone else.
 - Anyone can switch the interface language (English, Español) with the flag; the choice
   is kept in a cookie.
-- A footer on every page but the landing with the version, the build's commit and
-  "What's new": the changes since the last version, unfolded with a click. `/changes` lists every
-  change, newest first. The changelog ships inside the package and the image, so the
+- A small, faint version in the bottom corner of every page but the landing, with a dot
+  when the build brought news; it leads to `/changes`, which lists every change, newest
+  first (the build's commit shows on hover). The changelog ships inside the package and the image, so the
   site never asks GitHub.
+- On a project's page the owner clicks its mushroom to choose its species, color and
+  size; on a source's page, its mineral (diamond, emerald, amber, quartz, amethyst) and
+  color. Saved at once in the data folder, never in the notes, and shown on every graph,
+  the project list and the landing.
+- A project's scene shows how it grows: a small card in its corner with twelve weekly
+  bars (notes added or edited, journal entries) and a stage, Dormant, Germinating,
+  Growing or Fruiting, from the last thirty days. It replaces the category, type and
+  status line over the title.
 
 ### Changed
 
 - An empty tagline on the Appearance page now shows no tagline instead of the default.
+- The header is one line: the name, the sections, then Appearance, the language and
+  signing out (the sections wrap below on a phone). On the landing the two buttons sit
+  on the headline's line.
+- Space between nodes goes up to 600 %. Zoomed out, names keep a readable size, and
+  names that would overlap hide behind the better connected node's (pointing at a node
+  shows its name). Better connected nodes show longer names.
+- How to use a graph moved behind a small ⓘ in its corner.
+- A project's scene is taller, starts at the very top under the header (the painting
+  is one piece, no seam) and shows the sky, as on the landing.
+- In the graphs, notes are plain dots in their category's color and the links show
+  clearly (no more spore clouds or twigs there; the landing keeps them). Projects glow,
+  each in its own shade of its category's color. Sources are minerals (a diamond by
+  default). Clicking a name opens its node, like clicking the node.
 
 ### Fixed
 
 - After a deploy, browsers kept the previous build's styles and scripts for months (every
   build's files have the same date), so pages could look broken and the graph settings
-  do nothing. Static files now carry a hash of their content and are checked each time.
+  do nothing. Static files now carry a hash of their content and are checked each time,
+  and the first page from a new build tells the browser to drop what it cached before
+  (`Clear-Site-Data`), so nobody needs to force a reload.
+- The site's name and the titles kept the old palette's colors after a change on the
+  Appearance page: a cache in front of the site kept `/theme.css`. Its address now
+  changes with the theme. Project names in the list take the palette's title color
+  instead of the link color, which was a light blue in every palette.
 
 ## [0.1.0] - 2026-11-10
 

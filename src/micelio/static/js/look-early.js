@@ -17,7 +17,7 @@
   if (typeof look.palette === "string" && word.test(look.palette)) {
     root.dataset.palette = look.palette;
     var theme = document.querySelector('link[rel="stylesheet"][href^="/theme.css"]');
-    if (theme) theme.setAttribute("href", "/theme.css?palette=" + encodeURIComponent(look.palette));
+    if (theme) theme.setAttribute("href", theme.getAttribute("href") + "&palette=" + encodeURIComponent(look.palette));
     if (typeof look.ramp === "string" && color.test(look.ramp)) root.dataset.ramp = look.ramp;
   }
   var style = root.style;

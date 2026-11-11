@@ -8,7 +8,7 @@ export const STORAGE_KEY = "micelio.graph.v1";
 
 /** Range settings: [min, max, step, default]. Percentages, characters. */
 export const LIMITS = {
-  spacing: [50, 250, 10, 100],
+  spacing: [50, 600, 10, 100],
   labels: [60, 200, 10, 100],
   length: [12, 60, 2, 28],
 };
@@ -80,7 +80,16 @@ export function shorten(title, max) {
   return `${cut.replace(/[\s.,;:\-–—]+$/u, "")}…`;
 }
 
-/** The label a node shows with these settings. */
-export function labelText(title, settings) {
-  return settings.shorten ? shorten(title, settings.length) : String(title);
+/** How much of the chosen length a node of this many links shows: small nodes less,
+ * well connected ones more, so the names follow the size of what they name. */
+export function lengthFor(degree) {
+  return Math.min(1.6, Math.max(0.7, 0.7 + Math.sqrt(Math.max(0, degree || 0)) * 0.15));
+}
+
+/** The label a node shows with these settings; ``scale`` stretches the chosen length. */
+export function labelText(title, settings, scale = 1) {
+  if (!settings.shorten) return String(title);
+  const length = LIMITS.length;
+  const max = Math.round(Math.min(length[1] * 1.6, settings.length * scale));
+  return shorten(title, Math.max(length[0] - 4, max));
 }

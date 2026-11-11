@@ -11,20 +11,23 @@
 {% block content %}
 <section class="scene" id="scene">
   <div class="hero">
-    <h1 class="headline" id="headline">{{ headline }}</h1>
-    {% if tagline %}<p class="tagline">{{ tagline }}</p>{% endif %}
+    {#- The name and the two buttons on one line; the tagline below (§7a). #}
     {% set everything = request.state.signed_in is not defined or request.state.signed_in %}
     {% set bare = not data.projects and not data.notes and not data.sources and not data.journal %}
+    <div class="hero-line">
+      <h1 class="headline" id="headline">{{ headline }}</h1>
+      <div class="actions">
+        {% if everything or not bare %}
+        <a class="btn btn-main" href="/explore">{{ t("landing.explore") }}</a>
+        <a class="btn btn-alt" href="/projects">{{ t("landing.projects") }}</a>
+        {% else %}
+        <a class="btn btn-main" href="/login">{{ t("login.title") }}</a>
+        {% endif %}
+      </div>
+    </div>
+    {% if tagline %}<p class="tagline">{{ tagline }}</p>{% endif %}
     {% if everything and not data.projects %}<p class="tagline empty">{{ t("landing.empty") }}</p>
     {% elif bare %}<p class="tagline empty">{{ t("landing.empty_public") }}</p>{% endif %}
-    <div class="actions">
-      {% if everything or not bare %}
-      <a class="btn btn-main" href="/explore">{{ t("landing.explore") }}</a>
-      <a class="btn btn-alt" href="/projects">{{ t("landing.projects") }}</a>
-      {% else %}
-      <a class="btn btn-main" href="/login">{{ t("login.title") }}</a>
-      {% endif %}
-    </div>
   </div>
   <svg class="forest" id="forest" role="group" aria-labelledby="forest-label" xmlns="http://www.w3.org/2000/svg">
     <title id="forest-label">{{ t("landing.label") }}</title>

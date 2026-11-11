@@ -69,7 +69,7 @@ def test_defaults_and_cleaning() -> None:
     }
     assert from_null == defaults
     assert from_list == defaults
-    assert cleaned["spacing"] == 250  # clamped to the top
+    assert cleaned["spacing"] == 600  # clamped to the top
     assert cleaned["labels"] == 100  # not a number: the default
     assert cleaned["length"] in (12, 14)  # snapped to the slider's step
     assert cleaned["shorten"] is True  # not a boolean: the default

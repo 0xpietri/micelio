@@ -8,13 +8,15 @@
   <title>{% block title %}{{ site_name() }}{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', path='css/fonts.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', path='css/micelio.css') }}">
-  <link rel="stylesheet" href="/theme.css">
+  <link rel="stylesheet" href="/theme.css?v={{ theme_version() }}">
   {% if visitor %}
   {#- A visitor's own look, kept in their browser: applied before the page paints. #}
   <script src="/static/js/look-early.js"></script>
   <script type="module" src="/static/js/look.js"></script>
   {% endif %}
   <script type="module" src="/static/js/menu.js"></script>
+  {%- set dress_key = looks_token(request) if looks_token is defined else "" %}
+  {% if dress_key %}<meta name="micelio-looks" content="{{ dress_key }}">{% endif %}
   {% block head %}{% endblock %}
 </head>
 <body{% block body_class %}{% endblock %}>
@@ -33,21 +35,21 @@
   {% endblock %}
   {% block header %}
   <header class="top">
-    {#- Two lines (§7c): the name, then Appearance, the language and signing out or in;
-        below, the sections. #}
+    {#- One line (§7c): the name, the sections, then Appearance, the language and signing
+        out or in at the right. On a narrow screen the sections wrap below. #}
+    {% set everything = request.state.signed_in is not defined or request.state.signed_in %}
     <div class="top-row">
       <a class="brand" href="/">{{ site_name() }}</a>
+      <nav aria-label="{{ t('nav.main') }}">
+        <a href="/explore"{% if nav == "explore" %} aria-current="page"{% endif %}>{{ t("nav.explore") }}</a>
+        <a href="/projects"{% if nav == "projects" %} aria-current="page"{% endif %}>{{ t("nav.projects") }}</a>
+        <a href="/journal"{% if nav == "journal" %} aria-current="page"{% endif %}>{{ t("nav.journal") }}</a>
+        {% if everything %}
+        <a href="/health"{% if nav == "health" %} aria-current="page"{% endif %}>{{ t("nav.health") }}</a>
+        {% endif %}
+      </nav>
       {% if nav != "login" %}{% include "_menu.html" %}{% endif %}
     </div>
-    {% set everything = request.state.signed_in is not defined or request.state.signed_in %}
-    <nav aria-label="{{ t('nav.main') }}">
-      <a href="/explore"{% if nav == "explore" %} aria-current="page"{% endif %}>{{ t("nav.explore") }}</a>
-      <a href="/projects"{% if nav == "projects" %} aria-current="page"{% endif %}>{{ t("nav.projects") }}</a>
-      <a href="/journal"{% if nav == "journal" %} aria-current="page"{% endif %}>{{ t("nav.journal") }}</a>
-      {% if everything %}
-      <a href="/health"{% if nav == "health" %} aria-current="page"{% endif %}>{{ t("nav.health") }}</a>
-      {% endif %}
-    </nav>
   </header>
   {% endblock %}
   <main>
@@ -56,15 +58,12 @@
   {% block footer %}
   {#- The version and what it brought, from the packaged CHANGELOG.md (§7c). -#}
   {% set latest = changes.latest %}
+  {#- Only a small, faint version in the corner; a dot when this build brought news. #}
   <footer class="site-foot">
-    <details>
-      <summary>Micelio {{ changes.version }}{% if changes.build %} · {{ changes.build }}{% endif %} · {{ t("changes.whats_new") }}</summary>
-      {% if latest %}
-      <p class="foot-title">{{ t("changes.since", version=changes.version) if latest.unreleased else latest.version }}</p>
-      {{ latest.html }}
-      {% endif %}
-      <a href="/changes">{{ t("changes.all") }}</a>
-    </details>
+    <a class="foot-version" href="/changes" title="{{ t('changes.whats_new') }}{% if changes.build %} · {{ t('changes.build', build=changes.build) }}{% endif %}">
+      {%- if latest and latest.unreleased %}<span class="foot-news" aria-hidden="true"></span>{% endif -%}
+      v{{ changes.version }}{% if changes.build %}<span class="visually-hidden"> · {{ changes.build }}</span>{% endif %}<span class="visually-hidden"> · {{ t("changes.whats_new") }}</span>
+    </a>
   </footer>
   {% endblock %}
 </body>

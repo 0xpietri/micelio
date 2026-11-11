@@ -15,6 +15,7 @@ from typing import Literal, TypedDict
 from micelio.appearance import PALETTES, category_colors
 from micelio.config import Config
 from micelio.i18n import active_language, category_names
+from micelio.looks import Look
 from micelio.render import href_for
 from micelio.vault.index import IndexView, Note
 from micelio.vault.parser import link_key
@@ -38,6 +39,7 @@ class NodeData(TypedDict):
     ghost: bool
     faded: bool
     focus: bool
+    look: Look | None
 
 
 class EdgeData(TypedDict):
@@ -99,10 +101,14 @@ class GraphBuilder:
         config: Config,
         index: IndexView,
         colors: Callable[[], dict[str, str]] | None = None,
+        dress: Callable[[], dict[str, Look]] | None = None,
     ) -> None:
         self.config = config
         self.index = index
         self.colors = colors or (lambda: category_colors(config, PALETTES[config.landing.palette]))
+        # How the owner dressed projects and sources (looks.py), read once per build.
+        self.dress = dress or dict
+        self._dressed: dict[str, Look] = {}
 
     # -- pieces --------------------------------------------------------------------
 
@@ -126,6 +132,7 @@ class GraphBuilder:
             "ghost": False,
             "faded": faded,
             "focus": focus,
+            "look": self._dressed.get(note.slug) if note.type in ("project", "source") else None,
         }
 
     def _ghost(self, target: str) -> NodeData:
@@ -143,6 +150,7 @@ class GraphBuilder:
             "ghost": True,
             "faded": False,
             "focus": False,
+            "look": None,
         }
 
     def _categories(self) -> list[CategoryData]:
@@ -162,6 +170,7 @@ class GraphBuilder:
     # -- scopes --------------------------------------------------------------------
 
     def build(self, scope: Scope) -> GraphData:
+        self._dressed = self.dress()
         if scope.kind != "all":
             note = self.index.notes.get(scope.slug)
             if note is None or (scope.kind == "project") != (note.type == "project"):

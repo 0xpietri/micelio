@@ -24,8 +24,10 @@
 </div>
 {%- endmacro %}
 
-{# A project's mushroom, drawn by static/js/specimens.js; its color comes from the category. #}
+{# A project's mushroom, drawn by static/js/specimens.js: its category's species and its
+   own shade, or what the owner chose for it (looks.py). #}
 {% macro mushroom(project, scene=False, notes=0) -%}
 {% set category = category_of(project.category) %}
-<span class="{{ 'specimen-scene' if scene else 'mushroom-icon' }}{% if category %} cat-{{ category.key }}{% endif %}" data-mushroom data-species="{{ category.species if category else 'glowing-bonnets' }}" data-status="{{ project.status or 'active' }}"{% if scene %} data-scene="card" data-seed="{{ project.slug }}" data-notes="{{ notes }}"{% endif %} aria-hidden="true"></span>
+{% set look = node_look(project.slug) %}
+<span class="{{ 'specimen-scene' if scene else 'mushroom-icon' }}{% if category %} cat-{{ category.key }}{% endif %}" data-mushroom data-id="{{ project.slug }}" data-species="{{ look.species or (category.species if category else 'glowing-bonnets') }}" data-status="{{ project.status or 'active' }}"{% if look.color %} data-color="{{ look.color }}"{% endif %}{% if scene %} data-scene="card" data-seed="{{ project.slug }}" data-notes="{{ notes }}"{% endif %} aria-hidden="true"></span>
 {%- endmacro %}

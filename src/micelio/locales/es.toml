@@ -244,6 +244,16 @@ not_found_help = "Acá no hay ninguna nota. Puede que la hayan renombrado o movi
 sign_in_help = "Si este cuaderno es tuyo, iniciá sesión para ver todas las notas."
 back = "Volver a los proyectos"
 
+[growth]
+dormant = "Dormido"
+germinating = "Germinando"
+growing = "Creciendo"
+fruiting = "Fructificando"
+added = "+{count} notas en 30 días"
+score = "Puntaje de actividad {score}: cada nota nueva vale dos, cada edición o entrada del diario uno (últimos 30 días)"
+weeks = "Notas nuevas o editadas, semana por semana (12 semanas)"
+week = "{count} esa semana"
+
 [changes]
 title = "Novedades"
 whats_new = "Novedades"
@@ -265,10 +275,10 @@ no_journal = "Todavía no hay conversaciones."
 list = "Todas las notas en una lista ({count})"
 graph_label = "Grafo de todas las notas. Las mismas notas están como enlaces en el panel lateral."
 legend = "Cómo leerlo"
-legend_project = "Hongo: un proyecto. La especie es su categoría, el crecimiento su estado."
-legend_note = "Nube de esporas: una nota, que brilla con el color de su categoría. Un anillo punteado marca un puente."
-legend_journal = "Esporas doradas: una conversación del diario."
-legend_source = "Cristal: una fuente."
+legend_project = "Hongo: un proyecto, que brilla con su propio color. La especie es su categoría, el crecimiento su estado."
+legend_note = "Punto: una nota, del color de su categoría. Un anillo punteado marca un puente."
+legend_journal = "Punto dorado: una conversación del diario."
+legend_source = "Mineral: una fuente."
 legend_thread = "Los hilos que brillan son enlaces; por ellos corren chispas."
 
 [graph]
@@ -293,6 +303,33 @@ length = "Nombre más largo"
 chars = "{count} letras"
 settings_note = "Pasá el cursor por un nodo para leer el nombre completo. Se guarda solo en este navegador."
 reset = "Restablecer"
+dress_project = "El hongo de este proyecto"
+dress_source = "El mineral de esta fuente"
+dress_species = "Especie"
+dress_mineral = "Mineral"
+dress_color = "Color"
+dress_size = "Tamaño"
+dress_default = "Volver al de siempre"
+dress_saved = "Guardado"
+dress_failed = "No se pudo guardar"
+dress_hint = "Hacé clic para elegir cómo se ve."
+
+[species]
+fly-agaric = "Amanita"
+shaggy-inkcap = "Barbuda"
+morel = "Colmenilla"
+chanterelle = "Rebozuelo"
+liberty-caps = "Mongui"
+coral = "Hongo coral"
+parasol = "Parasol"
+glowing-bonnets = "Micenas luminosas"
+
+[mineral]
+diamond = "Diamante"
+emerald = "Esmeralda"
+amber = "Ámbar"
+quartz = "Cuarzo"
+amethyst = "Amatista"
 
 [font]
 shrikhand = "Shrikhand"

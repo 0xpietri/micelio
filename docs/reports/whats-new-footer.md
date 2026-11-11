@@ -41,3 +41,13 @@ numbers the version (the last tag's next patch), moves Unreleased under it in
 tag (a tag pushed with the workflow token starts nothing by itself). 0.1.1 was never
 tagged, so its entries went back under Unreleased and `pyproject.toml` says 0.1.0 again:
 the first run will make 0.1.1. The server half lives in factory-panel's `miceliodeploy`.
+
+## Cloudflare kept the old files
+
+Even after a hard reload the site showed the old styles: Cloudflare had cached
+`/static/*` from the old build (no caching headers then) and kept serving it. With
+`no-cache` from the origin it now revalidates every time, but it still tells browsers
+`max-age=14400` (the zone's Browser Cache TTL). So the first HTML page of each new build
+(cookie `micelio_static` holds a fingerprint of the static files) carries
+`Clear-Site-Data: "cache"`, and browsers drop what they kept. marcos purged the stale
+copies once by hand.

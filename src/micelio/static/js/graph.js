@@ -4,11 +4,12 @@
 // always draws the same map. Plain ES module, no build step.
 
 import {
-  DEFS, SVG_NS, cloud, el, f1, fold, fragment, hyphaPath, lighter, loadStrings, mix, painter,
-  paletteFromCss, rampFilter, reduced, seededRandom, tr,
+  DEFS, MINERALS, SVG_NS, cloud, el, f1, fold, fragment, hyphaPath, lighter, loadStrings, mix, painter,
+  paletteFromCss, rampFilter, reduced, seededRandom, shade, tr,
 } from "./draw.js";
-import { labelText, load, save } from "./graph-settings.js";
+import { labelText, lengthFor, load, save } from "./graph-settings.js";
 import { graphSection } from "./graph-panel.js";
+import { lookKey, openLookPanel } from "./node-look.js";
 
 export { fold, loadStrings, tr };
 
@@ -36,6 +37,17 @@ function look(data) {
     paint: painter(pal),
     color: (key) => (key && cats[key] ? cats[key].color : neutral),
     species: (key) => (key && cats[key] ? cats[key].species : UNCATEGORIZED_SPECIES),
+    /** A project's own color: its category's, shifted a little per project, so two
+     * projects of one category are told apart (the owner may choose it, ``node.look``). */
+    projectColor(node) {
+      if (node.look && node.look.color) return node.look.color;
+      return shade(node.id, this.color(node.category), pal);
+    },
+    projectSpecies(node) { return (node.look && node.look.species) || this.species(node.category); },
+    mineral(node) {
+      const kind = (node.look && node.look.mineral) || "diamond";
+      return { kind, color: (node.look && node.look.color) || MINERALS[kind] || MINERALS.diamond };
+    },
     defs: (ramp) => DEFS + (ramp ? rampFilter(ramp) : ""),
   };
 }
@@ -46,26 +58,33 @@ function mark(node, L, k = 1) {
   const { pal, paint } = L;
   const degree = node.degree || 0;
   if (node.type === "project") {
-    const s = (0.36 + 0.06 * Math.sqrt(degree)) * k;
-    const glow = `<ellipse cx="0" cy="2" rx="${f1(46 * s)}" ry="${f1(12 * s)}" fill="${L.color(node.category)}" opacity=".55" filter="url(#softglow)"/>`;
-    const body = paint.mushroom(L.species(node.category), L.color(node.category), node.status);
-    return { r: 30 * s, top: 105 * s, markup: `${glow}<g transform="scale(${s.toFixed(3)})"><g class="grow"><g class="sway">${body}</g></g></g>` };
+    const size = (node.look && node.look.size) || 1;
+    const s = (0.36 + 0.06 * Math.sqrt(degree)) * k * size;
+    const color = L.projectColor(node);
+    // The glow the notes used to have now belongs to the projects.
+    const aura = `<ellipse cx="0" cy="${f1(-52 * s)}" rx="${f1(44 * s)}" ry="${f1(58 * s)}" fill="${color}" opacity=".38" filter="url(#softglow)"/>`;
+    const glow = `<ellipse cx="0" cy="2" rx="${f1(46 * s)}" ry="${f1(12 * s)}" fill="${color}" opacity=".6" filter="url(#softglow)"/>`;
+    const body = paint.mushroom(L.projectSpecies(node), color, node.status);
+    return { r: 30 * s, top: 105 * s, markup: `${aura}${glow}<g transform="scale(${s.toFixed(3)})"><g class="grow"><g class="sway">${body}</g></g></g>` };
   }
   if (node.type === "source") {
-    return { r: 14 * k, top: 18 * k, markup: `<g class="cloud" transform="scale(${(0.55 * k).toFixed(2)})">${paint.crystal(pal.crystals[0])}</g>` };
+    const { kind, color } = L.mineral(node);
+    const s = 0.42 * k;
+    return { r: 10 * k, top: 10 * k, markup: `<g class="cloud"><g transform="scale(${s.toFixed(2)})">${paint.mineral(kind, color)}</g><circle r="${f1(12 * k)}" fill="transparent"/></g>` };
   }
   if (node.ghost) {
-    return { r: 8 * k, top: 10 * k, markup: `<circle r="${7 * k}" fill="none" stroke="${pal.thread}" stroke-opacity=".55" stroke-dasharray="2 3"/><circle r="${9 * k}" fill="transparent"/>` };
+    return { r: 6 * k, top: 6 * k, markup: `<circle r="${f1(5 * k)}" fill="none" stroke="${pal.thread}" stroke-opacity=".55" stroke-dasharray="2 3"/><circle r="${f1(9 * k)}" fill="transparent"/>` };
   }
   if (node.type === "journal") {
-    const r = 10 * k;
-    return { r, top: r, markup: `<g class="cloud"><circle r="${f1(r * 1.6)}" fill="${pal.spore}" opacity=".45" filter="url(#softglow)"/>${cloud(r, node.id, lighter(pal.spore, 0.45))}<circle r="${f1(r * 1.6)}" fill="transparent"/></g>` };
+    const r = 4.5 * k;
+    return { r, top: r, markup: `<g class="cloud"><circle r="${f1(r)}" fill="${pal.spore}" stroke="${pal.ink}" stroke-width="1.4"/><circle r="${f1(r + 7)}" fill="transparent"/></g>` };
   }
-  const r = (6 + Math.sqrt(degree) * 3.2) * k;
+  // A note: a plain dot in its category's color, so the links stay readable.
+  const r = (3.6 + Math.sqrt(degree) * 1.25) * k;
   const ring = node.bridge
-    ? `<circle r="${f1(r + 5)}" fill="none" stroke="${pal.sun}" stroke-opacity=".8" stroke-width="1.2" stroke-dasharray="2 4"/>`
+    ? `<circle r="${f1(r + 4)}" fill="none" stroke="${pal.sun}" stroke-opacity=".9" stroke-width="1.3" stroke-dasharray="2 3"/>`
     : "";
-  return { r, top: r, markup: `<g class="cloud"><circle r="${f1(r * 1.55)}" fill="${L.color(node.category)}" opacity=".42" filter="url(#softglow)"/>${ring}${cloud(r, node.id, pal.thread)}<circle r="${f1(r * 1.6)}" fill="transparent"/></g>` };
+  return { r, top: r, markup: `<g class="cloud">${ring}<circle r="${f1(r)}" fill="${L.color(node.category)}" stroke="${pal.ink}" stroke-width="1.4"/><circle r="${f1(r + 7)}" fill="transparent"/></g>` };
 }
 
 /** A small picture of one kind of node, for legends. */
@@ -339,7 +358,20 @@ function openLabels(svg) {
     text.parentNode.appendChild(text);
     open = text;
   };
-  svg.addEventListener("mouseover", (e) => reveal(e.target.closest("a.node")));
+  // A name is a way in too: pointing at it shows it whole, clicking it opens its node.
+  const nodeOf = (target) => {
+    const name = target.closest && target.closest("text.lbl");
+    if (name && !name.classList.contains("crowded")) return svg.querySelector(`a.node[data-id="${CSS.escape(name.dataset.id)}"]`);
+    return target.closest ? target.closest("a.node") : null;
+  };
+  svg.addEventListener("click", (e) => {
+    const name = e.target.closest && e.target.closest("text.lbl");
+    const a = name && nodeOf(e.target);
+    if (!a) return;
+    e.preventDefault();
+    a.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, ctrlKey: e.ctrlKey, metaKey: e.metaKey, shiftKey: e.shiftKey }));
+  });
+  svg.addEventListener("mouseover", (e) => reveal(nodeOf(e.target)));
   svg.addEventListener("mouseleave", close);
   svg.addEventListener("focusin", (e) => reveal(e.target.closest("a.node")));
   svg.addEventListener("focusout", close);
@@ -361,11 +393,32 @@ function nodeLink(node, strings, focusable) {
 }
 
 function label(node, x, y, cls, settings) {
-  const text = el("text", { class: `lbl ${cls}`, x: f1(x), y: f1(y), "text-anchor": "middle" });
+  const text = el("text", { class: `lbl ${cls}`, x: f1(x), y: f1(y), "text-anchor": "middle", "dominant-baseline": "hanging" });
   text.setAttribute("data-id", node.id);
   text.setAttribute("data-full", node.title);
-  text.textContent = labelText(node.title, settings);
+  const scale = node.type === "project" ? 1.6 : lengthFor(node.degree);
+  text.textContent = labelText(node.title, settings, scale);
+  // Which name wins when two would overlap (declutter): projects, the focus, then links.
+  text.setAttribute("data-rank", String((node.type === "project" ? 1e6 : 0) + (node.focus ? 5e5 : 0) + (node.degree || 0)));
   return text;
+}
+
+/** Names that would sit on top of each other: the better connected node keeps its name,
+ * the other one hides it until its node is pointed at (openLabels shows it). Run again
+ * after every zoom, since the names keep their size on screen. */
+function declutter(root) {
+  const texts = [...root.querySelectorAll("text.lbl")].sort((a, b) => Number(b.dataset.rank) - Number(a.dataset.rank));
+  const kept = [];
+  for (const t of texts) {
+    t.classList.remove("crowded");
+    let box;
+    try { box = t.getBBox(); } catch { continue; }
+    if (!box.width) continue;
+    const pad = box.height * 0.25;
+    const hit = kept.some((k) => box.x < k.x + k.width + pad && k.x < box.x + box.width + pad && box.y < k.y + k.height && k.y < box.y + box.height);
+    if (hit) t.classList.add("crowded");
+    else kept.push(box);
+  }
 }
 
 function pulsing(layer, pulses, state, every) {
@@ -413,8 +466,7 @@ function drawFree(layer, laid, L, strings, opts) {
     const cls = ["hypha", ghost ? "ghost" : "", l.faded ? "faded" : "", dimmed(a) && dimmed(b) ? "dim" : ""].join(" ").trim();
     markup += `<path class="${cls}" d="${d}" stroke-width="${width}" stroke-opacity="${project ? 0.8 : 0.6}"/>`;
     if (!ghost) {
-      for (const t of tw) twigMarkup += `<path class="twig${dimmed(a) && dimmed(b) ? " dim" : ""}" d="${t}" stroke-width=".8"/>`;
-      pulses.push({ d, color: a.type === "project" ? L.color(a.category) : b.type === "project" ? L.color(b.category) : L.pal.spore });
+      pulses.push({ d, color: a.type === "project" ? L.projectColor(a) : b.type === "project" ? L.projectColor(b) : L.pal.spore });
     }
   }
   hyphae.appendChild(fragment(markup));
@@ -430,13 +482,14 @@ function drawFree(layer, laid, L, strings, opts) {
     const ring = n.focus ? `<circle class="focus-ring" cy="${n.type === "project" ? f1(-m.top / 2) : 0}" r="${f1((n.type === "project" ? m.top * 0.62 : m.r * 1.7) + 6)}"/>` : "";
     a.appendChild(fragment(`<g transform="translate(${f1(n.x)},${f1(n.y)})">${ring}${m.markup}</g>`));
     marks.appendChild(a);
-    const y = n.type === "project" ? n.y + 18 : n.y + m.r * 1.35 + 11;
+    const y = n.type === "project" ? n.y + 8 : n.y + m.r * 1.35 + 2;
     const text = label(n, n.x, y, n.type === "project" ? "project" : n.ghost ? "ghost minor" : "minor", opts.settings);
     if (dimmed(n)) text.classList.add("dim");
     labels.appendChild(text);
   }
   const plane = el("g", { class: "pulses" });
   layer.replaceChildren(hyphae, twigs, plane, marks, labels);
+  declutter(labels);
   pulsing(plane, pulses, opts.state, opts.pulseEvery || 700);
 }
 
@@ -449,7 +502,8 @@ function drawForest(svg, data, L, strings, state, settings) {
   const a = r.width / Math.max(1, r.height);
   const h = a < 1 ? 640 : Math.min(1024, 1536 / a);
   const w = h * a;
-  const vb = { x: (1536 - w) / 2, y: Math.min(1024 - h, Math.max(0, soil - h * 0.36)), w, h };
+  // The soil line a little above the middle, so the sky shows as on the landing.
+  const vb = { x: (1536 - w) / 2, y: Math.min(1024 - h, Math.max(0, soil - h * 0.46)), w, h };
   svg.setAttribute("preserveAspectRatio", "xMidYMid slice");
   const k = Math.max(0.75, Math.min(1.6, vb.w / 900));
   const s = settings.spacing / 100;
@@ -492,8 +546,7 @@ function drawForest(svg, data, L, strings, state, settings) {
     const ghost = s.ghost || t.ghost;
     markup += `<path class="hypha${ghost ? " ghost" : ""}${l.faded ? " faded" : ""}" d="${d}" stroke-width="${s.bridge || t.bridge ? 3 : 1.8}"/>`;
     if (!ghost) {
-      for (const x of twigs) twigMarkup += `<path class="twig" d="${x}" stroke-width="1"/>`;
-      pulses.push({ d, color: s.type === "project" ? L.color(s.category) : L.pal.spore });
+      pulses.push({ d, color: s.type === "project" ? L.projectColor(s) : L.pal.spore });
     }
   }
   const marks = el("g");
@@ -501,14 +554,16 @@ function drawForest(svg, data, L, strings, state, settings) {
   for (const n of nodes) {
     const link = nodeLink(n, strings, true);
     if (n.type === "project") {
-      const s = (n.focus ? 1 : 0.62) * k;
-      const body = L.paint.mushroom(L.species(n.category), L.color(n.category), n.status);
-      link.appendChild(fragment(`<g transform="translate(${f1(n.x)},${soil + 4}) scale(${s.toFixed(2)})"><g class="grow"><g class="sway">${body}</g></g></g>`));
-      if (!n.focus) labels.appendChild(label(n, n.x, soil + 30, "project-small", settings));
+      const s = (n.focus ? 1 : 0.62) * k * ((n.look && n.look.size) || 1);
+      const color = L.projectColor(n);
+      const body = L.paint.mushroom(L.projectSpecies(n), color, n.status);
+      const aura = `<ellipse cx="0" cy="-55" rx="48" ry="62" fill="${color}" opacity=".35" filter="url(#softglow)"/>`;
+      link.appendChild(fragment(`<g transform="translate(${f1(n.x)},${soil + 4}) scale(${s.toFixed(2)})">${aura}<g class="grow"><g class="sway">${body}</g></g></g>`));
+      if (!n.focus) labels.appendChild(label(n, n.x, soil + 18, "project-small", settings));
     } else {
       const m = mark(n, L, k);
       link.appendChild(fragment(`<g transform="translate(${f1(n.x)},${f1(n.y)})">${m.markup}</g>`));
-      labels.appendChild(label(n, n.x, n.y + m.r * 1.4 + 12, n.ghost ? "ghost minor" : "minor", settings));
+      labels.appendChild(label(n, n.x, n.y + m.r * 1.4 + 2, n.ghost ? "ghost minor" : "minor", settings));
     }
     marks.appendChild(link);
   }
@@ -522,6 +577,7 @@ function drawForest(svg, data, L, strings, state, settings) {
   const twigLayer = el("g");
   twigLayer.appendChild(fragment(twigMarkup));
   svg.replaceChildren(el("defs", {}, L.defs(bg.ramp)), image, hyphae, twigLayer, plane, marks, labels);
+  declutter(labels);
   pulsing(plane, pulses, state, 1000);
   return vb;
 }
@@ -537,8 +593,14 @@ function html(tag, attrs = {}, text = "") {
 
 /** + / − / Fit and ⚙ in the graph's top right corner. The ⚙ opens the viewer's settings
  * (spacing, names; static/js/graph-panel.js), which tell every graph when they change. */
-function zoomButtons(host, strings, { onZoom, onFit }) {
+function zoomButtons(host, strings, { hint, onZoom, onFit }) {
   const bar = html("div", { class: "graph-tools" });
+  if (hint) {
+    // Shown while pointed at or focused (CSS), and read out as the button's name.
+    const help = html("span", { class: "graph-help" });
+    help.append(html("button", { type: "button", class: "graph-help-icon", "aria-label": hint }, "i"), html("span", { class: "graph-help-text glass", role: "tooltip" }, hint));
+    bar.appendChild(help);
+  }
   const button = (attrs, text, fn) => {
     const b = html("button", { type: "button", ...attrs }, text);
     b.addEventListener("click", fn);
@@ -625,10 +687,11 @@ export async function mountGraph(host) {
   tooltips(host, svg, nodesById, strings);
   const labels = openLabels(svg);
 
+  // How to use the graph sits behind a discreet ⓘ in the corner; the status line only
+  // says how many nodes were left out, if any.
+  const hint = tr(strings, mode === "free" ? "graph.hint" : "graph.hint_box");
   if (status) {
-    let hint = tr(strings, mode === "free" ? "graph.hint" : "graph.hint_box");
-    if (trimmed.hidden) hint = `${trimmed.hidden === 1 ? tr(strings, "landing.more_one") : tr(strings, "landing.more", { count: trimmed.hidden })} ${hint}`;
-    status.textContent = hint;
+    status.textContent = trimmed.hidden ? (trimmed.hidden === 1 ? tr(strings, "landing.more_one") : tr(strings, "landing.more", { count: trimmed.hidden })) : "";
   }
 
   const rememberZoom = (ratio) => {
@@ -638,10 +701,17 @@ export async function mountGraph(host) {
   const embedded = mode !== "free";
   let home = null;
   let narrow = false;
+  let tidy = null;
   const view = panZoom(svg, (scale, ratio) => {
-    // Far out, or a narrow scene, the notes' names would be too small or overlap: the
-    // tooltip and the list on the page say them.
-    svg.classList.toggle("far", mode === "forest" ? narrow && ratio < 1.5 : scale < 0.75);
+    if (mode === "forest") {
+      // A narrow scene: the notes' names would overlap; the tooltip and the list say them.
+      svg.classList.toggle("far", narrow && ratio < 1.5);
+      return;
+    }
+    // Zoomed out, the names keep a readable size on screen and the crowded ones hide.
+    host.style.setProperty("--view-scale", String(Math.max(0.3, Math.min(1, scale))));
+    clearTimeout(tidy);
+    tidy = setTimeout(() => declutter(svg), 120);
   }, { onZoom: rememberZoom, ctrlWheel: embedded, maxOut: mode === "forest" ? 1 : mode === "box" ? 2 : 4, clamp: mode === "forest" });
 
   let visible = () => true;
@@ -675,15 +745,36 @@ export async function mountGraph(host) {
   place();
 
   zoomButtons(host, strings, {
+    hint,
     onZoom: (f) => view.zoom(f),
     onFit: () => { rememberZoom(1); place(); },
   });
+  // On its own page the owner dresses the project or source: clicking its mushroom or
+  // mineral opens the look editor instead of reloading the page.
+  if (lookKey()) {
+    svg.addEventListener("click", (e) => {
+      const a = e.target.closest && e.target.closest("a.node");
+      const node = a && nodesById[a.dataset.id];
+      if (!node || !node.focus || (node.type !== "project" && node.type !== "source")) return;
+      if (e.ctrlKey || e.metaKey || e.shiftKey) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const now = node.type === "project"
+        ? { species: L.projectSpecies(node), color: L.projectColor(node), size: (node.look && node.look.size) || 1 }
+        : (() => { const m = L.mineral(node); return { mineral: m.kind, color: m.color }; })();
+      openLookPanel(host, node, now, strings, (lookNow) => {
+        node.look = lookNow;
+        if (laid) for (const n of laid.nodes) if (n.id === node.id) n.look = lookNow;
+        redraw();
+      });
+    });
+  }
   // A ⚙ panel saved new settings: take them and draw again as needed.
   window.addEventListener("micelio:graph-settings", (e) => {
     const key = e.detail && e.detail.key;
     const fresh = load();
     for (const k of ["spacing", "labels", "shorten", "length"]) settings[k] = fresh[k];
-    if (key === "labels") return labelZoom();
+    if (key === "labels") { labelZoom(); return redraw(); }
     if (key === "spacing" && laid) laid = layoutFree(data, settings.spacing);
     redraw();
     if (key === "spacing" || key === "reset") place();

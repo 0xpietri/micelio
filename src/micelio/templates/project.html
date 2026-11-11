@@ -2,17 +2,29 @@
 {% from "_macros.html" import status_badge, category_dot, graph_head, graph_box, mushroom %}
 {% block title %}{{ note.title }} · {{ site_name() }}{% endblock %}
 {% block head %}{{ graph_head("graph-embed.js") }}{% endblock %}
+{#- The scene starts at the very top, under the header, so the painting is one piece. #}
+{% block body_class %} class="scene-page"{% endblock %}
 {% block content %}
 {% set category = category_of(note.category) %}
 <section class="hero-scene" aria-labelledby="project-map">
   <h2 class="visually-hidden" id="project-map">{{ t("project.graph") }}</h2>
   {{ graph_box("project:" ~ note.slug, t("project.graph_label"), mode="forest") }}
   <div class="hero-heading">
-    <p class="eyebrow">
-      {% if category %}{{ category_dot(category.key) }} {{ category_name(category) }} ·{% endif %} {{ t("type.project") }}
-      {{ status_badge(note.status) }}
-    </p>
     <h1>{{ note.title }}</h1>
+    {% if looks_token(request) %}<p class="muted small dress-hint">{{ t("graph.dress_hint") }}</p>{% endif %}
+  </div>
+  {#- How the project grows: a stage and twelve weeks of notes (§7c). #}
+  <div class="growth glass stage-{{ growth.stage }}{% if category %} cat-{{ category.key }}{% endif %}" title="{{ t('growth.score', score=growth.score) }}">
+    <p class="growth-head">
+      <strong>{{ t("growth." ~ growth.stage) }}</strong>
+      <span class="muted">{{ t("growth.added", count=growth.added) }}</span>
+    </p>
+    <svg class="growth-weeks" viewBox="0 0 120 30" preserveAspectRatio="none" role="img" aria-label="{{ t('growth.weeks') }}">
+      {%- for count in growth.weeks %}
+      {%- set h = growth.height(count) * 0.3 %}
+      <rect x="{{ loop.index0 * 10 + 1 }}" y="{{ '%.1f' % (30 - h) }}" width="8" height="{{ '%.1f' % h }}" rx="1.5"><title>{{ t('growth.week', count=count) }}</title></rect>
+      {%- endfor %}
+    </svg>
   </div>
 </section>
 <div class="project-page">

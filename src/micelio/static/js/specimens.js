@@ -1,6 +1,6 @@
 // Small mushrooms next to project names (§7c): on the project cards and in lists. Each
 // placeholder says its species and status; its color is the category's, from theme.css.
-import { DEFS, el, f1, fragment, mix, painter, paletteFromCss, rampFilter, seededRandom } from "./draw.js";
+import { DEFS, el, f1, fragment, mix, painter, paletteFromCss, rampFilter, seededRandom, shade } from "./draw.js";
 
 const pal = paletteFromCss();
 const paint = painter(pal);
@@ -10,8 +10,10 @@ const soil = Math.round((1024 * Number(backdrop ? backdrop.dataset.soil : 52)) /
 const ramp = backdrop && backdrop.dataset.ramp ? backdrop.dataset.ramp.split(" ") : null;
 
 function colorOf(node) {
+  if (/^#[0-9a-f]{6}$/i.test(node.dataset.color || "")) return node.dataset.color;
   const value = getComputedStyle(node).getPropertyValue("--cat").trim();
-  return /^#[0-9a-f]{6}$/i.test(value) ? value : mix(pal.thread, pal.ink, 0.45);
+  const base = /^#[0-9a-f]{6}$/i.test(value) ? value : mix(pal.thread, pal.ink, 0.45);
+  return node.dataset.id ? shade(node.dataset.id, base, pal) : base;
 }
 
 document.querySelectorAll("[data-mushroom]").forEach((slot, i) => {

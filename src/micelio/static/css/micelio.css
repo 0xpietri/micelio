@@ -65,17 +65,23 @@ body.underground .scrim { background: color-mix(in srgb, var(--ink) 35%, transpa
 }
 
 /* The top bar */
-/* Two lines: the name and the corner tools, then the sections. */
+/* One line: the name, the sections, the corner tools at the right. */
 .top {
   position: relative;
   z-index: 10;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
   padding: 0.7rem max(1rem, env(safe-area-inset-right, 0px)) 0.7rem max(1rem, env(safe-area-inset-left, 0px));
 }
-.top-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.top-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 1.1rem; }
 .top nav { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+.top .corner-tools { margin-left: auto; }
+/* A phone: the name and the tools on the first line, the sections below. */
+@media (max-width: 720px) {
+  .top nav { order: 3; flex-basis: 100%; flex-wrap: nowrap; gap: 0.3rem; }
+  /* The four sections fit one line on a phone. */
+  .top nav a { padding: 0 0.6rem; font-size: 0.82rem; }
+}
 
 .brand {
   font-family: var(--display);
@@ -214,7 +220,7 @@ h2 { margin-top: 2rem; font-size: 1.12rem; }
 .specimen-scene { display: block; height: 9.5rem; border-bottom: 2px solid var(--ink); background: linear-gradient(180deg, var(--surface-2) 0 60%, var(--surface) 60%); }
 .specimen-scene svg { display: block; width: 100%; height: 100%; }
 .specimen-body { display: grid; gap: 0.3rem; padding: 0.65rem 0.85rem 0.85rem; }
-.specimen-body strong { line-height: 1.3; }
+.specimen-body strong { line-height: 1.3; color: var(--sun); }
 
 /* The journal: conversations rise like spores */
 .timeline { list-style: none; padding: 0; position: relative; }
@@ -314,22 +320,19 @@ form.inline { display: inline; }
 }
 
 
-/* A note's spore cloud, a source's crystal, a journal note's golden spores, in lists */
+/* A note's dot, a source's diamond, a journal note's golden dot, in lists (as in the graphs) */
 .spore-icon {
   display: inline-block;
   flex: none;
-  width: 1.15rem;
-  height: 1.15rem;
+  width: 0.7rem;
+  height: 0.7rem;
+  margin: 0 0.22rem;
   border-radius: 50%;
-  background:
-    radial-gradient(circle at 30% 35%, var(--pal-thread, #fff) 0 9%, transparent 10%),
-    radial-gradient(circle at 62% 28%, var(--pal-thread, #fff) 0 7%, transparent 8%),
-    radial-gradient(circle at 55% 65%, var(--pal-thread, #fff) 0 9%, transparent 10%),
-    radial-gradient(circle at 28% 70%, var(--pal-thread, #fff) 0 6%, transparent 7%),
-    radial-gradient(circle, color-mix(in srgb, var(--pal-thread, #fff) 30%, transparent) 0 40%, transparent 72%);
+  background: var(--cat, var(--pal-thread, #fff));
+  border: 2px solid var(--ink);
 }
-.spore-icon.golden { background: radial-gradient(circle at 35% 35%, #fff 0 12%, transparent 13%), radial-gradient(circle at 65% 60%, #fff 0 10%, transparent 11%), radial-gradient(circle, var(--pal-spore, #ffd23f) 0 45%, transparent 72%); }
-.spore-icon.crystal { border-radius: 2px; transform: rotate(45deg) scale(0.75); background: linear-gradient(135deg, #fff 0 18%, var(--pal-crystal, #22d3ee) 19%); border: 2px solid var(--ink); }
+.spore-icon.golden { background: var(--pal-spore, #ffd23f); }
+.spore-icon.crystal { border-radius: 2px; transform: rotate(45deg) scale(0.9); background: linear-gradient(135deg, #fff 0 22%, #7fe7ff 23%); }
 
 /* The header's corner: Appearance, language, sign out or in (templates/_menu.html) */
 .corner-tools { position: relative; display: flex; gap: 0.45rem; align-items: center; }
@@ -384,35 +387,11 @@ form.inline { display: inline; }
 .look-range input { width: 100%; margin: 0; accent-color: var(--accent); }
 .look-range input:disabled { opacity: 0.4; }
 
-/* The footer: the version, the build and what it brought (§7c). */
-.site-foot {
-  position: relative;
-  max-width: 48rem;
-  margin: 0 auto 2rem;
-  padding: 0 1rem;
-  font-size: 0.85rem;
-  color: var(--muted);
-}
-.site-foot summary {
-  cursor: pointer;
-  width: max-content;
-  max-width: 100%;
-  margin: 0 auto;
-  padding: 0.3rem 0.8rem;
-  border-radius: 999px;
-  background: var(--glass);
-  border: 1px solid var(--line);
-}
-.site-foot details[open] {
-  background: var(--glass);
-  border: 2px solid var(--ink);
-  border-radius: 18px;
-  padding: 0.6rem 1.2rem 1rem;
-  color: var(--text);
-}
-.site-foot details[open] summary { border: 0; background: none; padding: 0; margin: 0 0 0.4rem; }
-.site-foot .foot-title { margin: 0.6rem 0 0.2rem; font-weight: 700; color: var(--text); }
-.site-foot h3, .changes h3 { margin: 0.8rem 0 0.2rem; font-size: 0.95rem; color: var(--sun); }
-.site-foot ul, .changes ul { margin: 0.2rem 0; padding-left: 1.2rem; }
-.site-foot li, .changes li { margin: 0.2rem 0; }
-.site-foot a { color: var(--link); }
+/* The footer: only the version, small and faint in the corner, to /changes (§7c). */
+.site-foot { display: flex; justify-content: flex-end; padding: 0.4rem max(1rem, env(safe-area-inset-right, 0px)) 0.8rem; font-size: 0.72rem; }
+.foot-version { display: inline-flex; align-items: center; gap: 0.35rem; color: var(--muted); opacity: 0.55; text-decoration: none; }
+.foot-version:hover, .foot-version:focus-visible { opacity: 1; color: var(--text); }
+.foot-news { width: 6px; height: 6px; border-radius: 50%; background: var(--sun); }
+.changes h3 { margin: 0.8rem 0 0.2rem; font-size: 0.95rem; color: var(--sun); }
+.changes ul { margin: 0.2rem 0; padding-left: 1.2rem; }
+.changes li { margin: 0.2rem 0; }

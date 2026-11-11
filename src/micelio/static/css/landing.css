@@ -32,7 +32,9 @@ body.landing main { padding: 0; max-width: none; margin: 0; }
   pointer-events: none;
   z-index: 2;
 }
-.hero .tagline, .hero .actions { max-width: 40rem; }
+.hero .tagline { max-width: 40rem; }
+.hero-line { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 1.4rem; }
+.hero-line .actions { flex: none; }
 
 .headline {
   display: inline-block;

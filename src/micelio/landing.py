@@ -7,10 +7,12 @@ module only says what exists and how things connect.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import TypedDict
 
 from micelio.appearance import BUILTIN_BACKGROUND, Appearance, category_colors
 from micelio.config import Config
+from micelio.looks import Look
 from micelio.render import href_for
 from micelio.vault.index import IndexView, Note
 
@@ -27,6 +29,8 @@ class ProjectData(TypedDict):
     color: str
     status: str
     notes: int
+    scale: float
+    shade: bool
 
 
 class NoteData(TypedDict):
@@ -68,9 +72,12 @@ def background_url(appearance: Appearance) -> str:
 
 
 class LandingBuilder:
-    def __init__(self, config: Config, index: IndexView) -> None:
+    def __init__(
+        self, config: Config, index: IndexView, dress: Callable[[], dict[str, Look]] | None = None
+    ) -> None:
         self.config = config
         self.index = index
+        self.dress = dress or dict
 
     def _degree(self, slug: str) -> int:
         return len(self.index.outlinks.get(slug, ())) + len(self.index.backlinks.get(slug, ()))
@@ -84,22 +91,29 @@ class LandingBuilder:
         colors = category_colors(self.config, palette)
         notes = index.notes
 
+        dressed = self.dress()
         projects: list[ProjectData] = []
         for project in sorted(
             index.projects(), key=lambda n: (n.created or "", n.title.lower(), n.slug)
         ):
             category = self.config.category(project.category)
             members = index.members.get(project.slug, set())
+            look = dressed.get(project.slug, {})
             projects.append(
                 {
                     "id": project.slug,
                     "title": project.title,
                     "href": href_for(project),
                     "category": category.key if category else None,
-                    "species": category.species if category else UNCATEGORIZED_SPECIES,
-                    "color": colors[category.key] if category else palette.spare[3],
+                    "species": look.get("species")
+                    or (category.species if category else UNCATEGORIZED_SPECIES),
+                    "color": look.get("color")
+                    or (colors[category.key] if category else palette.spare[3]),
                     "status": project.status if project.status in _GROWTH else "active",
                     "notes": sum(1 for m in members if notes[m].type == "note"),
+                    "scale": look.get("size", 1.0),
+                    # No color chosen: the page shifts the category's a little (§7c).
+                    "shade": "color" not in look,
                 }
             )
         project_ids = {p["id"] for p in projects}
