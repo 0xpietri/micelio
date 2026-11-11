@@ -13,7 +13,13 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
-from micelio.appearance import Appearance, AppearanceStore, category_colors, palette_named
+from micelio.appearance import (
+    Appearance,
+    AppearanceStore,
+    category_colors,
+    palette_named,
+    ramp_tables,
+)
 from micelio.auth.web import SignIn
 from micelio.config import NOTE_TYPES, STATUSES, Category, Config
 from micelio.formatting import Dates
@@ -180,13 +186,15 @@ class Pages:
 
     def backdrop(self) -> dict[str, object]:
         """The painted background behind every page (§7c): the image, its soil line and,
-        when it is recolored, the palette's ramp for the browser's SVG filter."""
+        when it is recolored, the palette's ramp and the SVG filter's tables, written
+        into the page so the first paint already has the right colors."""
         look = self.looks.current()
         ramp = look.colors.ramp if look.recolors else None
         return {
             "url": background_url(look),
             "soil": look.soil,
             "ramp": " ".join(ramp) if ramp else "",
+            "tables": ramp_tables(ramp) if ramp else None,
         }
 
     def category_of(self, key: str | None) -> Category | None:

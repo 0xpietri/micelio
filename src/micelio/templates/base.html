@@ -1,4 +1,5 @@
 <!doctype html>
+{%- from "_backdrop.html" import painting, own_ramp %}
 {%- set visitor = request.state.signed_in is defined and not request.state.signed_in %}
 <html lang="{{ language }}"{% if visitor %} data-visitor{% endif %}>
 <head>
@@ -28,10 +29,10 @@
   {% set view = backdrop_view | default("horizon") %}
   {% if view == "underground" %}{% set top = soil + 20 %}{% else %}{% set top = [soil - 330, 0] | max %}{% endif %}
   <svg class="backdrop" id="backdrop" viewBox="0 {{ top }} 1536 {{ 1024 - top }}" preserveAspectRatio="{{ 'xMidYMid' if view == 'underground' else 'xMidYMin' }} slice" data-soil="{{ look.soil }}" data-ramp="{{ look.ramp }}" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
-    <image href="{{ look.url }}" x="0" y="0" width="1536" height="1024" preserveAspectRatio="xMidYMid slice"></image>
+    {{ painting(look, request) }}
   </svg>
+  {{ own_ramp(look, request) }}
   <div class="scrim"></div>
-  {% if look.ramp %}<script type="module" src="/static/js/backdrop.js"></script>{% endif %}
   {% endblock %}
   {% block header %}
   <header class="top">

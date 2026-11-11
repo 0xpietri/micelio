@@ -217,6 +217,23 @@ class Appearance:
         return PALETTES[self.palette]
 
 
+def ramp_tables(ramp: tuple[str, ...] | list[str]) -> tuple[str, str, str]:
+    """The red, green and blue ``tableValues`` of the SVG filter that maps the background's
+    brightness onto ``ramp`` (dark to light colors, ``#rrggbb``). The same table as
+    ``rampFilter`` in static/js/draw.js, so the page paints recolored from the start."""
+    stops = [[int(c[i : i + 2], 16) / 255 for i in (1, 3, 5)] for c in ramp]
+    n = len(stops) - 1
+    steps = 24
+    table: tuple[list[str], list[str], list[str]] = ([], [], [])
+    for i in range(steps + 1):
+        t = (i / steps) ** 0.8 * n
+        j = min(int(t), n - 1)
+        f = t - j
+        for ch in range(3):
+            table[ch].append(f"{stops[j][ch] + (stops[j + 1][ch] - stops[j][ch]) * f:.3f}")
+    return (" ".join(table[0]), " ".join(table[1]), " ".join(table[2]))
+
+
 def palette_named(value: object, fallback: PaletteName) -> PaletteName:
     """``value`` if it names a palette, else ``fallback``."""
     return next((k for k in PALETTE_NAMES if k == value), fallback)

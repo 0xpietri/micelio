@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_backdrop.html" import painting, own_ramp %}
 {% block title %}{{ headline }}{% endblock %}
 {% block head %}
   <link rel="stylesheet" href="/static/css/landing.css">
@@ -31,8 +32,10 @@
   </div>
   <svg class="forest" id="forest" role="group" aria-labelledby="forest-label" xmlns="http://www.w3.org/2000/svg">
     <title id="forest-label">{{ t("landing.label") }}</title>
-    <image href="{{ background }}" x="0" y="0" width="1536" height="1024" preserveAspectRatio="xMidYMid slice"></image>
+    {% set look = backdrop() %}
+    {{ painting(look, request) }}
   </svg>
+  {{ own_ramp(look, request) }}
   <nav class="corner" aria-label="{{ t('nav.settings') }}">{% include "_menu.html" %}</nav>
   <dl class="legend" aria-label="{{ t('landing.legend') }}">
     <div><dt>{{ t("landing.mushroom") }}</dt><dd>{{ t("type.project") }}</dd></div>
