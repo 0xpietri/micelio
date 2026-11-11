@@ -318,22 +318,19 @@ form.inline { display: inline; }
 }
 
 
-/* A note's spore cloud, a source's crystal, a journal note's golden spores, in lists */
+/* A note's dot, a source's diamond, a journal note's golden dot, in lists (as in the graphs) */
 .spore-icon {
   display: inline-block;
   flex: none;
-  width: 1.15rem;
-  height: 1.15rem;
+  width: 0.7rem;
+  height: 0.7rem;
+  margin: 0 0.22rem;
   border-radius: 50%;
-  background:
-    radial-gradient(circle at 30% 35%, var(--pal-thread, #fff) 0 9%, transparent 10%),
-    radial-gradient(circle at 62% 28%, var(--pal-thread, #fff) 0 7%, transparent 8%),
-    radial-gradient(circle at 55% 65%, var(--pal-thread, #fff) 0 9%, transparent 10%),
-    radial-gradient(circle at 28% 70%, var(--pal-thread, #fff) 0 6%, transparent 7%),
-    radial-gradient(circle, color-mix(in srgb, var(--pal-thread, #fff) 30%, transparent) 0 40%, transparent 72%);
+  background: var(--cat, var(--pal-thread, #fff));
+  border: 2px solid var(--ink);
 }
-.spore-icon.golden { background: radial-gradient(circle at 35% 35%, #fff 0 12%, transparent 13%), radial-gradient(circle at 65% 60%, #fff 0 10%, transparent 11%), radial-gradient(circle, var(--pal-spore, #ffd23f) 0 45%, transparent 72%); }
-.spore-icon.crystal { border-radius: 2px; transform: rotate(45deg) scale(0.75); background: linear-gradient(135deg, #fff 0 18%, var(--pal-crystal, #22d3ee) 19%); border: 2px solid var(--ink); }
+.spore-icon.golden { background: var(--pal-spore, #ffd23f); }
+.spore-icon.crystal { border-radius: 2px; transform: rotate(45deg) scale(0.9); background: linear-gradient(135deg, #fff 0 22%, #7fe7ff 23%); }
 
 /* The header's corner: Appearance, language, sign out or in (templates/_menu.html) */
 .corner-tools { position: relative; display: flex; gap: 0.45rem; align-items: center; }

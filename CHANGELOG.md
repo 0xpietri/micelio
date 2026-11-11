@@ -41,6 +41,10 @@ All notable changes to this project are documented here. The format follows
   shows its name). Better connected nodes show longer names.
 - How to use a graph moved behind a small ⓘ in its corner.
 - A project's scene is taller and shows the sky, as on the landing.
+- In the graphs, notes are plain dots in their category's color and the links show
+  clearly (no more spore clouds or twigs there; the landing keeps them). Projects glow,
+  each in its own shade of its category's color. Sources are minerals (a diamond by
+  default). Clicking a name opens its node, like clicking the node.
 
 ### Fixed
 

@@ -4,7 +4,7 @@
 // always draws the same map. Plain ES module, no build step.
 
 import {
-  DEFS, SVG_NS, cloud, el, f1, fold, fragment, hyphaPath, lighter, loadStrings, mix, painter,
+  DEFS, MINERALS, SVG_NS, cloud, el, f1, fold, fragment, hyphaPath, lighter, loadStrings, mix, painter,
   paletteFromCss, rampFilter, reduced, seededRandom, tr,
 } from "./draw.js";
 import { labelText, lengthFor, load, save } from "./graph-settings.js";
@@ -36,6 +36,19 @@ function look(data) {
     paint: painter(pal),
     color: (key) => (key && cats[key] ? cats[key].color : neutral),
     species: (key) => (key && cats[key] ? cats[key].species : UNCATEGORIZED_SPECIES),
+    /** A project's own color: its category's, shifted a little per project, so two
+     * projects of one category are told apart (the owner may choose it, ``node.look``). */
+    projectColor(node) {
+      if (node.look && node.look.color) return node.look.color;
+      const base = this.color(node.category);
+      const turn = Math.floor(seededRandom(node.id)() * 5);
+      return [base, lighter(base, 0.3), mix(base, pal.sun, 0.4), mix(base, pal.accent, 0.4), mix(base, "#000000", 0.25)][turn];
+    },
+    projectSpecies(node) { return (node.look && node.look.species) || this.species(node.category); },
+    mineral(node) {
+      const kind = (node.look && node.look.mineral) || "diamond";
+      return { kind, color: (node.look && node.look.color) || MINERALS[kind] || MINERALS.diamond };
+    },
     defs: (ramp) => DEFS + (ramp ? rampFilter(ramp) : ""),
   };
 }
@@ -46,26 +59,33 @@ function mark(node, L, k = 1) {
   const { pal, paint } = L;
   const degree = node.degree || 0;
   if (node.type === "project") {
-    const s = (0.36 + 0.06 * Math.sqrt(degree)) * k;
-    const glow = `<ellipse cx="0" cy="2" rx="${f1(46 * s)}" ry="${f1(12 * s)}" fill="${L.color(node.category)}" opacity=".55" filter="url(#softglow)"/>`;
-    const body = paint.mushroom(L.species(node.category), L.color(node.category), node.status);
-    return { r: 30 * s, top: 105 * s, markup: `${glow}<g transform="scale(${s.toFixed(3)})"><g class="grow"><g class="sway">${body}</g></g></g>` };
+    const size = (node.look && node.look.size) || 1;
+    const s = (0.36 + 0.06 * Math.sqrt(degree)) * k * size;
+    const color = L.projectColor(node);
+    // The glow the notes used to have now belongs to the projects.
+    const aura = `<ellipse cx="0" cy="${f1(-52 * s)}" rx="${f1(44 * s)}" ry="${f1(58 * s)}" fill="${color}" opacity=".38" filter="url(#softglow)"/>`;
+    const glow = `<ellipse cx="0" cy="2" rx="${f1(46 * s)}" ry="${f1(12 * s)}" fill="${color}" opacity=".6" filter="url(#softglow)"/>`;
+    const body = paint.mushroom(L.projectSpecies(node), color, node.status);
+    return { r: 30 * s, top: 105 * s, markup: `${aura}${glow}<g transform="scale(${s.toFixed(3)})"><g class="grow"><g class="sway">${body}</g></g></g>` };
   }
   if (node.type === "source") {
-    return { r: 14 * k, top: 18 * k, markup: `<g class="cloud" transform="scale(${(0.55 * k).toFixed(2)})">${paint.crystal(pal.crystals[0])}</g>` };
+    const { kind, color } = L.mineral(node);
+    const s = 0.42 * k;
+    return { r: 10 * k, top: 10 * k, markup: `<g class="cloud"><g transform="scale(${s.toFixed(2)})">${paint.mineral(kind, color)}</g><circle r="${f1(12 * k)}" fill="transparent"/></g>` };
   }
   if (node.ghost) {
-    return { r: 8 * k, top: 10 * k, markup: `<circle r="${7 * k}" fill="none" stroke="${pal.thread}" stroke-opacity=".55" stroke-dasharray="2 3"/><circle r="${9 * k}" fill="transparent"/>` };
+    return { r: 6 * k, top: 6 * k, markup: `<circle r="${f1(5 * k)}" fill="none" stroke="${pal.thread}" stroke-opacity=".55" stroke-dasharray="2 3"/><circle r="${f1(9 * k)}" fill="transparent"/>` };
   }
   if (node.type === "journal") {
-    const r = 10 * k;
-    return { r, top: r, markup: `<g class="cloud"><circle r="${f1(r * 1.6)}" fill="${pal.spore}" opacity=".45" filter="url(#softglow)"/>${cloud(r, node.id, lighter(pal.spore, 0.45))}<circle r="${f1(r * 1.6)}" fill="transparent"/></g>` };
+    const r = 4.5 * k;
+    return { r, top: r, markup: `<g class="cloud"><circle r="${f1(r)}" fill="${pal.spore}" stroke="${pal.ink}" stroke-width="1.4"/><circle r="${f1(r + 7)}" fill="transparent"/></g>` };
   }
-  const r = (6 + Math.sqrt(degree) * 3.2) * k;
+  // A note: a plain dot in its category's color, so the links stay readable.
+  const r = (3.6 + Math.sqrt(degree) * 1.25) * k;
   const ring = node.bridge
-    ? `<circle r="${f1(r + 5)}" fill="none" stroke="${pal.sun}" stroke-opacity=".8" stroke-width="1.2" stroke-dasharray="2 4"/>`
+    ? `<circle r="${f1(r + 4)}" fill="none" stroke="${pal.sun}" stroke-opacity=".9" stroke-width="1.3" stroke-dasharray="2 3"/>`
     : "";
-  return { r, top: r, markup: `<g class="cloud"><circle r="${f1(r * 1.55)}" fill="${L.color(node.category)}" opacity=".42" filter="url(#softglow)"/>${ring}${cloud(r, node.id, pal.thread)}<circle r="${f1(r * 1.6)}" fill="transparent"/></g>` };
+  return { r, top: r, markup: `<g class="cloud">${ring}<circle r="${f1(r)}" fill="${L.color(node.category)}" stroke="${pal.ink}" stroke-width="1.4"/><circle r="${f1(r + 7)}" fill="transparent"/></g>` };
 }
 
 /** A small picture of one kind of node, for legends. */
@@ -339,7 +359,20 @@ function openLabels(svg) {
     text.parentNode.appendChild(text);
     open = text;
   };
-  svg.addEventListener("mouseover", (e) => reveal(e.target.closest("a.node")));
+  // A name is a way in too: pointing at it shows it whole, clicking it opens its node.
+  const nodeOf = (target) => {
+    const name = target.closest && target.closest("text.lbl");
+    if (name && !name.classList.contains("crowded")) return svg.querySelector(`a.node[data-id="${CSS.escape(name.dataset.id)}"]`);
+    return target.closest ? target.closest("a.node") : null;
+  };
+  svg.addEventListener("click", (e) => {
+    const name = e.target.closest && e.target.closest("text.lbl");
+    const a = name && nodeOf(e.target);
+    if (!a) return;
+    e.preventDefault();
+    a.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, ctrlKey: e.ctrlKey, metaKey: e.metaKey, shiftKey: e.shiftKey }));
+  });
+  svg.addEventListener("mouseover", (e) => reveal(nodeOf(e.target)));
   svg.addEventListener("mouseleave", close);
   svg.addEventListener("focusin", (e) => reveal(e.target.closest("a.node")));
   svg.addEventListener("focusout", close);
@@ -434,8 +467,7 @@ function drawFree(layer, laid, L, strings, opts) {
     const cls = ["hypha", ghost ? "ghost" : "", l.faded ? "faded" : "", dimmed(a) && dimmed(b) ? "dim" : ""].join(" ").trim();
     markup += `<path class="${cls}" d="${d}" stroke-width="${width}" stroke-opacity="${project ? 0.8 : 0.6}"/>`;
     if (!ghost) {
-      for (const t of tw) twigMarkup += `<path class="twig${dimmed(a) && dimmed(b) ? " dim" : ""}" d="${t}" stroke-width=".8"/>`;
-      pulses.push({ d, color: a.type === "project" ? L.color(a.category) : b.type === "project" ? L.color(b.category) : L.pal.spore });
+      pulses.push({ d, color: a.type === "project" ? L.projectColor(a) : b.type === "project" ? L.projectColor(b) : L.pal.spore });
     }
   }
   hyphae.appendChild(fragment(markup));
@@ -515,8 +547,7 @@ function drawForest(svg, data, L, strings, state, settings) {
     const ghost = s.ghost || t.ghost;
     markup += `<path class="hypha${ghost ? " ghost" : ""}${l.faded ? " faded" : ""}" d="${d}" stroke-width="${s.bridge || t.bridge ? 3 : 1.8}"/>`;
     if (!ghost) {
-      for (const x of twigs) twigMarkup += `<path class="twig" d="${x}" stroke-width="1"/>`;
-      pulses.push({ d, color: s.type === "project" ? L.color(s.category) : L.pal.spore });
+      pulses.push({ d, color: s.type === "project" ? L.projectColor(s) : L.pal.spore });
     }
   }
   const marks = el("g");
@@ -524,9 +555,11 @@ function drawForest(svg, data, L, strings, state, settings) {
   for (const n of nodes) {
     const link = nodeLink(n, strings, true);
     if (n.type === "project") {
-      const s = (n.focus ? 1 : 0.62) * k;
-      const body = L.paint.mushroom(L.species(n.category), L.color(n.category), n.status);
-      link.appendChild(fragment(`<g transform="translate(${f1(n.x)},${soil + 4}) scale(${s.toFixed(2)})"><g class="grow"><g class="sway">${body}</g></g></g>`));
+      const s = (n.focus ? 1 : 0.62) * k * ((n.look && n.look.size) || 1);
+      const color = L.projectColor(n);
+      const body = L.paint.mushroom(L.projectSpecies(n), color, n.status);
+      const aura = `<ellipse cx="0" cy="-55" rx="48" ry="62" fill="${color}" opacity=".35" filter="url(#softglow)"/>`;
+      link.appendChild(fragment(`<g transform="translate(${f1(n.x)},${soil + 4}) scale(${s.toFixed(2)})">${aura}<g class="grow"><g class="sway">${body}</g></g></g>`));
       if (!n.focus) labels.appendChild(label(n, n.x, soil + 18, "project-small", settings));
     } else {
       const m = mark(n, L, k);

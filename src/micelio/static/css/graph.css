@@ -70,9 +70,11 @@
   stroke-width: calc(3.2px / var(--view-scale, 1));
   stroke-linejoin: round;
   paint-order: stroke fill;
-  pointer-events: none;
+  cursor: pointer;
   transition: opacity 0.2s;
 }
+.lbl.crowded { pointer-events: none; }
+.lbl:hover { fill: var(--sun); }
 .lbl.project { font-size: calc(13.5px * var(--label-scale, 1) * var(--label-zoom, 1) / var(--view-scale, 1)); font-weight: 800; }
 .lbl.project-small { font-size: calc(14px * var(--label-scale, 1) * var(--label-zoom, 1)); font-weight: 700; }
 .lbl.ghost { font-style: italic; fill: var(--muted); }

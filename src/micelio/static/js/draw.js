@@ -7,6 +7,9 @@ export const reduced = () => window.matchMedia("(prefers-reduced-motion: reduce)
 
 /* ---------- small helpers ---------- */
 
+/** The kinds of mineral a source can be, and the color each has unless chosen (§7c). */
+export const MINERALS = { diamond: "#7fe7ff", emerald: "#3ddc84", amber: "#ffb020", quartz: "#f1ecff", amethyst: "#b07cff" };
+
 export function seededRandom(seed) {
   // mulberry32 over a string hash
   let a = 0;
@@ -195,6 +198,25 @@ export function painter(pal) {
     + P("M-12,-22 L-2,-8 L-6,10 M4,-30 L-2,-8 M4,-30 L8,10 M16,-14 L8,10", "none", 1.6)
     + '<path d="M-11,-18 L-4,-9 L-8,4 L-18,-3 Z" fill="#fff" opacity=".35"/>';
 
+  /** A source's mineral, centered on its point, about 44 units across (§7c). */
+  const minerals = {
+    diamond: (c) => P("M-21,-6 L-12,-18 L12,-18 L21,-6 L0,21 Z", c, 2.6)
+      + P("M-21,-6 L21,-6 M-12,-18 L-6,-6 L0,-18 L6,-6 L12,-18 M-6,-6 L0,21 L6,-6", "none", 1.3)
+      + '<path d="M-12,-17 L-6,-7 L-18,-7 Z" fill="#fff" opacity=".45"/>',
+    emerald: (c) => P("M-11,-20 L11,-20 L19,-12 L19,12 L11,20 L-11,20 L-19,12 L-19,-12 Z", c, 2.6)
+      + P("M-6,-11 L6,-11 L10,-7 L10,7 L6,11 L-6,11 L-10,7 L-10,-7 Z", lighter(c, 0.2), 1.3)
+      + P("M-11,-20 L-6,-11 M11,-20 L6,-11 M19,12 L10,7 M-19,12 L-10,7", "none", 1.1)
+      + '<path d="M-9,-17 L5,-17 L2,-13 L-6,-13 Z" fill="#fff" opacity=".45"/>',
+    amber: (c) => P("M0,-21 C11,-9 18,1 15,11 C11,21 -11,21 -15,11 C-18,1 -11,-9 0,-21 Z", c, 2.6)
+      + '<path d="M-7,-6 C-4,-11 -1,-14 0,-15 C-2,-9 -5,-3 -9,2 Z" fill="#fff" opacity=".5"/>'
+      + `<circle cx="5" cy="8" r="2.4" fill="${darker(c, 0.35)}"/>`,
+    quartz: (c) => P("M-8,20 L-10,-5 L0,-22 L10,-5 L8,20 Z", c, 2.6)
+      + P("M0,-22 L0,20 M-10,-5 L10,-5", "none", 1.2)
+      + '<path d="M-8,-4 L-1,-19 L-1,-4 Z" fill="#fff" opacity=".45"/>',
+    amethyst: (c) => `<g transform="translate(0,9)">${crystal(c)}</g>`,
+  };
+  const mineral = (kind, c) => (minerals[kind] || minerals.diamond)(c);
+
   /** A project's mushroom; its status is its growth (§7a). */
   function mushroom(kind, color, status) {
     if (status === "draft") return button(color);
@@ -204,7 +226,7 @@ export function painter(pal) {
     return body;
   }
 
-  return { mushroom, crystal, button };
+  return { mushroom, crystal, button, mineral };
 }
 
 /* ---------- background recoloring: brightness mapped onto the palette's ramp ---------- */
