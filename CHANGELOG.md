@@ -37,6 +37,10 @@ All notable changes to this project are documented here. The format follows
   bars (notes added or edited, journal entries) and a stage, Dormant, Germinating,
   Growing or Fruiting, from the last thirty days. It replaces the category, type and
   status line over the title.
+- Clicking a note on the landing dives underground: the sky slides up, the soil fills
+  the view, and `/explore` rises centered on that note with its neighbors lit
+  (`/explore?focus=<note>`). Ctrl/⌘-click still opens the note; reduced motion skips
+  the animation.
 
 ### Changed
 

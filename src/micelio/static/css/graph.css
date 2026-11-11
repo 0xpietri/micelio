@@ -218,3 +218,8 @@ form .check, .check {
 .growth-weeks rect { fill: var(--cat, var(--accent)); opacity: 0.8; }
 .growth-weeks rect:last-of-type { opacity: 1; filter: drop-shadow(0 0 3px var(--cat, var(--accent))); }
 .growth.stage-dormant .growth-weeks rect { opacity: 0.35; filter: none; }
+
+/* Arriving on /explore from the landing's dive: the graph rises out of the dark. */
+.explore-stage.arriving { animation: arrive 0.9s cubic-bezier(0.2, 0.7, 0.3, 1) both; }
+@keyframes arrive { from { opacity: 0; transform: translateY(18vh) scale(1.08); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .explore-stage.arriving { animation: none; } }
