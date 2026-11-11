@@ -65,17 +65,21 @@ body.underground .scrim { background: color-mix(in srgb, var(--ink) 35%, transpa
 }
 
 /* The top bar */
-/* Two lines: the name and the corner tools, then the sections. */
+/* One line: the name, the sections, the corner tools at the right. */
 .top {
   position: relative;
   z-index: 10;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
   padding: 0.7rem max(1rem, env(safe-area-inset-right, 0px)) 0.7rem max(1rem, env(safe-area-inset-left, 0px));
 }
-.top-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.top-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 1.1rem; }
 .top nav { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+.top .corner-tools { margin-left: auto; }
+/* A phone: the name and the tools on the first line, the sections below. */
+@media (max-width: 720px) {
+  .top nav { order: 3; flex-basis: 100%; }
+}
 
 .brand {
   font-family: var(--display);

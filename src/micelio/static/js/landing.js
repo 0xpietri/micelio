@@ -229,10 +229,14 @@ function draw(svg, data, strings, state) {
 function fitHeadline() {
   const h = document.getElementById("headline");
   if (!h) return;
-  const hero = h.parentElement;
+  const hero = h.closest(".hero");
   h.style.fontSize = "";
   const cs = getComputedStyle(hero);
-  const avail = (hero.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)) * (window.innerWidth > 900 ? 0.62 : 1);
+  const inner = hero.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  // The buttons share the line on a wide screen (and the corner tools take the right).
+  const actions = hero.querySelector(".hero-line .actions");
+  const beside = actions && window.innerWidth > 900 ? actions.offsetWidth + 24 : 0;
+  const avail = window.innerWidth > 900 ? Math.min(inner * 0.72 - beside, inner - beside - 320) : inner;
   const max = parseFloat(getComputedStyle(h).fontSize);
   if (h.scrollWidth > avail) h.style.fontSize = `${Math.max(12, (max * avail) / h.scrollWidth).toFixed(1)}px`;
 }

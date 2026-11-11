@@ -33,6 +33,14 @@ All notable changes to this project are documented here. The format follows
 ### Changed
 
 - An empty tagline on the Appearance page now shows no tagline instead of the default.
+- The header is one line: the name, the sections, then Appearance, the language and
+  signing out (the sections wrap below on a phone). On the landing the two buttons sit
+  on the headline's line.
+- Space between nodes goes up to 600 %. Zoomed out, names keep a readable size, and
+  names that would overlap hide behind the better connected node's (pointing at a node
+  shows its name). Better connected nodes show longer names.
+- How to use a graph moved behind a small ⓘ in its corner.
+- A project's scene is taller and shows the sky, as on the landing.
 
 ### Fixed
 

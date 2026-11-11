@@ -1,4 +1,4 @@
-"""The header (§7c): two lines, Appearance, the language flag (§5a), signing out or in
+"""The header (§7c): one line with the sections, Appearance, the language flag (§5a), signing out or in
 as icons; and a visitor's own look, kept in their browser (§7b)."""
 
 from __future__ import annotations
@@ -20,7 +20,8 @@ def test_header_has_two_lines_and_the_corner_tools() -> None:
     html = client.get("/projects").text
     row = html.index('class="top-row"')
     nav = html.index('<nav aria-label="Main">')
-    assert row < html.index('class="brand"') < html.index('class="corner-tools"') < nav
+    # One line: the name, the sections, then the corner tools.
+    assert row < html.index('class="brand"') < nav < html.index('class="corner-tools"')
     assert "menu-toggle" not in html  # no ⚙ in the header: it lives on each graph
     assert '<a class="pill" href="/appearance">Appearance</a>' in html
     assert 'class="lang-menu"' in html

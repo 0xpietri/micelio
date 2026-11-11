@@ -33,21 +33,21 @@
   {% endblock %}
   {% block header %}
   <header class="top">
-    {#- Two lines (§7c): the name, then Appearance, the language and signing out or in;
-        below, the sections. #}
+    {#- One line (§7c): the name, the sections, then Appearance, the language and signing
+        out or in at the right. On a narrow screen the sections wrap below. #}
+    {% set everything = request.state.signed_in is not defined or request.state.signed_in %}
     <div class="top-row">
       <a class="brand" href="/">{{ site_name() }}</a>
+      <nav aria-label="{{ t('nav.main') }}">
+        <a href="/explore"{% if nav == "explore" %} aria-current="page"{% endif %}>{{ t("nav.explore") }}</a>
+        <a href="/projects"{% if nav == "projects" %} aria-current="page"{% endif %}>{{ t("nav.projects") }}</a>
+        <a href="/journal"{% if nav == "journal" %} aria-current="page"{% endif %}>{{ t("nav.journal") }}</a>
+        {% if everything %}
+        <a href="/health"{% if nav == "health" %} aria-current="page"{% endif %}>{{ t("nav.health") }}</a>
+        {% endif %}
+      </nav>
       {% if nav != "login" %}{% include "_menu.html" %}{% endif %}
     </div>
-    {% set everything = request.state.signed_in is not defined or request.state.signed_in %}
-    <nav aria-label="{{ t('nav.main') }}">
-      <a href="/explore"{% if nav == "explore" %} aria-current="page"{% endif %}>{{ t("nav.explore") }}</a>
-      <a href="/projects"{% if nav == "projects" %} aria-current="page"{% endif %}>{{ t("nav.projects") }}</a>
-      <a href="/journal"{% if nav == "journal" %} aria-current="page"{% endif %}>{{ t("nav.journal") }}</a>
-      {% if everything %}
-      <a href="/health"{% if nav == "health" %} aria-current="page"{% endif %}>{{ t("nav.health") }}</a>
-      {% endif %}
-    </nav>
   </header>
   {% endblock %}
   <main>
