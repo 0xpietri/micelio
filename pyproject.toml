@@ -58,6 +58,10 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/micelio"]
 
+# The changelog travels with the package, for the footer and /changes.
+[tool.hatch.build.targets.wheel.force-include]
+"CHANGELOG.md" = "micelio/CHANGELOG.md"
+
 # The source archive carries what builds and tests the package, not the design files.
 [tool.hatch.build.targets.sdist]
 include = [

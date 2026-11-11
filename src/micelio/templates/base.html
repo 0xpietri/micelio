@@ -53,5 +53,19 @@
   <main>
     {% block content %}{% endblock %}
   </main>
+  {% block footer %}
+  {#- The version and what it brought, from the packaged CHANGELOG.md (§7c). -#}
+  {% set latest = changes.latest %}
+  <footer class="site-foot">
+    <details>
+      <summary>Micelio {{ changes.version }}{% if changes.build %} · {{ changes.build }}{% endif %} · {{ t("changes.whats_new") }}</summary>
+      {% if latest %}
+      <p class="foot-title">{{ t("changes.since", version=changes.version) if latest.unreleased else latest.version }}</p>
+      {{ latest.html }}
+      {% endif %}
+      <a href="/changes">{{ t("changes.all") }}</a>
+    </details>
+  </footer>
+  {% endblock %}
 </body>
 </html>

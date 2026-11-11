@@ -380,3 +380,36 @@ form.inline { display: inline; }
 .look-range output { color: var(--muted); font-weight: 400; font-variant-numeric: tabular-nums; }
 .look-range input { width: 100%; margin: 0; accent-color: var(--accent); }
 .look-range input:disabled { opacity: 0.4; }
+
+/* The footer: the version, the build and what it brought (§7c). */
+.site-foot {
+  position: relative;
+  max-width: 48rem;
+  margin: 0 auto 2rem;
+  padding: 0 1rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.site-foot summary {
+  cursor: pointer;
+  width: max-content;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  background: var(--glass);
+  border: 1px solid var(--line);
+}
+.site-foot details[open] {
+  background: var(--glass);
+  border: 2px solid var(--ink);
+  border-radius: 18px;
+  padding: 0.6rem 1.2rem 1rem;
+  color: var(--text);
+}
+.site-foot details[open] summary { border: 0; background: none; padding: 0; margin: 0 0 0.4rem; }
+.site-foot .foot-title { margin: 0.6rem 0 0.2rem; font-weight: 700; color: var(--text); }
+.site-foot h3, .changes h3 { margin: 0.8rem 0 0.2rem; font-size: 0.95rem; color: var(--sun); }
+.site-foot ul, .changes ul { margin: 0.2rem 0; padding-left: 1.2rem; }
+.site-foot li, .changes li { margin: 0.2rem 0; }
+.site-foot a { color: var(--link); }

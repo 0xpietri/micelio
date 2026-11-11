@@ -21,6 +21,7 @@ from micelio.appearance import AppearanceStore
 from micelio.auth import resolve_auth
 from micelio.auth.store import AuthStore
 from micelio.auth.web import Clock, SignIn, install_security_headers
+from micelio.changes import Changes
 from micelio.config import Config
 from micelio.formatting import Dates
 from micelio.i18n import (
@@ -83,6 +84,9 @@ def create_app(
         t=t, site=config.site, language=ActiveLanguage(language), languages=language_menu
     )
 
+    changes = Changes()
+    templates.env.globals["changes"] = changes
+
     sign_in = SignIn(config, settings, store, templates, t, clock)
     app.state.sign_in = sign_in
     templates.env.globals["sign_in"] = sign_in
@@ -121,6 +125,11 @@ def create_app(
     public = PublicView(vault)
     app.include_router(Pages(config, vault, templates, dates, looks, sign_in, public).router())
     app.include_router(LandingPages(config, vault, looks, templates, sign_in, t, public).router())
+
+    @app.get("/changes", include_in_schema=False)
+    def changelog(request: Request) -> Response:
+        """Everything each version brought, newest first: the packaged CHANGELOG.md."""
+        return templates.TemplateResponse(request, "changes.html", {"nav": "changes"})
 
     @app.exception_handler(StarletteHTTPException)
     async def not_found(request: Request, exc: StarletteHTTPException) -> Response:

@@ -6,6 +6,13 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- A footer on every page but the landing with the version, the build's commit and
+  "What's new": the newest changes, unfolded with a click. `/changes` lists every
+  change, newest first. The changelog ships inside the package and the image, so the
+  site never asks GitHub.
+
 ## [0.1.1] - 2026-11-11
 
 ### Added

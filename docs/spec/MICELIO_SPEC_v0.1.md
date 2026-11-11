@@ -155,6 +155,7 @@ Since 2026-11-11 anyone can switch the interface language with the flag in the h
 | `/healthz` | Liveness for the container and monitoring |
 | `/appearance` | Palette, background, title and the background prompt guide (§7b, signed-in only) |
 | `/api/landing` | What the landing draws, as JSON (§7a) |
+| `/changes` | Every change, newest first, from the packaged `CHANGELOG.md` (§7c, visitors too) |
 
 Markdown is rendered with markdown-it-py and sanitized with nh3. Wikilinks become links to `/notes/<slug>`. Callouts (`> [!warning]`) and task lists render like Obsidian. Times are shown in the configured time zone. Links to projects go to `/projects/<slug>` (and `/notes/<project>` redirects there); links to missing notes render as dashed ghost text; `![[file.png]]` and other non-note embeds render as their name (attachments are not served in v0.1). Category colors, the palette and the type settings come from a generated `/theme.css`, so pages need no inline styles. There is one dark look built from the palette (§7c); the light theme of step 3 was dropped on 2026-11-10.
 
@@ -220,6 +221,7 @@ Decided by marcos on 2026-11-10: the landing's painting is part of the whole int
 - **Background**: the painting (or the uploaded image, recolored when chosen) stays fixed behind every page. Reading pages show the horizon at the top and scroll into the underground; `/explore` shows only the underground. The landing keeps its own scene.
 - **Header** (2026-11-11): two lines. First the site's name and, at the right, the ⚙ menu (the viewer's graph settings on pages with a graph, then the look: a link to Appearance for the owner, the visitor's own look for visitors), the language flag and an icon to sign out or in. Below, the sections.
 - **A visitor's own look** (2026-11-11): palette, fonts, title effect and sizes, kept in the visitor's browser (`localStorage`); the palette's name goes to `/theme.css`, `/api/graph` and `/api/landing` as `?palette=`, which only recolor that answer. The site stays the owner's for everyone else.
+- **Footer** (2026-11-11): every page but the landing ends with the version, the build's commit (`MICELIO_REVISION`, set by the image) and "What's new", which unfolds the newest changes: main's unreleased ones, else the newest release. Each change adds its line to `CHANGELOG.md` under Unreleased.
 - **Glass**: text sits on ink-colored glass panels with the palette's dark outline; navigation is pill buttons; titles use the title font and effect of §7b.
 - **One dark look**: no light theme; the palette sets every color.
 - **Project page**: a scene at the top, the project's mushroom on the soil line, its notes as spore clouds below, the other projects its bridge notes reach standing faded at the sides; the title over the sky.
@@ -302,3 +304,4 @@ The deployment on factory (Caddy site, the notes MCP, the vault's Git timer, bac
 - 2026-11-09 (marcos): no hosted service for other people's notes. Technical users self-host, guided by `docs/guides/` (own computer with a tunnel, or a VPS); non-technical users get the Obsidian plugin (v0.3).
 - 2026-11-10 (marcos): a settings panel on the graphs for spacing, name size, shortened names shown whole on hover, and zoom, remembered per browser (§7).
 - 2026-11-10 (marcos): before the first release the project is renamed from Mycelium to **Micelio** everywhere: code, command, environment variables, `micelio.toml`, the image `ghcr.io/0xpietri/micelio`, the PyPI package `micelio` (`mycelium` was taken there), the repository and the site `micelio.pietri.dev`.
+- 2026-11-11 (marcos): deploys follow main with `miceliodeploy edge`; the site lists what each deploy brought in a footer and at `/changes`.

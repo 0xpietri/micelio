@@ -26,6 +26,8 @@ These rules apply to any coding assistant (Claude, Codex, Copilot, Gemini, local
 - Python 3.12+, FastAPI + Jinja templates, plain CSS/JS with no build step, SQLite for the
   site's own state, `uv` with a lockfile, `pytest`, `ruff`, `mypy --strict`.
 - Must work on Linux, macOS and Windows: use `pathlib`, UTF-8 everywhere, no shell-outs.
+- Every user-visible change adds a line under `## [Unreleased]` in `CHANGELOG.md`: the
+  site shows it in its footer and at `/changes` once deployed.
 - Every behaviour change comes with tests; the sample vault in `examples/vault` is the shared
   fixture.
 - Code, comments, docs, commit messages and the interface are in English. Interface strings

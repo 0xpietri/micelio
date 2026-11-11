@@ -244,6 +244,13 @@ not_found_help = "Acá no hay ninguna nota. Puede que la hayan renombrado o movi
 sign_in_help = "Si este cuaderno es tuyo, iniciá sesión para ver todas las notas."
 back = "Volver a los proyectos"
 
+[changes]
+title = "Novedades"
+whats_new = "Novedades"
+since = "Nuevo desde la {version}"
+all = "Todos los cambios"
+build = "compilación {build}"
+
 [explore]
 title = "Explorar"
 search = "Buscar"
