@@ -179,6 +179,18 @@ def test_note_page_has_the_guide_and_a_pager() -> None:
     assert 'class="type-banner question"' in question
 
 
+def test_the_guide_leads_back_to_its_project_home() -> None:
+    home = f'<a href="/projects/{BAYES}">Project home</a>'
+    with client() as c:
+        note = c.get("/notes/conditional-probability").text
+        project = c.get(f"/projects/{BAYES}").text
+        chosen = c.get(f"/notes/priors-are-beliefs-you-can-update?guide={BAYES}").text
+    assert home in note
+    assert home in chosen
+    # On the project's own page the link marks where the reader is.
+    assert f'<a href="/projects/{BAYES}" aria-current="page">Project home</a>' in project
+
+
 def test_a_note_in_two_projects_picks_its_guide() -> None:
     priors = "/notes/priors-are-beliefs-you-can-update"
     with client() as c:

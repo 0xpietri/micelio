@@ -80,6 +80,23 @@ class Palette:
     ramp: tuple[str, ...] | None
     swatch: tuple[str, ...]
 
+    def thread_colors(self) -> list[str]:
+        """The colors a viewer may give the graphs' threads from this palette: its
+        thread, stem and category colors, then its other lights, each once."""
+        seen: list[str] = []
+        for color in (
+            self.thread,
+            self.stem,
+            *self.cats,
+            *self.spare,
+            self.spore,
+            self.accent,
+            self.sun,
+        ):
+            if color.lower() not in seen:
+                seen.append(color.lower())
+        return seen
+
     def slot(self, position: int) -> str:
         slots = (*self.cats, *self.spare)
         return slots[position % len(slots)]

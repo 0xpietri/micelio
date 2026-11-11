@@ -66,6 +66,8 @@ def test_defaults_and_cleaning() -> None:
         "shorten": True,
         "length": 28,
         "zoom": {"free": 1, "box": 1, "forest": 1},
+        "threadColor": "",
+        "threadFrom": "",
     }
     assert from_null == defaults
     assert from_list == defaults
@@ -144,8 +146,56 @@ console.log(JSON.stringify([
 # -- the panel on the pages --------------------------------------------------------------
 
 
+@needs_node
+def test_thread_color_is_kept_only_when_it_is_a_color() -> None:
+    out = run_module(
+        "console.log(JSON.stringify(["
+        " m.clean({threadColor: '#7DCFFF', threadFrom: 'tokyo-night'}),"
+        " m.clean({threadColor: '#abcdef'}),"
+        " m.clean({threadColor: '#abcdef', threadFrom: '<b>'}),"
+        " m.clean({threadColor: 'red', threadFrom: 'psychedelic'}),"
+        " m.clean({threadColor: 'url(x)'})]));"
+    )
+    picked, custom, odd_from, named, injected = out
+    assert (picked["threadColor"], picked["threadFrom"]) == ("#7dcfff", "tokyo-night")
+    assert (custom["threadColor"], custom["threadFrom"]) == ("#abcdef", "custom")
+    assert odd_from["threadFrom"] == "custom"
+    for cleaned in (named, injected):
+        assert (cleaned["threadColor"], cleaned["threadFrom"]) == ("", "")
+
+
+def test_palettes_for_the_threads_are_the_themes(client: TestClient) -> None:
+    response = client.get("/api/palettes")
+    assert response.status_code == 200
+    body = response.json()
+    assert [p["name"] for p in body] == [
+        "Psychedelic",
+        "Tokyo Night",
+        "Catppuccin Mocha",
+        "Rosé Pine",
+    ]
+    for palette in body:
+        assert palette["colors"], palette["key"]
+        assert all(re.fullmatch(r"#[0-9a-f]{6}", c) for c in palette["colors"])
+        assert len(set(palette["colors"])) == len(palette["colors"])
+    panel = (STATIC / "js" / "graph-panel.js").read_text("utf-8")
+    assert 'fetch("/api/palettes"' in panel
+    assert 'type: "color"' in panel  # the custom color
+
+
+def test_the_chosen_thread_color_reaches_every_drawing() -> None:
+    graph = (STATIC / "js" / "graph.js").read_text("utf-8")
+    assert "L.threads = settings.threadColor;" in graph
+    assert '"threadColor", "threadFrom"' in graph  # taken again when the ⚙ changes it
+    for name in ("landing.js", "specimens.js"):
+        source = (STATIC / "js" / name).read_text("utf-8")
+        assert 'from "./graph-settings.js"' in source, name
+        assert ".threadColor" in source, name
+
+
 def test_settings_strings_exist_in_every_language() -> None:
     keys = ("settings", "spacing", "labels", "shorten", "length", "chars", "settings_note")
+    keys = (*keys, "threads", "threads_change", "threads_theme", "threads_custom")
     for language in available_languages():
         strings = browser_strings(language)
         for key in (*keys, "reset", "zoom_in", "zoom_out", "fit"):
@@ -196,3 +246,10 @@ def test_visitors_get_the_same_graph_code(site_for: SiteFor) -> None:
         assert visitor.get(path).status_code == 200, path
     strings = visitor.get("/static/locales/en.json").json()
     assert strings["graph.settings"] == "Graph settings"
+
+
+def test_palettes_leak_nothing_of_the_vault(site_for: SiteFor) -> None:
+    site = site_for({"notes/Secret xq.md": "---\ntags: [hiddenxq]\n---\n# Secret xq\n"})
+    body = site.client.get("/api/palettes").text  # not signed in
+    assert "xq" not in body.lower()
+    assert "notes/" not in body

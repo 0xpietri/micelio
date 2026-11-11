@@ -45,6 +45,20 @@ def test_projects_grouped_by_category_in_config_order(client: TestClient) -> Non
     assert 'class="group cat-science"' in html
 
 
+def test_project_cards_are_alive() -> None:
+    static = Path(__file__).resolve().parents[1] / "src" / "micelio" / "static"
+    css = (static / "css" / "micelio.css").read_text("utf-8")
+    # /projects does not load graph.css: the cards' motion lives in micelio.css.
+    for rule in ("[data-mushroom] .sway", ".specimen-scene .hypha", ".specimen-scene .puff"):
+        assert rule + " {" in css, rule
+    reduced = css[css.index("@media (prefers-reduced-motion: reduce) {\n  [data-mushroom]") :]
+    assert "animation: none" in reduced[: reduced.index("\n}")]
+    script = (static / "js" / "specimens.js").read_text("utf-8")
+    # Delays go through the DOM: the Content Security Policy refuses style attributes.
+    assert 'style="' not in script
+    assert 'style.setProperty("--d"' in script
+
+
 def test_project_page(client: TestClient) -> None:
     html = client.get("/projects/learning-bayesian-statistics").text
     assert "<h1>Learning Bayesian statistics</h1>" in html

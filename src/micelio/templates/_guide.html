@@ -41,6 +41,9 @@
     <span class="guide-title">{{ t("guide.title") }}</span>
     <span class="muted small">{{ guide.project.title }}</span>
   </summary>
+  {#- The project's own page, reachable from each of its notes. #}
+  <p class="guide-home small"><span class="guide-icon project" aria-hidden="true"></span>
+    <a href="{{ href(guide.project) }}"{% if current is none %} aria-current="page"{% endif %}>{{ t("guide.home") }}</a></p>
   {% if guide.others %}
   <p class="guide-projects small">{{ t("guide.also_in") }}
     {% for other in guide.others %}<a href="?guide={{ other.slug }}">{{ other.title }}</a>{% if not loop.last %} · {% endif %}{% endfor %}

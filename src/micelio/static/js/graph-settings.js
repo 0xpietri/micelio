@@ -1,4 +1,5 @@
-// What a viewer chooses for the graphs: spacing, title size, short titles and zoom. Kept
+// What a viewer chooses for the graphs: spacing, title size, short titles, zoom and the
+// color of the mycelium's threads. Kept
 // in this browser's localStorage, never on the server: they are one person's view
 // settings (a phone and a desktop may want different ones), visitors can keep them too,
 // and nothing new is written to Micelio's data folder. The site-wide sizes stay on the
@@ -23,8 +24,16 @@ export function defaults() {
     shorten: true,
     length: LIMITS.length[3],
     zoom: Object.fromEntries(MODES.map((m) => [m, 1])),
+    // The threads' color: "" follows the theme; otherwise a #rrggbb picked from one of
+    // the themes' palettes (``threadFrom`` names it) or a custom one ("custom"). It stays
+    // when the site's theme changes.
+    threadColor: "",
+    threadFrom: "",
   };
 }
+
+const HEX = /^#[0-9a-f]{6}$/i;
+const FROM = /^[a-z][a-z0-9-]{0,39}$/;
 
 function inRange(value, [min, max, step, fallback]) {
   const n = Number(value);
@@ -47,6 +56,10 @@ export function clean(raw) {
   if (typeof raw.shorten === "boolean") out.shorten = raw.shorten;
   const zoom = raw.zoom && typeof raw.zoom === "object" ? raw.zoom : {};
   for (const mode of MODES) out.zoom[mode] = zoomOf(zoom[mode]);
+  if (typeof raw.threadColor === "string" && HEX.test(raw.threadColor)) {
+    out.threadColor = raw.threadColor.toLowerCase();
+    out.threadFrom = typeof raw.threadFrom === "string" && FROM.test(raw.threadFrom) ? raw.threadFrom : "custom";
+  }
   return out;
 }
 
