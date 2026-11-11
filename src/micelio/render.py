@@ -45,6 +45,11 @@ _ATTRIBUTES["input"] |= {"type", "checked", "disabled"}
 _ATTRIBUTES["a"] |= {"title", "id"}
 _ATTRIBUTES["li"] |= {"id"}
 _ATTRIBUTES["sup"] |= {"id"}
+# The owner's renderer marks each top-level block with the lines it spans in the note's
+# body (``data-l="start-end"``), so a said bubble can be put between two of them (§8a).
+_ANCHORED = {"p", "h1", "h2", "h3", "h4", "h5", "h6", "ul", "ol", "div", "code", "table", "hr"}
+for _tag in _ANCHORED:
+    _ATTRIBUTES.setdefault(_tag, set()).add("data-l")
 _TAGS = set(nh3.ALLOWED_TAGS) | {"input", "section"}
 _SCHEMES = {"http", "https", "mailto"}
 
@@ -119,6 +124,16 @@ def _callout_rule(state: StateCore) -> None:
         i += 1
 
 
+def _anchor_rule(state: StateCore) -> None:
+    for token in state.tokens:
+        if token.level == 0 and token.nesting in (0, 1) and token.map and token.type != "inline":
+            token.attrSet("data-l", f"{token.map[0]}-{token.map[1]}")
+
+
+def _keep_lines(match: re.Match[str]) -> str:
+    return "\n" * match.group(0).count("\n")
+
+
 def fill_callout_titles(body: Markup, titles: Mapping[str, str]) -> Markup:
     """Put each default callout heading (``DEFAULT_TITLED_CALLOUTS``) in the reader's
     language into HTML from ``Renderer.html``."""
@@ -133,13 +148,23 @@ class Renderer:
     """Renders notes of one vault; results are cached until the vault changes.
 
     With ``ghosts=False`` (the public view, §9) a link that resolves to nothing renders
-    as plain text, the same whether the note is missing or private."""
+    as plain text, the same whether the note is missing or private.
+
+    With ``anchors=True`` (the owner's view when editing is on, §8a) each top-level block
+    carries the body lines it came from; hidden parts are blanked, never cut, so the
+    numbers are the note's own."""
 
     def __init__(
-        self, index: IndexView, *, ghosts: bool = True, guide_headings: Iterable[str] = ()
+        self,
+        index: IndexView,
+        *,
+        ghosts: bool = True,
+        guide_headings: Iterable[str] = (),
+        anchors: bool = False,
     ) -> None:
         self.index = index
         self.ghosts = ghosts
+        self.anchors = anchors
         # A project's guide section is shown beside the page (§3.4), not in its body.
         self.guide_headings = tuple(guide_headings)
         self._cache: dict[str, Markup] = {}
@@ -150,6 +175,8 @@ class Renderer:
         md.use(tasklists_plugin).use(footnote_plugin)
         md.inline.ruler.before("link", "wikilink", _wikilink_rule)
         md.core.ruler.before("inline", "callouts", _callout_rule)
+        if anchors:
+            md.core.ruler.push("anchors", _anchor_rule)
         render_wikilink = self._render_wikilink
 
         def wikilink_rule(_renderer: object, tokens: list[Token], idx: int, *_rest: object) -> str:
@@ -183,9 +210,12 @@ class Renderer:
             cached = self._cache.get(note.slug)
             if cached is not None:
                 return cached
-        body = _LEADING_H1.sub("", note.body, count=1)
+        if self.anchors:
+            body = _LEADING_H1.sub(_keep_lines, note.body, count=1)
+        else:
+            body = _LEADING_H1.sub("", note.body, count=1)
         if note.type == "project" and self.guide_headings:
-            body = drop_section(body, self.guide_headings)
+            body = drop_section(body, self.guide_headings, keep_lines=self.anchors)
         raw = self.md.render(body)
         clean = nh3.clean(
             raw,

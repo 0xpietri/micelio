@@ -4,6 +4,8 @@
 {% block title %}{{ note.title }} · {{ site_name() }}{% endblock %}
 {% block head %}{{ graph_head("graph-embed.js") }}{% endblock %}
 {% block content %}
+{% from "_said.html" import prose, said_script %}
+{% set editing = said_editing(request, note) %}
 {% if guide %}<div class="guided">
 {{ guide_box(guide, note.slug) }}{% endif %}
 {% set guide_category = category_of(guide.project.category) if guide else none %}
@@ -35,7 +37,7 @@
   <p class="type-banner question"><span class="guide-icon question" aria-hidden="true"></span> {{ t("question.banner") }}</p>
   {% endif %}
 
-  <div class="prose">{{ body|callout_titles }}</div>
+  {{ prose(body, editing) }}
 
   {% if guide %}{{ guide_pager(guide, note.slug) }}{% endif %}
 
@@ -70,5 +72,6 @@
 </article>
 {% if guide %}</div>{% endif %}
 <script type="module" src="/static/js/specimens.js"></script>
+{{ said_script(editing) }}
 {% if guide %}<script type="module" src="/static/js/guide.js"></script>{% endif %}
 {% endblock %}

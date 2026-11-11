@@ -230,6 +230,28 @@ in_note = "Fructifica desde la nota misma (public: true); se cambia en el vault.
 [callout]
 takeaway = "Lo que tendrías que saber"
 
+[said]
+add = "Añadir nota"
+add_here = "Añadir una nota acá"
+write = "Escribir nota"
+placeholder = "Tus palabras, como las dirías…"
+save = "Guardar"
+cancel = "Cancelar"
+edit = "Editar"
+move = "Mover"
+delete = "Borrar"
+delete_confirm = "¿Borrarla?"
+up = "Subir"
+down = "Bajar"
+done = "Listo"
+drag = "Arrastrala para moverla entre párrafos"
+menu = "Opciones de la nota"
+saving = "Guardando…"
+changed = "Esta nota cambió desde que abriste la página (el MCP, Obsidian o Syncthing). No se escribió nada."
+reload = "Recargar"
+failed = "No se pudo guardar ({error}). No se escribió nada."
+hint_press = "Mantené apretado un espacio en blanco entre párrafos para añadir una nota"
+
 [note]
 card_created = "Creada"
 card_updated = "Editada"

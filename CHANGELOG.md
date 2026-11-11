@@ -8,6 +8,13 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Write your own words into a note from its page: said bubbles with your profile picture.
+  On a computer a floating "Add a note" button puts one between the paragraphs at its height;
+  on a phone hold a blank space between paragraphs and tap "Write a note". Bubbles can be
+  edited, dragged (or moved with arrows) between paragraphs and deleted. Off unless
+  `[editing] enabled = true`; a note changed meanwhile by the MCP or Obsidian is never
+  overwritten.
+
 - Two callouts for study notes. `> [!said]` shows the owner's own words in a speech bubble
   pointing at the speaker: a little mushroom in the category's color, or the owner's profile
   picture. `> [!takeaway]` closes a concept under "What you should know", handwritten in chalk on
