@@ -6,6 +6,15 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- The site's name and a project's title sit on a small sign in the theme's colors, so
+  they read on any background and palette.
+- A project's growth card stands on the soil line, beside the mushrooms (wide screens).
+- In the graphs a thread shows what it joins: a project's notes hang on solid threads in
+  its color, journal entries on gold dots, sources on dashes, and links between notes are
+  thin and faint. The threads no longer glow, so names read better.
+
 ## [0.1.1] - 2026-11-11
 
 ### Added

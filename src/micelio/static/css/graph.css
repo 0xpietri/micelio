@@ -46,8 +46,9 @@
 .graph-tip span { color: var(--muted); }
 
 /* Marks */
-.hypha { fill: none; stroke: var(--pal-thread, #fff); stroke-linecap: round; stroke-opacity: 0.85; }
-.hypha.ghost { stroke-dasharray: 3 6; opacity: 0.45; }
+.hypha { fill: none; stroke-linecap: round; }
+.hypha:not([stroke]) { stroke: var(--pal-thread, #fff); stroke-opacity: 0.85; }
+.hypha.ghost, .hypha.k-ghost { opacity: 0.45; }
 .twig { fill: none; stroke: var(--pal-thread, #fff); stroke-opacity: 0.45; stroke-linecap: round; }
 .faded { opacity: 0.4; }
 .dim { opacity: 0.14; }
@@ -223,3 +224,7 @@ form .check, .check {
 .explore-stage.arriving { animation: arrive 0.9s cubic-bezier(0.2, 0.7, 0.3, 1) both; }
 @keyframes arrive { from { opacity: 0; transform: translateY(18vh) scale(1.08); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .explore-stage.arriving { animation: none; } }
+/* On a wide scene the growth card stands on the soil line, beside the mushrooms. */
+@media (min-width: 720px) {
+  .hero-scene.has-soil .growth { bottom: auto; top: calc(var(--soil-y) - 0.5rem); transform: translateY(-100%); }
+}

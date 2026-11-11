@@ -446,11 +446,32 @@ function pulsing(layer, pulses, state, every) {
   }, every);
 }
 
+/** What a thread joins decides how it looks, so a crowded graph still reads: a project's
+ * own notes hang on solid threads in its color, journal entries on gold dots, sources
+ * on dashes in the crystal color, and note-to-note links are thin and faint. */
+function thread(a, b, L) {
+  const kind = a.ghost || b.ghost ? "ghost"
+    : a.type === "project" || b.type === "project" ? "member"
+      : a.type === "journal" || b.type === "journal" ? "journal"
+        : a.type === "source" || b.type === "source" ? "source" : "link";
+  const p = a.type === "project" ? a : b;
+  const bridge = a.bridge || b.bridge;
+  const look = {
+    member: { color: kind === "member" ? L.projectColor(p) : "", width: 1.8, dash: "", opacity: 0.8 },
+    journal: { color: L.pal.spore, width: 1.6, dash: "0.1 5", opacity: 0.85 },
+    source: { color: L.pal.crystals ? L.pal.crystals[0] : L.pal.thread, width: 1.3, dash: "7 5", opacity: 0.75 },
+    link: { color: L.pal.thread, width: bridge ? 1.6 : 1, dash: "", opacity: bridge ? 0.5 : 0.32 },
+    ghost: { color: L.pal.thread, width: 1, dash: "3 6", opacity: 0.4 },
+  }[kind];
+  const dash = look.dash ? ` stroke-dasharray="${look.dash}"` : "";
+  return { kind, attrs: `stroke="${look.color}" stroke-width="${look.width}" stroke-opacity="${look.opacity}"${dash}` };
+}
+
 /** The free graph (Explore and the note's neighborhood). */
 function drawFree(layer, laid, L, strings, opts) {
   const visible = opts.visible || (() => true);
   const dimmed = opts.dimmed || (() => false);
-  const hyphae = el("g", { filter: "url(#glow)" });
+  const hyphae = el("g");
   const twigs = el("g");
   const pulses = [];
   let markup = "";
@@ -461,10 +482,9 @@ function drawFree(layer, laid, L, strings, opts) {
     if (!visible(a) || !visible(b)) continue;
     const { d, twigs: tw } = hyphaPath(a, b, a.id + b.id, -Infinity);
     const ghost = a.ghost || b.ghost;
-    const project = a.type === "project" || b.type === "project";
-    const width = ghost ? 1 : a.bridge || b.bridge ? 2.4 : project ? 1.9 : 1.3;
-    const cls = ["hypha", ghost ? "ghost" : "", l.faded ? "faded" : "", dimmed(a) && dimmed(b) ? "dim" : ""].join(" ").trim();
-    markup += `<path class="${cls}" d="${d}" stroke-width="${width}" stroke-opacity="${project ? 0.8 : 0.6}"/>`;
+    const t = thread(a, b, L);
+    const cls = ["hypha", `k-${t.kind}`, l.faded ? "faded" : "", dimmed(a) && dimmed(b) ? "dim" : ""].join(" ").trim();
+    markup += `<path class="${cls}" d="${d}" ${t.attrs}/>`;
     if (!ghost) {
       pulses.push({ d, color: a.type === "project" ? L.projectColor(a) : b.type === "project" ? L.projectColor(b) : L.pal.spore });
     }
@@ -544,7 +564,8 @@ function drawForest(svg, data, L, strings, state, settings) {
     const to = t.type === "project" ? { x: t.x, y: soil + 6 } : t;
     const { d, twigs } = hyphaPath(from, to, s.id + t.id, soil + 8);
     const ghost = s.ghost || t.ghost;
-    markup += `<path class="hypha${ghost ? " ghost" : ""}${l.faded ? " faded" : ""}" d="${d}" stroke-width="${s.bridge || t.bridge ? 3 : 1.8}"/>`;
+    const look = thread(s, t, L);
+    markup += `<path class="hypha k-${look.kind}${l.faded ? " faded" : ""}" d="${d}" ${look.attrs}/>`;
     if (!ghost) {
       pulses.push({ d, color: s.type === "project" ? L.projectColor(s) : L.pal.spore });
     }
@@ -572,7 +593,7 @@ function drawForest(svg, data, L, strings, state, settings) {
     filter: bg.ramp ? "url(#bgmap)" : null,
   });
   const plane = el("g", { class: "pulses" });
-  const hyphae = el("g", { filter: "url(#glow)" });
+  const hyphae = el("g");
   hyphae.appendChild(fragment(markup));
   const twigLayer = el("g");
   twigLayer.appendChild(fragment(twigMarkup));
@@ -706,6 +727,7 @@ export async function mountGraph(host) {
     if (mode === "forest") {
       // A narrow scene: the notes' names would overlap; the tooltip and the list say them.
       svg.classList.toggle("far", narrow && ratio < 1.5);
+      requestAnimationFrame(soilLine);
       return;
     }
     // Zoomed out, the names keep a readable size on screen and the crowded ones hide.
@@ -713,6 +735,16 @@ export async function mountGraph(host) {
     clearTimeout(tidy);
     tidy = setTimeout(() => declutter(svg), 120);
   }, { onZoom: rememberZoom, ctrlWheel: embedded, maxOut: mode === "forest" ? 1 : mode === "box" ? 2 : 4, clamp: mode === "forest" });
+
+  // Where the soil line is on screen, for what stands on it (the project's growth card).
+  const scene = host.closest(".hero-scene");
+  function soilLine() {
+    const ctm = scene && svg.getScreenCTM();
+    if (!ctm) return;
+    const y = ctm.d * backdropInfo().soil + ctm.f - scene.getBoundingClientRect().top;
+    scene.style.setProperty("--soil-y", `${Math.round(y)}px`);
+    scene.classList.add("has-soil");
+  }
 
   let visible = () => true;
   let dimmed = () => false;

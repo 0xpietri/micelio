@@ -74,3 +74,22 @@ def test_the_scene_shows_the_card_not_the_old_eyebrow(client: TestClient) -> Non
     assert 'class="growth glass stage-' in html
     assert html.count("<rect ") >= 12
     assert 'class="eyebrow"' not in html.split('class="project-page"')[0]
+
+
+def test_growth_card_stands_on_the_soil() -> None:
+    from pathlib import Path
+
+    static = Path(__file__).resolve().parents[1] / "src" / "micelio" / "static"
+    assert "--soil-y" in (static / "js" / "graph.js").read_text("utf-8")
+    assert ".hero-scene.has-soil .growth" in (static / "css" / "graph.css").read_text("utf-8")
+
+
+def test_threads_show_what_they_join() -> None:
+    from pathlib import Path
+
+    script = (Path(__file__).resolve().parents[1] / "src/micelio/static/js/graph.js").read_text(
+        "utf-8"
+    )
+    for kind in ("member", "journal", "source", "link", "ghost"):
+        assert f"{kind}: {{ color" in script
+    assert "k-${t.kind}" in script
