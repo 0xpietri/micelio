@@ -87,6 +87,9 @@ body.underground .scrim { background: color-mix(in srgb, var(--ink) 35%, transpa
   paint-order: stroke fill;
   text-shadow: var(--title-shadow, 0.06em 0.07em 0 var(--pal-accent, #ff2fa0));
 }
+@media (min-width: 720px) {
+  .brand { font-size: calc(2.5rem * var(--title-scale, 1)); }
+}
 
 .pill, .top nav a {
   display: inline-flex;
@@ -104,7 +107,7 @@ body.underground .scrim { background: color-mix(in srgb, var(--ink) 35%, transpa
   cursor: pointer;
 }
 .pill:hover, .top nav a:hover { background: var(--ink); }
-.top nav a[aria-current="page"] {
+.top nav a[aria-current="page"], .corner-tools .pill[aria-current="page"], .corner-tools .menu-toggle[aria-expanded="true"] {
   background: var(--accent);
   color: var(--ink);
   box-shadow: 3px 3px 0 var(--ink);
@@ -328,7 +331,7 @@ form.inline { display: inline; }
 .spore-icon.golden { background: radial-gradient(circle at 35% 35%, #fff 0 12%, transparent 13%), radial-gradient(circle at 65% 60%, #fff 0 10%, transparent 11%), radial-gradient(circle, var(--pal-spore, #ffd23f) 0 45%, transparent 72%); }
 .spore-icon.crystal { border-radius: 2px; transform: rotate(45deg) scale(0.75); background: linear-gradient(135deg, #fff 0 18%, var(--pal-crystal, #22d3ee) 19%); border: 2px solid var(--ink); }
 
-/* The header's corner: ⚙ menu, language, sign out or in (templates/_menu.html) */
+/* The header's corner: Appearance, language, sign out or in (templates/_menu.html) */
 .corner-tools { position: relative; display: flex; gap: 0.45rem; align-items: center; }
 .icon-button, .lang-menu > summary {
   display: inline-flex;

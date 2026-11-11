@@ -1,4 +1,4 @@
-"""The header (§7c): two lines, the ⚙ menu, the language flag (§5a), signing out or in
+"""The header (§7c): two lines, Appearance, the language flag (§5a), signing out or in
 as icons; and a visitor's own look, kept in their browser (§7b)."""
 
 from __future__ import annotations
@@ -21,8 +21,8 @@ def test_header_has_two_lines_and_the_corner_tools() -> None:
     row = html.index('class="top-row"')
     nav = html.index('<nav aria-label="Main">')
     assert row < html.index('class="brand"') < html.index('class="corner-tools"') < nav
-    assert 'class="icon-button menu-toggle"' in html
-    assert 'href="/appearance"' in html  # the owner's Appearance page, inside the ⚙ menu
+    assert "menu-toggle" not in html  # no ⚙ in the header: it lives on each graph
+    assert '<a class="pill" href="/appearance">Appearance</a>' in html
     assert 'class="lang-menu"' in html
     assert 'href="/language/es?next=/projects"' in html
     assert "/static/js/menu.js" in html
@@ -60,6 +60,7 @@ def test_visitors_get_the_flag_their_look_and_a_sign_in_icon(site_for: SiteFor) 
     assert "data-visitor" in html
     assert "/static/js/look-early.js" in html
     assert 'class="look-panel"' in html
+    assert 'class="pill menu-toggle"' in html  # Appearance opens the visitor's own look
     assert 'href="/appearance"' not in html
     assert 'class="icon-button sign-in"' in html
     assert 'class="lang-menu"' in html

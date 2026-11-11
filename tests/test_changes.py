@@ -110,3 +110,17 @@ def test_visitors_can_read_what_changed(site_for: SiteFor) -> None:
     assert page.status_code == 200
     assert "What&#39;s new" in page.text or "What's new" in page.text
     assert 'class="site-foot"' in visitor.get("/projects").text
+
+
+def test_static_files_are_checked_again_by_their_content() -> None:
+    # Every build has the same file times, so browsers must not cache by them (§10).
+    client = client_for("en")
+    first = client.get("/static/css/micelio.css")
+    assert first.headers["cache-control"] == "no-cache"
+    assert "last-modified" not in first.headers
+    etag = first.headers["etag"]
+    assert client.get("/static/css/graph.css").headers["etag"] != etag
+    again = client.get("/static/css/micelio.css", headers={"If-None-Match": etag})
+    assert again.status_code == 304
+    stale = client.get("/static/css/micelio.css", headers={"If-None-Match": '"old"'})
+    assert stale.status_code == 200

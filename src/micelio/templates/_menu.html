@@ -1,23 +1,19 @@
-{#- The header's corner (§7c): the ⚙ menu (the viewer's graph settings and the look),
+{#- The header's corner (§7c): Appearance (the owner's page, or a visitor's own look),
     the language flag, and signing out or in. Used by base.html and the landing. -#}
 {%- set visitor = request.state.signed_in is defined and not request.state.signed_in %}
 {%- set everything = not visitor %}
 <div class="corner-tools">
+  {% if visitor %}
+  {#- A visitor's own look, kept in their browser (§7c). #}
   <div class="menu-corner">
-    <button type="button" class="icon-button menu-toggle" aria-expanded="false" aria-controls="site-menu" aria-label="{{ t('nav.settings') }}" title="{{ t('nav.settings') }}">⚙</button>
+    <button type="button" class="pill menu-toggle" aria-expanded="false" aria-controls="site-menu">{{ t("nav.appearance") }}</button>
     <div class="menu-panel glass" id="site-menu" hidden>
-      {#- Filled by static/js/menu.js on pages with a graph. #}
-      <section class="menu-graph" hidden></section>
-      {% if visitor %}
       {% include "_look_fields.html" %}
-      {% else %}
-      <section>
-        <h2 class="menu-heading">{{ t("nav.appearance") }}</h2>
-        <a class="pill" href="/appearance">{{ t("nav.appearance") }} →</a>
-      </section>
-      {% endif %}
     </div>
   </div>
+  {% else %}
+  <a class="pill" href="/appearance"{% if nav == "appearance" %} aria-current="page"{% endif %}>{{ t("nav.appearance") }}</a>
+  {% endif %}
   <details class="lang-menu">
     {%- set here = request.url.path ~ ("?" ~ request.url.query if request.url.query else "") %}
     {%- for l in languages() if l.code == (language | string) %}

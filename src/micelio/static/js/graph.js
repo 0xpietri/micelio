@@ -8,6 +8,7 @@ import {
   paletteFromCss, rampFilter, reduced, seededRandom, tr,
 } from "./draw.js";
 import { labelText, load, save } from "./graph-settings.js";
+import { graphSection } from "./graph-panel.js";
 
 export { fold, loadStrings, tr };
 
@@ -534,18 +535,29 @@ function html(tag, attrs = {}, text = "") {
   return node;
 }
 
-/** + / − / Fit in the graph's corner. The viewer's settings (spacing, names) live in
- * the ⚙ menu of the header (static/js/menu.js), which tells every graph when they change. */
+/** + / − / Fit and ⚙ in the graph's top right corner. The ⚙ opens the viewer's settings
+ * (spacing, names; static/js/graph-panel.js), which tell every graph when they change. */
 function zoomButtons(host, strings, { onZoom, onFit }) {
   const bar = html("div", { class: "graph-tools" });
   const button = (attrs, text, fn) => {
     const b = html("button", { type: "button", ...attrs }, text);
     b.addEventListener("click", fn);
     bar.appendChild(b);
+    return b;
   };
   button({ "data-zoom": "in", "aria-label": tr(strings, "graph.zoom_in"), title: tr(strings, "graph.zoom_in") }, "+", () => onZoom(1 / 1.3));
   button({ "data-zoom": "out", "aria-label": tr(strings, "graph.zoom_out"), title: tr(strings, "graph.zoom_out") }, "−", () => onZoom(1.3));
   button({ "data-zoom": "fit" }, tr(strings, "graph.fit"), onFit);
+  const panel = html("div", { class: "graph-panel glass", hidden: "" });
+  graphSection(panel, strings);
+  const open = (yes) => {
+    panel.hidden = !yes;
+    gear.setAttribute("aria-expanded", String(yes));
+  };
+  const gear = button({ class: "graph-gear", "aria-expanded": "false", "aria-label": tr(strings, "graph.settings"), title: tr(strings, "graph.settings") }, "⚙", () => open(panel.hidden));
+  panel.addEventListener("keydown", (e) => { if (e.key === "Escape") { open(false); gear.focus(); } });
+  document.addEventListener("pointerdown", (e) => { if (!panel.hidden && !bar.contains(e.target)) open(false); });
+  bar.appendChild(panel);
   host.appendChild(bar);
 }
 
@@ -666,7 +678,7 @@ export async function mountGraph(host) {
     onZoom: (f) => view.zoom(f),
     onFit: () => { rememberZoom(1); place(); },
   });
-  // The ⚙ menu saved new settings: take them and draw again as needed.
+  // A ⚙ panel saved new settings: take them and draw again as needed.
   window.addEventListener("micelio:graph-settings", (e) => {
     const key = e.detail && e.detail.key;
     const fresh = load();

@@ -12,7 +12,6 @@ from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.exception_handlers import http_exception_handler
 from fastapi.responses import JSONResponse, RedirectResponse, Response
-from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
@@ -35,6 +34,7 @@ from micelio.i18n import (
 )
 from micelio.landing_web import LandingPages
 from micelio.pages import Pages
+from micelio.static_files import FreshStaticFiles
 from micelio.vault import PublicView, VaultIndex
 
 PACKAGE = Path(str(files("micelio")))
@@ -117,7 +117,7 @@ def create_app(
         )
         return response
 
-    app.mount("/static", StaticFiles(directory=PACKAGE / "static"), name="static")
+    app.mount("/static", FreshStaticFiles(directory=PACKAGE / "static"), name="static")
     sign_in.install(app)
     install_security_headers(app)
 

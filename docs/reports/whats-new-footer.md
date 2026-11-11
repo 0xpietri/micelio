@@ -20,3 +20,13 @@ list the changes of the new version at the bottom.
 
 `tests/test_changes.py`: parsing and sanitizing, which section is the latest, the build
 value, the packaging, the footer on the pages (not the landing), visitors reading `/changes`.
+
+## Follow-up the same night
+
+marcos saw the header broken and the graph settings doing nothing after deploying. Cause:
+every file in the wheel and the image has the same 2020 date, so browsers cached the old
+`micelio.css` and `graph.js` by heuristic and used them with the new pages. `/static` is
+now served by `FreshStaticFiles`: `Cache-Control: no-cache` and an ETag from the content.
+
+He also asked for the ⚙ only on graphs, in the graph's top right corner
+(`static/js/graph-panel.js`), "Appearance" back as text in the header, and a larger name.

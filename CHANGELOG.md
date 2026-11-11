@@ -13,6 +13,18 @@ All notable changes to this project are documented here. The format follows
   change, newest first. The changelog ships inside the package and the image, so the
   site never asks GitHub.
 
+### Changed
+
+- The ⚙ with the graph settings sits in each graph's top right corner, next to + / − /
+  Fit, and only on pages with a graph. The header shows "Appearance" as text again (for
+  visitors it opens their own look), and the site's name is larger on wide screens.
+
+### Fixed
+
+- After a deploy, browsers kept the previous build's styles and scripts for months (every
+  build's files have the same date), so the header looked broken and the graph settings
+  did nothing. Static files now carry a hash of their content and are checked each time.
+
 ## [0.1.1] - 2026-11-11
 
 ### Added
