@@ -88,7 +88,8 @@ def test_sharing_a_project_opens_it_and_its_notes_to_visitors(site_for: SiteFor)
     assert "<form" not in page.text, "visitors only look"
     assert "share-switch" in page.text, "and they see the mushroom"
     assert 'class="growth' in page.text, "and the growth card"
-    assert "anyone can read it, no account needed" in page.text
+    assert "Spores in the air" in page.text
+    assert "title=" not in page.text.split("share-switch", 1)[1].split("</div>", 1)[0]
     assert "Spores in the air" in page.text
     assert "badge shared" not in site.client.get("/projects").text
     assert site.client.get("/notes/lonely-xq").status_code == 200

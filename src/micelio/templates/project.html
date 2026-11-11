@@ -12,73 +12,73 @@
   <div class="hero-heading">
     <h1>{{ note.title }}</h1>
   </div>
-  {#- The Share switch (§9), on the soil line at the right: a neon mushroom when visitors can
-      read the project, only its mycelium under the soil when it is private. Only the owner
-      can flip it; visitors just see the mushroom. #}
-  {% set share = share_switch(request, note) %}
-  {% if share %}
-  {% set on = share.shared or share.in_note %}
-  {% set label = t("share.shared") if on else t("share.private") %}
-  {% set fixed = share.in_note or not share.owner %}
-  {% set hint = t("share.visitor") if not share.owner else (t("share.in_note") if share.in_note else (t("share.hint_on") if share.shared else t("share.hint_off"))) %}
-  {% if share.owner %}<form{% else %}<div{% endif %} class="share-switch{% if category %} cat-{{ category.key }}{% endif %}{% if on %} on{% endif %}"{% if share.owner %} method="post" action="/projects/{{ note.slug }}/share"{% endif %}>
-    {% if share.owner %}<input type="hidden" name="csrf" value="{{ share.token }}">{% endif %}
-    {% if not fixed %}<input type="hidden" name="shared" value="{{ '' if share.shared else 'on' }}">{% endif %}
-    {% if fixed %}<span class="share-toggle" role="img" aria-label="{{ label }}. {{ hint }}" title="{{ hint }}">{% else %}<button type="submit" class="share-toggle" role="switch" aria-checked="{{ 'true' if share.shared else 'false' }}" aria-label="{{ label }}. {{ hint }}" title="{{ hint }}">{% endif %}
-      <span class="share-caption" aria-hidden="true">{{ label }}</span>
-      <svg class="share-art" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
-        <path class="share-soil" d="M2 40H62"/>
-        <g class="share-roots">
-          <path d="M32 40c-3 5-9 7-15 8s-10 4-13 8"/>
-          <path d="M32 40c4 4 10 5 15 9s9 6 13 7"/>
-          <path d="M32 40c-1 6 2 11 0 17"/>
-          <path d="M20 47c-2 3-1 7-4 10"/>
-          <path d="M45 48c1 3 4 5 4 9"/>
-          <circle cx="17" cy="48" r="1.1"/><circle cx="47" cy="49" r="1.1"/><circle cx="32" cy="57" r="1.1"/><circle cx="4" cy="56" r="0.9"/><circle cx="60" cy="56" r="0.9"/>
-        </g>
-        {% if on %}
-        <g class="share-shroom">
-          <path class="stem" d="M29.5 24.5c.4 5-.6 10-1.8 15.5h8.6c-1.2-5.5-2.2-10.5-1.8-15.5"/>
-          <path class="stem-line" d="M31.2 27c0 4-.6 8-1.3 12M32.8 27c0 4 .6 8 1.3 12"/>
-          <path class="cap" d="M10 23c0-10 9.5-17 22-17s22 7 22 17c0 1.6-1.4 2.6-3 2.6H13c-1.6 0-3-1-3-2.6z"/>
-          <path class="gills" d="M15 25.4l5 0M21 25.6l17 0M39 25.6l9 0"/>
-          <rect class="ring" x="28.6" y="24.6" width="6.8" height="3.2" rx="0.6"/>
-          <circle class="spot" cx="22" cy="14" r="2.4"/><circle class="spot" cx="32" cy="10.5" r="2"/><circle class="spot" cx="41.5" cy="14.5" r="2.6"/><circle class="spot" cx="17" cy="20" r="1.4"/><circle class="spot" cx="47" cy="20.5" r="1.5"/><circle class="spot" cx="29" cy="18" r="1.3"/><circle class="spot" cx="37" cy="19.5" r="1.2"/>
-          <path class="small cap" d="M5 33c0-3.4 2.6-5.6 5.6-5.6s5.6 2.2 5.6 5.6z"/>
-          <path class="small stem" d="M9.7 33c.2 2.5-.1 4.6-.6 7h3c-.5-2.4-.8-4.5-.6-7"/>
-          <path class="small cap" d="M48.6 31.5c0-3.8 2.8-6.3 6.2-6.3S61 27.7 61 31.5z"/>
-          <path class="small stem" d="M53.9 31.5c.2 3-.1 5.6-.7 8.5h3.4c-.6-2.9-.9-5.5-.7-8.5"/>
-          <circle class="glow" cx="22" cy="40" r="1.1"/><circle class="glow" cx="26" cy="38.6" r="0.8"/><circle class="glow" cx="39" cy="39" r="1"/><circle class="glow" cx="43" cy="40.2" r="0.8"/><circle class="glow" cx="16" cy="39.4" r="0.7"/><circle class="glow" cx="48" cy="39.2" r="0.7"/>
-        </g>
-        {% endif %}
-      </svg>
-    {% if fixed %}</span>{% else %}</button>{% endif %}
-  {% if share.owner %}</form>{% else %}</div>{% endif %}
-  {% endif %}
-  {#- How the project grows: a stage and twelve weeks of notes (§7c). #}
-  <div class="growth glass stage-{{ growth.stage }}{% if category %} cat-{{ category.key }}{% endif %}" title="{{ t('growth.score', score=growth.score) }}">
-    <p class="growth-head">
-      <strong>
-        {#- A small mushroom that grows with the stage; it breathes while the project is alive. #}
-        <svg class="growth-shroom" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <g class="growth-shroom-body">
-            <path class="stem" d="M10 13.5h4l.8 8.5h-5.6z"/>
-            <path class="cap" d="M3 14c0-5.2 4-9 9-9s9 3.8 9 9z"/>
-            <circle class="dot" cx="9" cy="9.5" r="1.3"/><circle class="dot" cx="14.5" cy="8" r="1.1"/><circle class="dot" cx="16" cy="11.5" r="1"/>
+  {#- The cards on the soil line: the growth card at the left, the Share switch at the right. #}
+  <div class="scene-cards">
+    {#- The Share switch (§9), on the soil line at the right: a neon mushroom when visitors can
+        read the project, only its mycelium under the soil when it is private. Only the owner
+        can flip it; visitors just see the mushroom. #}
+    {% set share = share_switch(request, note) %}
+    {% if share %}
+    {% set on = share.shared or share.in_note %}
+    {% set label = t("share.shared") if on else t("share.private") %}
+    {% set fixed = share.in_note or not share.owner %}
+    {#- The longer hint on hover is the owner's; visitors just read the sign. #}
+    {% set hint = (t("share.in_note") if share.in_note else (t("share.hint_on") if share.shared else t("share.hint_off"))) if share.owner else "" %}
+    {% if share.owner %}<form{% else %}<div{% endif %} class="share-switch{% if category %} cat-{{ category.key }}{% endif %}{% if on %} on{% endif %}"{% if share.owner %} method="post" action="/projects/{{ note.slug }}/share"{% endif %}>
+      {% if share.owner %}<input type="hidden" name="csrf" value="{{ share.token }}">{% endif %}
+      {% if not fixed %}<input type="hidden" name="shared" value="{{ '' if share.shared else 'on' }}">{% endif %}
+      {% if fixed %}<span class="share-toggle glass" role="img" aria-label="{{ label }}{% if hint %}. {{ hint }}{% endif %}"{% if hint %} title="{{ hint }}"{% endif %}>{% else %}<button type="submit" class="share-toggle glass" role="switch" aria-checked="{{ 'true' if share.shared else 'false' }}" aria-label="{{ label }}. {{ hint }}" title="{{ hint }}">{% endif %}
+        <span class="share-caption" aria-hidden="true">{{ label }}</span>
+        <svg class="share-art" viewBox="6 2 52 58" aria-hidden="true" focusable="false">
+          <path class="share-soil" d="M7 40H57"/>
+          <g class="share-roots">
+            <path d="M32 40c-3 5-9 7-15 8s-10 4-13 8"/>
+            <path d="M32 40c4 4 10 5 15 9s9 6 13 7"/>
+            <path d="M32 40c-1 6 2 11 0 17"/>
+            <path d="M20 47c-2 3-1 7-4 10"/>
+            <path d="M45 48c1 3 4 5 4 9"/>
+            <circle cx="17" cy="48" r="1.1"/><circle cx="47" cy="49" r="1.1"/><circle cx="32" cy="57" r="1.1"/><circle cx="4" cy="56" r="0.9"/><circle cx="60" cy="56" r="0.9"/>
           </g>
-          <circle class="spore s1" cx="7" cy="4" r="0.9"/><circle class="spore s2" cx="17" cy="3" r="0.8"/>
+          {% if on %}
+          <g class="share-shroom">
+            <path class="stem" d="M29.5 24.5c.4 5-.6 10-1.8 15.5h8.6c-1.2-5.5-2.2-10.5-1.8-15.5"/>
+            <path class="stem-line" d="M31.2 27c0 4-.6 8-1.3 12M32.8 27c0 4 .6 8 1.3 12"/>
+            <path class="cap" d="M10 23c0-10 9.5-17 22-17s22 7 22 17c0 1.6-1.4 2.6-3 2.6H13c-1.6 0-3-1-3-2.6z"/>
+            <path class="gills" d="M15 25.4l5 0M21 25.6l17 0M39 25.6l9 0"/>
+            <rect class="ring" x="28.6" y="24.6" width="6.8" height="3.2" rx="0.6"/>
+            <circle class="spot" cx="22" cy="14" r="2.4"/><circle class="spot" cx="32" cy="10.5" r="2"/><circle class="spot" cx="41.5" cy="14.5" r="2.6"/><circle class="spot" cx="17" cy="20" r="1.4"/><circle class="spot" cx="47" cy="20.5" r="1.5"/><circle class="spot" cx="29" cy="18" r="1.3"/><circle class="spot" cx="37" cy="19.5" r="1.2"/>
+            <circle class="glow" cx="22" cy="40" r="1.1"/><circle class="glow" cx="26" cy="38.6" r="0.8"/><circle class="glow" cx="39" cy="39" r="1"/><circle class="glow" cx="43" cy="40.2" r="0.8"/><circle class="glow" cx="16" cy="39.4" r="0.7"/><circle class="glow" cx="48" cy="39.2" r="0.7"/>
+          </g>
+          {% endif %}
         </svg>
-        {{ t("growth." ~ growth.stage) }}
-      </strong>
-      <span class="muted">{{ t("growth.added", count=growth.added) }}</span>
-    </p>
-    <svg class="growth-weeks" viewBox="0 0 120 30" preserveAspectRatio="none" role="img" aria-label="{{ t('growth.weeks') }}">
-      {%- for count in growth.weeks %}
-      {%- set h = growth.height(count) * 0.3 %}
-      <rect x="{{ loop.index0 * 10 + 1 }}" y="{{ '%.1f' % (30 - h) }}" width="8" height="{{ '%.1f' % h }}" rx="1.5"><title>{{ t('growth.week', count=count) }}</title></rect>
-      {%- endfor %}
-    </svg>
-    <p class="growth-dates muted">{{ t("growth.dates", created=short_date(created(note)), updated=short_date(updated(note))) }}</p>
+      {% if fixed %}</span>{% else %}</button>{% endif %}
+    {% if share.owner %}</form>{% else %}</div>{% endif %}
+    {% endif %}
+    {#- How the project grows: a stage and twelve weeks of notes (§7c). #}
+    <div class="growth glass stage-{{ growth.stage }}{% if category %} cat-{{ category.key }}{% endif %}" title="{{ t('growth.score', score=growth.score) }}">
+      <p class="growth-head">
+        <strong>
+          {#- A small mushroom that grows with the stage; it breathes while the project is alive. #}
+          <svg class="growth-shroom" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <g class="growth-shroom-body">
+              <path class="stem" d="M10 13.5h4l.8 8.5h-5.6z"/>
+              <path class="cap" d="M3 14c0-5.2 4-9 9-9s9 3.8 9 9z"/>
+              <circle class="dot" cx="9" cy="9.5" r="1.3"/><circle class="dot" cx="14.5" cy="8" r="1.1"/><circle class="dot" cx="16" cy="11.5" r="1"/>
+            </g>
+            <circle class="spore s1" cx="7" cy="4" r="0.9"/><circle class="spore s2" cx="17" cy="3" r="0.8"/>
+          </svg>
+          {{ t("growth." ~ growth.stage) }}
+        </strong>
+        <span class="muted">{{ t("growth.added", count=growth.added) }}</span>
+      </p>
+      <svg class="growth-weeks" viewBox="0 0 120 30" preserveAspectRatio="none" role="img" aria-label="{{ t('growth.weeks') }}">
+        {%- for count in growth.weeks %}
+        {%- set h = growth.height(count) * 0.3 %}
+        <rect x="{{ loop.index0 * 10 + 1 }}" y="{{ '%.1f' % (30 - h) }}" width="8" height="{{ '%.1f' % h }}" rx="1.5"><title>{{ t('growth.week', count=count) }}</title></rect>
+        {%- endfor %}
+      </svg>
+      <p class="growth-dates muted">{{ t("growth.dates", created=short_date(created(note)), updated=short_date(updated(note))) }}</p>
+    </div>
   </div>
 </section>
 <div class="project-page">

@@ -17,10 +17,10 @@ anyone, without signing in.
   middleware, and 404 if it is off), a per-session form token, projects only. Plain
   HTML form, no JavaScript.
 - The switch is a dark card on the soil line at the right of the project's scene,
-  mirroring the growth card: a neon mushroom over its mycelium ("Spores in the air") when
-  shared, only the mycelium under the soil ("Underground") when private. Its neon comes
+  mirroring the growth card (same glass, same colors; on a phone both share one row in `.scene-cards`): a mushroom over its mycelium ("Spores in the air") when
+  shared, only the mycelium under the soil ("Underground") when private. Its colors come
   from the theme (category color, the palette's spore and second button colors). Only the
-  owner can click it; visitors see the mushroom, with no form. A project with
+  owner can click it and gets a hint on hover; visitors see the mushroom and its sign only. A project with
   `public: true` in its frontmatter shows the mushroom without a button (it is changed in
   the vault). The projects list shows a badge to the owner.
 - Spec §9 and the decision log updated; CHANGELOG line under Unreleased.

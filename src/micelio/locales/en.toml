@@ -211,7 +211,6 @@ private = "Underground"
 hint_off = "Underground: only you see this project. Click and it fruits and lets its spores go: anyone can read it and its notes, no account needed."
 hint_on = "Its spores are in the air: anyone can read this project and its notes, no account needed. Click to send it back underground."
 in_note = "It fruits from the note itself (public: true); change it in the vault."
-visitor = "This project let its spores go: anyone can read it, no account needed."
 
 [note]
 created = "Created {date}"
