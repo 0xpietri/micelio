@@ -235,6 +235,15 @@ class DataConfig(_Strict):
     dir: Path = Path("data")
 
 
+class EditingConfig(_Strict):
+    """The owner's said bubbles, written into the vault from the note pages (§8a). Off by
+    default: on, the vault must be mounted with write access."""
+
+    enabled: bool = False
+    # Set as `edited_by` on each note changed; empty: the site owner's name.
+    author: str = Field(default="", max_length=80)
+
+
 class Config(_Strict):
     site: SiteConfig = Field(default_factory=SiteConfig)
     vault: VaultConfig = Field(default_factory=VaultConfig)
@@ -245,6 +254,7 @@ class Config(_Strict):
     typography: TypographyConfig = Field(default_factory=TypographyConfig)
     auth: AuthConfig = Field(default_factory=AuthConfig)
     data: DataConfig = Field(default_factory=DataConfig)
+    editing: EditingConfig = Field(default_factory=EditingConfig)
 
     @model_validator(mode="after")
     def _unique_categories(self) -> Config:

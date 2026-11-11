@@ -231,6 +231,28 @@ in_note = "It fruits from the note itself (public: true); change it in the vault
 [callout]
 takeaway = "What you should know"
 
+[said]
+add = "Add a note"
+add_here = "Add a note here"
+write = "Write a note"
+placeholder = "Your words, as you would say them…"
+save = "Save"
+cancel = "Cancel"
+edit = "Edit"
+move = "Move"
+delete = "Delete"
+delete_confirm = "Delete it?"
+up = "Up"
+down = "Down"
+done = "Done"
+drag = "Drag to move it between paragraphs"
+menu = "Note options"
+saving = "Saving…"
+changed = "This note changed since the page opened (the MCP, Obsidian or Syncthing). Nothing was written."
+reload = "Reload"
+failed = "It could not be saved ({error}). Nothing was written."
+hint_press = "Hold a blank space between paragraphs to add a note"
+
 [note]
 card_created = "Created"
 card_updated = "Edited"

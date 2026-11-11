@@ -56,8 +56,9 @@ def section(body: str, headings: Iterable[str]) -> list[tuple[str | None, str]] 
     return found
 
 
-def drop_section(body: str, headings: Iterable[str]) -> str:
-    """``body`` without that section, heading included."""
+def drop_section(body: str, headings: Iterable[str], *, keep_lines: bool = False) -> str:
+    """``body`` without that section, heading included. With ``keep_lines`` its lines are
+    left empty instead, so every other line keeps its number (the owner's edits, §8a)."""
     wanted = _wanted(headings)
     kept: list[str] = []
     inside = done = False
@@ -66,9 +67,13 @@ def drop_section(body: str, headings: Iterable[str]) -> str:
             if level is not None and level <= 2:
                 inside, done = False, True
             else:
+                if keep_lines:
+                    kept.append("\n" * line.count("\n"))
                 continue
         if not done and level == 2 and slugify(text) in wanted:
             inside = True
+            if keep_lines:
+                kept.append("\n" * line.count("\n"))
             continue
         kept.append(line)
     return "".join(kept)

@@ -6,6 +6,8 @@
 {#- The scene starts at the very top, under the header, so the painting is one piece. #}
 {% block body_class %} class="scene-page"{% endblock %}
 {% block content %}
+{% from "_said.html" import prose, said_script %}
+{% set editing = said_editing(request, note) %}
 {% set category = category_of(note.category) %}
 <section class="hero-scene" aria-labelledby="project-map">
   <h2 class="visually-hidden" id="project-map">{{ t("project.graph") }}</h2>
@@ -93,7 +95,7 @@
     {%- for tag in note.tags %} <a class="tag" href="/explore?tag={{ tag | urlencode }}" title="{{ t('note.tag_graph', tag=tag) }}">#{{ tag }}</a>{% endfor %}
   </p>
   {% endif %}
-  <div class="prose">{{ body|callout_titles }}</div>
+  {{ prose(body, editing) }}
 
   <section>
     <h2>{{ t("project.notes") }}</h2>
@@ -128,5 +130,6 @@
 </article>
 </div>
 <script type="module" src="/static/js/specimens.js"></script>
+{{ said_script(editing) }}
 <script type="module" src="/static/js/guide.js"></script>
 {% endblock %}

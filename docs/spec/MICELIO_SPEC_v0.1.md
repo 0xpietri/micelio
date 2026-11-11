@@ -14,7 +14,7 @@ It is meant to be useful to anyone with an Obsidian-style vault, and to read as 
 ## 2. Principles
 
 1. **The files are the truth.** Everything Micelio shows is derived from the Markdown files at request time. Delete its data folder and nothing is lost.
-2. **Read only.** No editor, no Git operations, nothing written to the vault, which is mounted read-only. The one exception to "no uploads" is the landing's background image (§7b), stored in Micelio's own data folder, never in the vault.
+2. **Read only.** No editor, no Git operations, nothing written to the vault, which is mounted read-only. The one exception to "no uploads" is the landing's background image (§7b), stored in Micelio's own data folder, never in the vault. The one exception to "nothing written" (2026-11-11) is the owner's said bubbles (§8a): off by default, and only `> [!said]` callouts plus `edited_by` / `updated`, with a conflict check; the vault is then mounted with write access.
 3. **Model-agnostic.** Nothing depends on a particular LLM or MCP server. Any tool that writes the documented frontmatter works.
 4. **Configuration, not code.** Categories, colors, folder names, titles and texts live in `micelio.toml`. Nothing personal is hard-coded.
 5. **No build step.** Server-rendered pages (FastAPI + Jinja), plain CSS and JavaScript modules, vendored libraries. No inline `<script>` or `<style>`, so a strict CSP works.
@@ -128,6 +128,11 @@ max_nodes = 400            # over this, /explore draws only the most connected n
 
 [auth]
 mode = "local"             # local | none (when an external gateway handles it)
+
+# The owner's said bubbles written from the site (§8a); the vault needs write access.
+[editing]
+enabled = false
+author = ""                # edited_by on changed notes; empty: [site] owner
 ```
 
 Secrets (password hash, TOTP secret, session key) come only from environment variables. The repo ships `micelio.example.toml` and `.env.example` with placeholders.
@@ -170,6 +175,7 @@ Since 2026-11-11 anyone can switch the interface language with the flag in the h
 | `/appearance` | Palette, background, title and the background prompt guide (§7b, signed-in only) |
 | `/api/landing` | What the landing draws, as JSON (§7a) |
 | `/changes` | Every change, newest first, from the packaged `CHANGELOG.md` (§7c, visitors too) |
+| `/api/notes/<slug>/said` | The owner's said bubbles: GET the words of one, POST a change (§8a, editing on, signed-in only) |
 
 Markdown is rendered with markdown-it-py and sanitized with nh3. Wikilinks become links to `/notes/<slug>`. Callouts (`> [!warning]`) and task lists render like Obsidian. Two callouts have a look of their own: `> [!said]` (the owner's own words, no heading unless one is given, in a speech bubble pointing at the owner's profile picture from the Appearance page, or a little mushroom without one) and `> [!takeaway]` (what closes a concept, headed "What you should know" in the reader's language unless the note gives a title, written by hand in chalk on a chalkboard framed by logs, leaves and fly agarics, `static/img/log-frame.webp` as a 9-slice border image; the Appearance page picks one of nine boards, black, green or white in Caveat, Patrick Hand or Gochi Hand, and the chalk's colors follow the palette). The profile picture lives in the data dir (`avatar/`), never in the vault, and is served at `/appearance/avatar`. Times are shown in the configured time zone. Links to projects go to `/projects/<slug>` (and `/notes/<project>` redirects there); links to missing notes render as dashed ghost text; `![[file.png]]` and other non-note embeds render as their name (attachments are not served in v0.1). Category colors, the palette and the type settings come from a generated `/theme.css`, so pages need no inline styles. There is one dark look built from the palette (§7c); the light theme of step 3 was dropped on 2026-11-10.
 
@@ -249,6 +255,17 @@ Decided by marcos on 2026-11-10: the landing's painting is part of the whole int
 - On each request, re-check modification times (cheap `stat`, throttled to once every 2 s) and re-parse only changed files. A note written during a voice call shows up on reload.
 - Paths are resolved under the vault root only; symlinks leaving it are refused.
 
+## 8a. The owner's said bubbles (added 2026-11-11)
+
+With `[editing] enabled = true` the signed-in owner writes `> [!said]` bubbles (§6) into a note or a project from its page: insert one between two blocks, change its words, move it to another place between blocks, or delete it. Nothing else of a note can be changed from the site, and visitors never see any of it.
+
+- **Where.** The owner's renderer marks every top-level block with the body lines it came from (`data-l="start-end"`); the hidden title and guide section are blanked, not cut, so the numbers are the file's own. A bubble goes only between two top-level blocks (or before the first, or after the last); the server re-parses the file and refuses any other line. Only top-level said callouts can be changed.
+- **Desktop.** A floating "Add a note" button beside the text, at the middle of the window. The gap between blocks nearest to it lights up (a dashed line), and a click opens the composer there: a bubble with the profile picture and a text box (Ctrl+Enter saves, Esc cancels). Each bubble shows tools on hover: a handle to drag it to another gap (the window scrolls at its edges), Edit (the words as written, Markdown kept), Move (↑ ↓ from gap to gap, then Done) and Delete (click twice).
+- **Phone.** Holding a blank space between paragraphs (half a second) opens a popup with "Write a note"; tapping it opens the same composer in that gap. Each bubble has a ⋯ with Edit, Move (↑ ↓, Done) and Delete. A hint under the text says so until the first use.
+- **Voice notes (not yet).** The popup, the floating button and the composer keep an empty slot for a record button: a voice note will be recorded there and saved into the same bubble.
+- **Safe writing.** The page carries the SHA-256 of the file it showed; the server refuses a change, writing nothing, when the file is not that file any more (the notes MCP, Obsidian or Syncthing wrote it meanwhile), and the page asks for a reload. The new text goes to a temporary file in the note's folder named like Syncthing's own temporary files (so Syncthing never syncs it) and replaces the note in one rename, keeping its permissions and line endings. The frontmatter gets `edited_by: <[editing] author, or [site] owner>` and `updated: <today>`, the rest of it untouched; a note without frontmatter gets none. The version replaced is copied to the data folder (`edits/`, the last 50), never to the vault.
+- **Routes.** `GET /api/notes/<slug>/said?start=N` (the words of a bubble) and `POST /api/notes/<slug>/said` (`{op: insert|edit|move|delete, hash, at?, start?, text?}`, per-session form key in `X-Micelio-Form`; 409 when the note changed). Both answer 404 with editing off or to visitors.
+
 ## 9. Public notes
 
 - `public: true` makes a note readable without signing in, at the same URL.
@@ -261,7 +278,7 @@ Decided by marcos on 2026-11-10: the landing's painting is part of the whole int
 
 ## 10. Packaging
 
-- Docker image built from a multi-stage Dockerfile: Python 3.12 slim, `uv` with a lockfile, non-root user, read-only root filesystem, the vault mounted read-only, one data volume for SQLite.
+- Docker image built from a multi-stage Dockerfile: Python 3.12 slim, `uv` with a lockfile, non-root user, read-only root filesystem, the vault mounted read-only (with write access only when `[editing]` is on, §8a), one data volume for SQLite.
 - Published to `ghcr.io/0xpietri/micelio` for `linux/amd64` on merges to `main` and on tags; `linux/arm64` only on release tags.
 - `compose.example.yml` runs it against the bundled sample vault in one command.
 - **New versions** (2026-11-11): the "New version" workflow (`version.yml`, started by `miceliodeploy edge` or by hand) numbers the version (the next patch after the last tag), moves `CHANGELOG.md`'s Unreleased changes under it, commits to `main`, tags `v<version>` and starts the image and package builds on that tag. Nobody tags by hand. Static files are served with `Cache-Control: no-cache` and a content ETag, since every build's files carry the same date.
@@ -323,4 +340,5 @@ The deployment on factory (Caddy site, the notes MCP, the vault's Git timer, bac
 - 2026-11-11 (marcos): `miceliodeploy` installs what `main` has without a new version; `miceliodeploy edge` makes a new version from the changes gathered since the last one and installs it. The site lists each version's changes in a footer and at `/changes`.
 - 2026-11-11 (marcos): a Share switch on each project's page shares the project and its notes with visitors (§9), kept in the data folder so the vault stays read-only.
 - 2026-11-11 (marcos): a guide at the left of each project and its notes (§3.4), structured by default or by date; two new kinds of note, `question` (side questions) and `gap` (primordia, what is still missing), with their own look. The model writes the order and the gaps in the vault; Micelio only reads them.
+- 2026-11-11 (marcos): the owner writes said bubbles by hand from the site (§8a): a floating button on desktop, a held blank space on the phone, drag or move between paragraphs, edit and delete; a voice-note button later. Chosen: Micelio writes the vault directly, with a hash check and a copy of each replaced version, rather than through the notes MCP. This relaxes principle 2 for said bubbles only.
 - 2026-11-11 (marcos): the guide becomes a numbered outline (sections from nested lists, numbers computed, never written), the order a dropdown, previous / next follow the kinds shown, conversations at the top of the guide; `created_by` / `edited_by` on notes (decided: both, rather than only the last); dates in a card beside the title; tags as pills linked to the graph.

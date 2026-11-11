@@ -24,6 +24,7 @@ from micelio.appearance import (
 )
 from micelio.auth.web import SignIn
 from micelio.config import NOTE_TYPES, STATUSES, Category, Config
+from micelio.editing import Edit, EditError, SaidEditor, content_hash
 from micelio.formatting import Dates, authors
 from micelio.graph import GraphBuilder, ScopeError, UnknownNodeError, parse_scope
 from micelio.growth import growth
@@ -157,8 +158,13 @@ class Pages:
         dress = self.node_looks.all
         self.everything = Reader(
             index,
-            Renderer(index, guide_headings=config.guide.headings),
+            Renderer(index, guide_headings=config.guide.headings, anchors=config.editing.enabled),
             GraphBuilder(config, index, self.colors, dress),
+        )
+        self.editor = SaidEditor(
+            config.vault.root,
+            config.data.dir / "edits",
+            config.editing.author or config.site.owner,
         )
         self.public = Reader(
             public,
@@ -186,6 +192,7 @@ class Pages:
             looks_token=self.looks_token,
             node_look=self.node_look,
             share_switch=self.share_switch,
+            said_editing=self.said_editing,
             is_shared=self.is_shared,
             theme_version=self.theme_version,
         )
@@ -208,6 +215,25 @@ class Pages:
             # Public in its own frontmatter: shown, and visitors already see it.
             "in_note": note.public,
             "token": self.sign_in.form_token(request, "share"),
+        }
+
+    def said_editing(self, request: Request, note: Note) -> dict[str, str] | None:
+        """What the page needs to let the owner write said bubbles (§8a): the key for the
+        change and the hash of the file shown. None for visitors or with editing off."""
+        if not self.config.editing.enabled or not self.sign_in.sees_everything(request):
+            return None
+        path = self.config.vault.root / note.path
+        try:
+            raw = path.read_bytes()
+            fresh = path.stat().st_mtime_ns == note.mtime_ns
+        except OSError:
+            return None
+        return {
+            "token": self.sign_in.form_token(request, "said"),
+            # A file newer than the page's text gets a hash nothing matches: the first
+            # change asks for a reload instead of writing at the wrong lines.
+            "hash": content_hash(raw) if fresh else "stale",
+            "url": f"/api/notes/{note.slug}/said",
         }
 
     def is_shared(self, note: Note) -> bool:
@@ -257,10 +283,13 @@ class Pages:
         language = active_language(self.config.site.language)
         return category.name(language, category_names(language).get(category.key))
 
-    def reader(self, request: Request) -> Reader:
-        """The whole vault when signed in, the public notes otherwise (§9). Refreshed."""
-        reader = self.everything if self.sign_in.sees_everything(request) else self.public
-        reader.vault.refresh()
+    def reader(self, request: Request, *, page: bool = False) -> Reader:
+        """The whole vault when signed in, the public notes otherwise (§9). Refreshed;
+        a note's page for an owner who can edit it is refreshed now, never 2 s late, so
+        the lines it numbers are the file's (§8a)."""
+        owner = self.sign_in.sees_everything(request)
+        reader = self.everything if owner else self.public
+        reader.vault.refresh(force=page and owner and self.config.editing.enabled)
         return reader
 
     def _note(self, vault: IndexView, slug: str) -> Note:
@@ -347,7 +376,7 @@ class Pages:
 
         @router.get("/projects/{slug}", include_in_schema=False)
         def project(request: Request, slug: str) -> Response:
-            reader = self.reader(request)
+            reader = self.reader(request, page=True)
             vault = reader.vault
             note = self._note(vault, slug)
             if note.type != "project":
@@ -379,7 +408,7 @@ class Pages:
         def note_page(
             request: Request, slug: str, guide: str = Query("", max_length=200)
         ) -> Response:
-            reader = self.reader(request)
+            reader = self.reader(request, page=True)
             vault = reader.vault
             note = self._note(vault, slug)
             if note.type == "project":
@@ -431,6 +460,59 @@ class Pages:
             look = clean_look(body, note.type)
             self.node_looks.save(slug, look)
             return JSONResponse({"ok": True, "look": look})
+
+        @router.get("/api/notes/{slug}/said", include_in_schema=False)
+        def said_words(request: Request, slug: str, start: int = Query(ge=0)) -> Response:
+            """The words of one said bubble as written, for the owner's editor (§8a)."""
+            if not self.config.editing.enabled or not self.sign_in.sees_everything(request):
+                raise HTTPException(status_code=404)
+            note = self.index.notes.get(slug)
+            if note is None:
+                raise HTTPException(status_code=404)
+            try:
+                words = self.editor.words(note.path, start)
+            except EditError as error:
+                return JSONResponse({"ok": False, "error": error.code}, status_code=error.status)
+            return JSONResponse({"ok": True, "text": words}, headers={"Cache-Control": "no-store"})
+
+        @router.post("/api/notes/{slug}/said", include_in_schema=False)
+        async def said(request: Request, slug: str) -> Response:
+            """The owner inserts, changes, moves or deletes a said bubble (§8a): the one
+            write to the vault, refused when the note changed since the page showed it."""
+            if not self.config.editing.enabled or not self.sign_in.sees_everything(request):
+                raise HTTPException(status_code=404)
+            token = request.headers.get("x-micelio-form", "")
+            if not hmac.compare_digest(token, self.sign_in.form_token(request, "said")):
+                return JSONResponse({"ok": False, "error": "form"}, status_code=403)
+            self.index.refresh(force=True)
+            note = self.index.notes.get(slug)
+            if note is None:
+                raise HTTPException(status_code=404)
+            try:
+                body: object = await request.json()
+            except ValueError:
+                body = None
+            if not isinstance(body, dict):
+                return JSONResponse({"ok": False, "error": "body"}, status_code=400)
+
+            def line(key: str) -> int | None:
+                value = body.get(key)
+                return value if isinstance(value, int) and not isinstance(value, bool) else None
+
+            text = body.get("text")
+            edit = Edit(
+                op=str(body.get("op", "")),
+                at=line("at"),
+                start=line("start"),
+                text=text if isinstance(text, str) else "",
+            )
+            today = datetime.now(self.dates.zone).date()
+            try:
+                new_hash = self.editor.apply(note.path, str(body.get("hash", "")), edit, today)
+            except EditError as error:
+                return JSONResponse({"ok": False, "error": error.code}, status_code=error.status)
+            self.index.refresh(force=True)
+            return JSONResponse({"ok": True, "hash": new_hash})
 
         @router.post("/projects/{slug}/share", include_in_schema=False)
         def share(
