@@ -154,13 +154,16 @@ def test_settings_strings_exist_in_every_language() -> None:
     assert browser_strings("es")["graph.settings"] == "Ajustes del grafo"
 
 
-def test_every_graph_gets_the_panel_from_the_shared_module() -> None:
+def test_every_graph_hears_the_header_menu() -> None:
     graph = (STATIC / "js" / "graph.js").read_text("utf-8")
     assert 'from "./graph-settings.js"' in graph
-    # One place builds the zoom buttons and the panel for every mode.
-    assert graph.count("function controls(") == 1
-    assert graph.count("  controls(host, strings, settings, {") == 1
-    assert "data-zoom" in graph
+    # Zoom buttons on every graph; the settings themselves live in the header's menu.
+    assert graph.count("function zoomButtons(") == 1
+    assert graph.count("  zoomButtons(host, strings, {") == 1
+    assert 'addEventListener("micelio:graph-settings"' in graph
+    menu = (STATIC / "js" / "menu.js").read_text("utf-8")
+    assert 'from "./graph-settings.js"' in menu
+    assert 'new CustomEvent("micelio:graph-settings"' in menu
     explore = (STATIC / "js" / "explore.js").read_text("utf-8")
     assert "graph-zoom" not in explore
 

@@ -2,9 +2,15 @@
 # Values may use {placeholders}; keep them as they are when translating.
 
 [site]
+flag = "🇬🇧"
+language_name = "English"
 owners_micelio = "{owner}'s Micelio"
 
 [nav]
+language = "Language"
+settings = "Settings"
+sign_out = "Sign out"
+sign_in = "Sign in"
 projects = "Projects"
 journal = "Journal"
 health = "Health"
@@ -99,6 +105,10 @@ error_form = "The form expired. Please try again."
 saving = "Saving…"
 save_failed = "Could not save. Try again or reload the page."
 leave = "Click outside the panel to go back."
+visitor_title = "Your appearance"
+visitor_note = "Only for you, in this browser. The site stays the same for everyone else."
+visitor_reset = "Back to the site's look"
+close = "Close"
 
 [prompt]
 title = "Make your own background"

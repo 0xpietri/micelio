@@ -26,7 +26,7 @@ CSRF_COOKIE = "micelio_csrf"
 
 # Paths anyone may reach. Everything else needs a session while sign-in is on.
 OPEN_PATHS = frozenset({"/login", "/healthz", "/favicon.ico", "/theme.css"})
-OPEN_PREFIXES = ("/static/",)
+OPEN_PREFIXES = ("/static/", "/language/")
 
 # Pages anonymous visitors may read (GET and HEAD only). They are built from the public
 # notes alone (§9); the pages decide that through ``SignIn.sees_everything``.

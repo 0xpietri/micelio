@@ -3,6 +3,9 @@
 import { rampFilter } from "./draw.js";
 
 const backdrop = document.getElementById("backdrop");
+// A visitor's own palette (look-early.js) recolors with its ramp, or not at all.
+const own = document.documentElement.dataset;
+if (backdrop && backdrop.dataset.ramp && own.palette) backdrop.dataset.ramp = own.ramp || "";
 if (backdrop && backdrop.dataset.ramp) {
   const image = backdrop.querySelector("image");
   const defs = new DOMParser().parseFromString(

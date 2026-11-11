@@ -20,6 +20,13 @@ All notable changes to this project are documented here. The format follows
 - "Make your own background" is folded on the Appearance page.
 - A click outside the Appearance panel goes back to the previous page.
 - Pinch with two fingers to zoom any graph on a phone or tablet.
+- A two-line header: the site's name with a ⚙ menu, a language flag and a sign-out (or
+  sign-in) icon; the sections below. The ⚙ menu holds the graph settings (they moved
+  there from each graph's corner) and the look.
+- Visitors can choose their own look (palette, fonts, sizes) in the ⚙ menu. It is kept
+  in their browser and never changes the site for anyone else.
+- Anyone can switch the interface language (English, Español) with the flag; the choice
+  is kept in a cookie.
 
 ### Changed
 

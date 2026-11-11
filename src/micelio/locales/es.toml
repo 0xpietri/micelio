@@ -1,9 +1,15 @@
 # Español. Mismas claves que en.toml; los {marcadores} quedan sin traducir.
 
 [site]
+flag = "🇦🇷"
+language_name = "Español"
 owners_micelio = "El micelio de {owner}"
 
 [nav]
+language = "Idioma"
+settings = "Ajustes"
+sign_out = "Cerrar sesión"
+sign_in = "Entrar"
 projects = "Proyectos"
 journal = "Diario"
 health = "Salud"
@@ -98,6 +104,10 @@ error_form = "El formulario venció. Probá de nuevo."
 saving = "Guardando…"
 save_failed = "No se pudo guardar. Probá de nuevo o recargá la página."
 leave = "Hacé clic fuera del panel para volver."
+visitor_title = "Tu apariencia"
+visitor_note = "Solo para vos, en este navegador. El sitio no cambia para nadie más."
+visitor_reset = "Volver a la apariencia del sitio"
+close = "Cerrar"
 
 [prompt]
 title = "Creá tu propio fondo"

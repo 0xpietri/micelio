@@ -29,21 +29,7 @@
     <title id="forest-label">{{ t("landing.label") }}</title>
     <image href="{{ background }}" x="0" y="0" width="1536" height="1024" preserveAspectRatio="xMidYMid slice"></image>
   </svg>
-  {% if everything %}
-  <nav class="corner" aria-label="{{ t('nav.main') }}">
-    <a href="/appearance">{{ t("nav.appearance") }}</a>
-    {% if sign_in.enabled %}
-    <form method="post" action="/logout" class="inline">
-      <input type="hidden" name="csrf" value="{{ sign_in.logout_token(request) }}">
-      <button type="submit">{{ t("logout.submit") }}</button>
-    </form>
-    {% endif %}
-  </nav>
-  {% elif sign_in.enabled and not bare %}
-  <nav class="corner" aria-label="{{ t('nav.main') }}">
-    <a href="/login">{{ t("login.title") }}</a>
-  </nav>
-  {% endif %}
+  <nav class="corner" aria-label="{{ t('nav.settings') }}">{% include "_menu.html" %}</nav>
   <dl class="legend" aria-label="{{ t('landing.legend') }}">
     <div><dt>{{ t("landing.mushroom") }}</dt><dd>{{ t("type.project") }}</dd></div>
     <div><dt>{{ t("landing.cloud") }}</dt><dd>{{ t("type.note") }}</dd></div>

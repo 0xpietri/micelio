@@ -284,7 +284,8 @@ async function start() {
   if (!scene || !svg || !window.d3) return;
   let data;
   try {
-    const response = await fetch("/api/landing", { headers: { Accept: "application/json" } });
+    const palette = document.documentElement.dataset.palette;  // a visitor's own (look.js)
+    const response = await fetch(palette ? `/api/landing?palette=${encodeURIComponent(palette)}` : "/api/landing", { headers: { Accept: "application/json" } });
     if (!response.ok) return;
     data = await response.json();
   } catch {

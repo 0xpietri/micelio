@@ -7,7 +7,7 @@ import {
   DEFS, SVG_NS, cloud, el, f1, fold, fragment, hyphaPath, lighter, loadStrings, mix, painter,
   paletteFromCss, rampFilter, reduced, seededRandom, tr,
 } from "./draw.js";
-import { LIMITS, labelText, load, save } from "./graph-settings.js";
+import { labelText, load, save } from "./graph-settings.js";
 
 export { fold, loadStrings, tr };
 
@@ -525,9 +525,7 @@ function drawForest(svg, data, L, strings, state, settings) {
   return vb;
 }
 
-/* ---------- the viewer's settings panel ---------- */
-
-let panels = 0;
+/* ---------- zoom buttons ---------- */
 
 function html(tag, attrs = {}, text = "") {
   const node = document.createElement(tag);
@@ -536,99 +534,20 @@ function html(tag, attrs = {}, text = "") {
   return node;
 }
 
-/** Zoom buttons and a settings panel in the graph's corner. ``onChange(key)`` hears every
- * change after ``settings`` is updated and saved. */
-function controls(host, strings, settings, { onChange, onZoom, onFit }) {
-  const id = `graph-settings-${++panels}`;
+/** + / − / Fit in the graph's corner. The viewer's settings (spacing, names) live in
+ * the ⚙ menu of the header (static/js/menu.js), which tells every graph when they change. */
+function zoomButtons(host, strings, { onZoom, onFit }) {
   const bar = html("div", { class: "graph-tools" });
-  const button = (attrs, text) => {
+  const button = (attrs, text, fn) => {
     const b = html("button", { type: "button", ...attrs }, text);
+    b.addEventListener("click", fn);
     bar.appendChild(b);
-    return b;
   };
-  button({ "data-zoom": "in", "aria-label": tr(strings, "graph.zoom_in"), title: tr(strings, "graph.zoom_in") }, "+")
-    .addEventListener("click", () => onZoom(1 / 1.3));
-  button({ "data-zoom": "out", "aria-label": tr(strings, "graph.zoom_out"), title: tr(strings, "graph.zoom_out") }, "−")
-    .addEventListener("click", () => onZoom(1.3));
-  button({ "data-zoom": "fit" }, tr(strings, "graph.fit")).addEventListener("click", onFit);
-  const gear = button({
-    class: "graph-gear", "aria-expanded": "false", "aria-controls": id,
-    "aria-label": tr(strings, "graph.settings"), title: tr(strings, "graph.settings"),
-  }, "⚙");
-
-  const panel = html("div", { class: "graph-settings glass", id, role: "group", "aria-label": tr(strings, "graph.settings") });
-  panel.hidden = true;
-  panel.appendChild(html("p", { class: "graph-settings-title" }, tr(strings, "graph.settings")));
-  const outputs = {};
-  const inputs = {};
-  const shown = (key, value) => (key === "length" ? tr(strings, "graph.chars", { count: value }) : `${value} %`);
-  const range = (key) => {
-    const [min, max, step] = LIMITS[key];
-    const row = html("label", { class: "graph-range" });
-    const head = html("span", { class: "graph-range-head" });
-    head.appendChild(html("span", {}, tr(strings, `graph.${key}`)));
-    const out = html("output", {}, shown(key, settings[key]));
-    head.appendChild(out);
-    const input = html("input", { type: "range", min, max, step, name: key });
-    input.value = String(settings[key]);
-    row.append(head, input);
-    // Spacing lays the graph out again, so it waits for the slider to be let go.
-    input.addEventListener("input", () => {
-      out.textContent = shown(key, Number(input.value));
-      if (key !== "spacing") set(key, Number(input.value));
-    });
-    input.addEventListener("change", () => set(key, Number(input.value)));
-    outputs[key] = out;
-    inputs[key] = input;
-    panel.appendChild(row);
-  };
-  const set = (key, value) => {
-    if (settings[key] === value) return;
-    settings[key] = value;
-    save(settings);
-    if (key === "shorten") inputs.length.disabled = !value;
-    onChange(key);
-  };
-  range("spacing");
-  range("labels");
-  const check = html("label", { class: "graph-check" });
-  const box = html("input", { type: "checkbox", name: "shorten" });
-  box.checked = settings.shorten;
-  box.addEventListener("change", () => set("shorten", box.checked));
-  check.append(box, document.createTextNode(` ${tr(strings, "graph.shorten")}`));
-  panel.appendChild(check);
-  range("length");
-  inputs.length.disabled = !settings.shorten;
-  panel.appendChild(html("p", { class: "graph-settings-note" }, tr(strings, "graph.settings_note")));
-  const reset = html("button", { type: "button", class: "link" }, tr(strings, "graph.reset"));
-  reset.addEventListener("click", () => {
-    for (const key of Object.keys(LIMITS)) {
-      const value = LIMITS[key][3];
-      inputs[key].value = String(value);
-      outputs[key].textContent = shown(key, value);
-      set(key, value);
-    }
-    box.checked = true;
-    set("shorten", true);
-  });
-  panel.appendChild(reset);
-
-  const toggle = (open) => {
-    panel.hidden = !open;
-    gear.setAttribute("aria-expanded", String(open));
-    if (open) panel.querySelector("input").focus();
-  };
-  gear.addEventListener("click", () => toggle(panel.hidden));
-  panel.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") { toggle(false); gear.focus(); }
-  });
-  document.addEventListener("pointerdown", (e) => {
-    if (!panel.hidden && !panel.contains(e.target) && !bar.contains(e.target)) toggle(false);
-  });
-  host.append(bar, panel);
+  button({ "data-zoom": "in", "aria-label": tr(strings, "graph.zoom_in"), title: tr(strings, "graph.zoom_in") }, "+", () => onZoom(1 / 1.3));
+  button({ "data-zoom": "out", "aria-label": tr(strings, "graph.zoom_out"), title: tr(strings, "graph.zoom_out") }, "−", () => onZoom(1.3));
+  button({ "data-zoom": "fit" }, tr(strings, "graph.fit"), onFit);
+  host.appendChild(bar);
 }
-
-/* ---------- mounting ---------- */
 
 /** The most connected nodes, at most ``max``: projects first, ghosts last. */
 function trim(data, max) {
@@ -664,7 +583,10 @@ export async function mountGraph(host) {
   if (!window.d3) return null;
   let data;
   try {
-    const response = await fetch(host.dataset.graph, { headers: { Accept: "application/json" } });
+    // A visitor's own palette (look.js) colors the categories too.
+    const url = new URL(host.dataset.graph, location.href);
+    if (document.documentElement.dataset.palette) url.searchParams.set("palette", document.documentElement.dataset.palette);
+    const response = await fetch(url, { headers: { Accept: "application/json" } });
     if (!response.ok) throw new Error(String(response.status));
     data = await response.json();
   } catch {
@@ -740,15 +662,20 @@ export async function mountGraph(host) {
   redraw();
   place();
 
-  controls(host, strings, settings, {
+  zoomButtons(host, strings, {
     onZoom: (f) => view.zoom(f),
     onFit: () => { rememberZoom(1); place(); },
-    onChange: (key) => {
-      if (key === "labels") return labelZoom();
-      if (key === "spacing" && laid) laid = layoutFree(data, settings.spacing);
-      redraw();
-      if (key === "spacing") place();
-    },
+  });
+  // The ⚙ menu saved new settings: take them and draw again as needed.
+  window.addEventListener("micelio:graph-settings", (e) => {
+    const key = e.detail && e.detail.key;
+    const fresh = load();
+    for (const k of ["spacing", "labels", "shorten", "length"]) settings[k] = fresh[k];
+    if (key === "labels") return labelZoom();
+    if (key === "spacing" && laid) laid = layoutFree(data, settings.spacing);
+    redraw();
+    if (key === "spacing" || key === "reset") place();
+    labelZoom();
   });
 
   let timer = null;

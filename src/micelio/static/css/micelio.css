@@ -65,15 +65,17 @@ body.underground .scrim { background: color-mix(in srgb, var(--ink) 35%, transpa
 }
 
 /* The top bar */
+/* Two lines: the name and the corner tools, then the sections. */
 .top {
+  position: relative;
+  z-index: 10;
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 1.25rem;
-  align-items: center;
+  flex-direction: column;
+  gap: 0.6rem;
   padding: 0.7rem max(1rem, env(safe-area-inset-right, 0px)) 0.7rem max(1rem, env(safe-area-inset-left, 0px));
 }
-.top nav { display: flex; flex-wrap: wrap; gap: 0.45rem; flex: 1; }
-.top .end { display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: center; }
+.top-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.top nav { display: flex; flex-wrap: wrap; gap: 0.45rem; }
 
 .brand {
   font-family: var(--display);
@@ -86,7 +88,7 @@ body.underground .scrim { background: color-mix(in srgb, var(--ink) 35%, transpa
   text-shadow: var(--title-shadow, 0.06em 0.07em 0 var(--pal-accent, #ff2fa0));
 }
 
-.pill, .top nav a, .top .end a, .top .end button {
+.pill, .top nav a {
   display: inline-flex;
   align-items: center;
   min-height: 36px;
@@ -101,8 +103,8 @@ body.underground .scrim { background: color-mix(in srgb, var(--ink) 35%, transpa
   text-decoration: none;
   cursor: pointer;
 }
-.pill:hover, .top nav a:hover, .top .end a:hover, .top .end button:hover { background: var(--ink); }
-.top nav a[aria-current="page"], .top .end a[aria-current="page"] {
+.pill:hover, .top nav a:hover { background: var(--ink); }
+.top nav a[aria-current="page"] {
   background: var(--accent);
   color: var(--ink);
   box-shadow: 3px 3px 0 var(--ink);
@@ -308,9 +310,6 @@ form.inline { display: inline; }
   white-space: nowrap;
 }
 
-@media (max-width: 700px) {
-  .top nav { order: 3; flex-basis: 100%; }
-}
 
 /* A note's spore cloud, a source's crystal, a journal note's golden spores, in lists */
 .spore-icon {
@@ -328,3 +327,56 @@ form.inline { display: inline; }
 }
 .spore-icon.golden { background: radial-gradient(circle at 35% 35%, #fff 0 12%, transparent 13%), radial-gradient(circle at 65% 60%, #fff 0 10%, transparent 11%), radial-gradient(circle, var(--pal-spore, #ffd23f) 0 45%, transparent 72%); }
 .spore-icon.crystal { border-radius: 2px; transform: rotate(45deg) scale(0.75); background: linear-gradient(135deg, #fff 0 18%, var(--pal-crystal, #22d3ee) 19%); border: 2px solid var(--ink); }
+
+/* The header's corner: ⚙ menu, language, sign out or in (templates/_menu.html) */
+.corner-tools { position: relative; display: flex; gap: 0.45rem; align-items: center; }
+.icon-button, .lang-menu > summary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  min-height: 38px;
+  padding: 0 0.55rem;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ink) 72%, transparent);
+  color: var(--text);
+  box-shadow: none;
+  font: inherit;
+  font-size: 1.1rem;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+}
+.icon-button:hover, .lang-menu > summary:hover, .menu-toggle[aria-expanded="true"], .lang-menu[open] > summary { background: var(--text); color: var(--ink); }
+.icon-button:focus-visible, .lang-menu > summary:focus-visible { outline: 3px solid var(--text); outline-offset: 2px; }
+/* The menus hang from the corner's right edge, so they stay on a phone's screen. */
+.menu-corner, .lang-menu { position: static; }
+.menu-panel { position: absolute; z-index: 20; top: calc(100% + 0.5rem); right: 0; width: min(20rem, calc(100vw - 2rem)); max-height: min(38rem, calc(100vh - 6rem)); overflow-y: auto; padding: 0.9rem 1rem 1rem; text-align: left; font-size: 0.88rem; }
+.menu-panel[hidden] { display: none; }
+.menu-panel section[hidden] + section { margin-top: 0; padding-top: 0; border-top: 0; }
+.menu-panel section:not([hidden]) + section { margin-top: 1rem; padding-top: 0.9rem; border-top: 1px solid var(--line); }
+.menu-heading { margin: 0 0 0.6rem; font-family: inherit; font-size: 0.95rem; font-weight: 800; -webkit-text-stroke: 0; text-shadow: none; color: var(--text); }
+.menu-check { display: flex; gap: 0.45rem; align-items: center; margin: 0 0 0.7rem; color: var(--text); font-weight: 700; cursor: pointer; }
+.menu-check input { margin: 0; accent-color: var(--accent); }
+.menu-panel .muted.small { margin: 0 0 0.5rem; font-size: 0.78rem; line-height: 1.4; }
+.lang-menu > summary { list-style: none; }
+.lang-menu > summary::-webkit-details-marker { display: none; }
+.lang-menu ul { position: absolute; z-index: 20; top: calc(100% + 0.5rem); right: 0; margin: 0; padding: 0.4rem; list-style: none; min-width: 9rem; }
+.lang-menu li a { display: flex; gap: 0.5rem; align-items: center; padding: 0.4rem 0.6rem; border-radius: 10px; color: var(--text); font-weight: 700; text-decoration: none; }
+.lang-menu li a:hover, .lang-menu li a[aria-current="true"] { background: color-mix(in srgb, var(--text) 14%, transparent); }
+.look-panel fieldset { margin: 0.5rem 0 0.75rem; padding: 0; border: 0; }
+.look-panel legend, .look-panel label { color: var(--text); font-weight: 700; }
+.look-panel > label { display: grid; gap: 0.25rem; margin: 0 0 0.7rem; }
+.look-range { display: grid; gap: 0.15rem; margin: 0 0 0.7rem; color: var(--text); font-weight: 700; }
+.look-panel select { padding: 0.35rem 0.5rem; border: 2px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--text); font: inherit; font-weight: 400; }
+.look-palettes { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; margin-top: 0.35rem; }
+.look-palette { position: relative; display: grid; gap: 0.25rem; padding: 0.4rem; border: 2px solid var(--line); border-radius: 10px; font-weight: 600; font-size: 0.8rem; cursor: pointer; }
+.look-palette input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.look-palette:has(input:checked) { border-color: var(--accent); }
+.look-palette:has(input:focus-visible) { outline: 3px solid var(--text); outline-offset: 2px; }
+.look-swatch { display: block; width: 100%; height: 0.7rem; border-radius: 4px; }
+.look-range-head { display: flex; justify-content: space-between; }
+.look-range output { color: var(--muted); font-weight: 400; font-variant-numeric: tabular-nums; }
+.look-range input { width: 100%; margin: 0; accent-color: var(--accent); }
+.look-range input:disabled { opacity: 0.4; }

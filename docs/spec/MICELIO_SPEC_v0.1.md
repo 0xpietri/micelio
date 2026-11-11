@@ -137,6 +137,8 @@ Secrets (password hash, TOTP secret, session key) come only from environment var
 - Adding a language = copy `en.toml`, translate, open a PR. `CONTRIBUTING.md` explains it in five lines.
 - v0.1 ships `en` and `es`. Dates and numbers are formatted per language (Babel).
 
+Since 2026-11-11 anyone can switch the interface language with the flag in the header (`/language/<code>`, kept in a `micelio_lang` cookie for a year); `site.language` is the default.
+
 ## 6. Pages and API
 
 | Route | Shows |
@@ -216,6 +218,8 @@ A signed-in page, `/appearance`, decided by marcos on 2026-11-10. What it saves 
 Decided by marcos on 2026-11-10: the landing's painting is part of the whole interface, and every graph is drawn as micelio.
 
 - **Background**: the painting (or the uploaded image, recolored when chosen) stays fixed behind every page. Reading pages show the horizon at the top and scroll into the underground; `/explore` shows only the underground. The landing keeps its own scene.
+- **Header** (2026-11-11): two lines. First the site's name and, at the right, the ⚙ menu (the viewer's graph settings on pages with a graph, then the look: a link to Appearance for the owner, the visitor's own look for visitors), the language flag and an icon to sign out or in. Below, the sections.
+- **A visitor's own look** (2026-11-11): palette, fonts, title effect and sizes, kept in the visitor's browser (`localStorage`); the palette's name goes to `/theme.css`, `/api/graph` and `/api/landing` as `?palette=`, which only recolor that answer. The site stays the owner's for everyone else.
 - **Glass**: text sits on ink-colored glass panels with the palette's dark outline; navigation is pill buttons; titles use the title font and effect of §7b.
 - **One dark look**: no light theme; the palette sets every color.
 - **Project page**: a scene at the top, the project's mushroom on the soil line, its notes as spore clouds below, the other projects its bridge notes reach standing faded at the sides; the title over the sky.

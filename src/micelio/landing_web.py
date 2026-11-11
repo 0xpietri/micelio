@@ -6,7 +6,7 @@ import hmac
 from dataclasses import replace
 from typing import Annotated
 
-from fastapi import APIRouter, File, Form, Request, UploadFile
+from fastapi import APIRouter, File, Form, Query, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from starlette.exceptions import HTTPException
@@ -42,7 +42,7 @@ from micelio.config import (
     TITLE_SIZE_MIN,
     Config,
 )
-from micelio.i18n import Translate
+from micelio.i18n import Translate, active_language
 from micelio.landing import LandingBuilder, background_url
 from micelio.vault import PublicView, VaultIndex
 
@@ -71,11 +71,30 @@ class LandingPages:
         self.everything = LandingBuilder(config, index)
         self.public = LandingBuilder(config, public)
         templates.env.globals["site_name"] = self.site_name
+        templates.env.globals["look_choices"] = self.look_choices
+
+    def look_choices(self) -> dict[str, object]:
+        """What a visitor may pick for their own look (§7b): kept in their browser only,
+        it never changes the site for anyone else. The owner's look is the default."""
+        look = self.store.current()
+        return {
+            "palettes": [PALETTES[k] for k in PALETTE_NAMES],
+            "title_fonts": TITLE_FONTS,
+            "text_fonts": TEXT_FONTS,
+            "title_effects": TITLE_EFFECTS,
+            "sizes": {
+                "title_size": (TITLE_SIZE_MIN, TITLE_SIZE_MAX, 5, "%"),
+                "text_size": (TEXT_SIZE_MIN, TEXT_SIZE_MAX, 1, "px"),
+                "graph_labels": (LABEL_SIZE_MIN, LABEL_SIZE_MAX, 5, "%"),
+            },
+            "owner": look,
+            "recolors": look.recolors,
+        }
 
     # -- texts ------------------------------------------------------------------------
 
     def default_headline(self) -> str:
-        site, language = self.config.site, self.config.site.language
+        site, language = self.config.site, active_language(self.config.site.language)
         configured = site.headline_for(language)
         if configured:
             return configured
@@ -88,7 +107,8 @@ class LandingPages:
         return self.store.current().site_name or self.config.site.title
 
     def default_tagline(self) -> str:
-        return self.config.site.tagline_for(self.config.site.language) or self.t("landing.tagline")
+        language = active_language(self.config.site.language)
+        return self.config.site.tagline_for(language) or self.t("landing.tagline")
 
     def texts(self, appearance: Appearance) -> tuple[str, str]:
         return (
@@ -133,8 +153,11 @@ class LandingPages:
             return render(request, "landing.html", context)
 
         @router.get("/api/landing", include_in_schema=False)
-        def landing_data(request: Request) -> Response:
-            data = self.builder(request).build(self.store.current())
+        def landing_data(request: Request, palette: str = Query("", max_length=40)) -> Response:
+            look = self.store.current()
+            if palette:  # a visitor's own palette, kept in their browser (§7b)
+                look = replace(look, palette=palette_named(palette, look.palette))
+            data = self.builder(request).build(look)
             return JSONResponse(dict(data), headers={"Cache-Control": "no-store"})
 
         @router.get("/appearance/background", include_in_schema=False)

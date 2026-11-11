@@ -4,19 +4,19 @@ from __future__ import annotations
 
 from collections import Counter
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date
 
 from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
-from micelio.appearance import Appearance, AppearanceStore, category_colors
+from micelio.appearance import Appearance, AppearanceStore, category_colors, palette_named
 from micelio.auth.web import SignIn
 from micelio.config import NOTE_TYPES, STATUSES, Category, Config
 from micelio.formatting import Dates
 from micelio.graph import GraphBuilder, ScopeError, UnknownNodeError, parse_scope
-from micelio.i18n import category_names
+from micelio.i18n import active_language, category_names
 from micelio.landing import background_url
 from micelio.render import Renderer, href_for
 from micelio.vault.index import IndexView, Note, VaultIndex
@@ -118,6 +118,12 @@ class Pages:
         """Category colors from the palette chosen on the Appearance page (§7b)."""
         return category_colors(self.config, self.looks.current().colors)
 
+    def look_for(self, palette: str) -> Appearance:
+        """The saved look, or with a visitor's own palette (§7b, kept in their browser).
+        Only a known palette name is taken; anything else is the owner's look."""
+        look = self.looks.current()
+        return replace(look, palette=palette_named(palette, look.palette)) if palette else look
+
     def backdrop(self) -> dict[str, object]:
         """The painted background behind every page (§7c): the image, its soil line and,
         when it is recolored, the palette's ramp for the browser's SVG filter."""
@@ -133,7 +139,7 @@ class Pages:
         return self.config.category(key)
 
     def category_name(self, category: Category) -> str:
-        language = self.config.site.language
+        language = active_language(self.config.site.language)
         return category.name(language, category_names(language).get(category.key))
 
     def reader(self, request: Request) -> Reader:
@@ -190,9 +196,10 @@ class Pages:
             )
 
         @router.get("/theme.css", include_in_schema=False)
-        def theme() -> Response:
+        def theme(palette: str = Query("", max_length=40)) -> Response:
+            look = self.look_for(palette)
             return PlainTextResponse(
-                theme_css(self.colors(), self.looks.current()),
+                theme_css(category_colors(self.config, look.colors), look),
                 media_type="text/css",
                 headers={"Cache-Control": "no-cache"},
             )
@@ -259,7 +266,11 @@ class Pages:
             return render(request, "journal.html", {"entries": entries, "nav": "journal"}, reader)
 
         @router.get("/api/graph", include_in_schema=False)
-        def graph(request: Request, scope: str = Query("all", max_length=300)) -> Response:
+        def graph(
+            request: Request,
+            scope: str = Query("all", max_length=300),
+            palette: str = Query("", max_length=40),
+        ) -> Response:
             reader = self.reader(request)
             try:
                 data = reader.graphs.build(parse_scope(scope))
@@ -270,6 +281,10 @@ class Pages:
                 )
             except UnknownNodeError:
                 return JSONResponse({"error": "not found"}, status_code=404)
+            if palette:
+                colors = category_colors(self.config, self.look_for(palette).colors)
+                for category in data["categories"]:
+                    category["color"] = colors[category["key"]]
             return JSONResponse(dict(data), headers={"Cache-Control": "no-store"})
 
         @router.get("/explore", include_in_schema=False)

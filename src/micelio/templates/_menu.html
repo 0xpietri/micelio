@@ -1,0 +1,44 @@
+{#- The header's corner (§7c): the ⚙ menu (the viewer's graph settings and the look),
+    the language flag, and signing out or in. Used by base.html and the landing. -#}
+{%- set visitor = request.state.signed_in is defined and not request.state.signed_in %}
+{%- set everything = not visitor %}
+<div class="corner-tools">
+  <div class="menu-corner">
+    <button type="button" class="icon-button menu-toggle" aria-expanded="false" aria-controls="site-menu" aria-label="{{ t('nav.settings') }}" title="{{ t('nav.settings') }}">⚙</button>
+    <div class="menu-panel glass" id="site-menu" hidden>
+      {#- Filled by static/js/menu.js on pages with a graph. #}
+      <section class="menu-graph" hidden></section>
+      {% if visitor %}
+      {% include "_look_fields.html" %}
+      {% else %}
+      <section>
+        <h2 class="menu-heading">{{ t("nav.appearance") }}</h2>
+        <a class="pill" href="/appearance">{{ t("nav.appearance") }} →</a>
+      </section>
+      {% endif %}
+    </div>
+  </div>
+  <details class="lang-menu">
+    {%- set here = request.url.path ~ ("?" ~ request.url.query if request.url.query else "") %}
+    {%- for l in languages() if l.code == (language | string) %}
+    <summary class="icon-button" aria-label="{{ t('nav.language') }}: {{ l.name }}" title="{{ t('nav.language') }}"><span aria-hidden="true">{{ l.flag }}</span></summary>
+    {%- endfor %}
+    <ul class="glass">
+      {% for l in languages() %}
+      <li><a href="/language/{{ l.code }}?next={{ here | urlencode }}" lang="{{ l.code }}"{% if l.code == (language | string) %} aria-current="true"{% endif %}><span aria-hidden="true">{{ l.flag }}</span> {{ l.name }}</a></li>
+      {% endfor %}
+    </ul>
+  </details>
+  {% if sign_in.enabled and everything %}
+  <form method="post" action="/logout" class="inline">
+    <input type="hidden" name="csrf" value="{{ sign_in.logout_token(request) }}">
+    <button type="submit" class="icon-button" aria-label="{{ t('nav.sign_out') }}" title="{{ t('nav.sign_out') }}">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path d="M10 4H5v16h5M15 8l4 4-4 4M19 12H9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+    </button>
+  </form>
+  {% elif sign_in.enabled and nav != "login" %}
+  <a class="icon-button sign-in" href="/login?next={{ request.url.path | urlencode }}" aria-label="{{ t('nav.sign_in') }}" title="{{ t('nav.sign_in') }}">
+    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path d="M14 4h5v16h-5M10 8l4 4-4 4M14 12H4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+  </a>
+  {% endif %}
+</div>
