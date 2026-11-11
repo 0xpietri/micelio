@@ -307,6 +307,21 @@ export function hyphaPath(a, b, seed, soil) {
   return { d, twigs };
 }
 
+/** A graph's thread: almost straight, with one soft bow to a seeded side, so threads that
+ * share a node fan out instead of looping over each other (the landing keeps its wild
+ * ``hyphaPath``). The bow grows with the length but stays small, and never goes above
+ * ``soil``. */
+export function threadPath(a, b, seed, soil = -Infinity) {
+  const rand = seededRandom(seed);
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const bow = (rand() < 0.5 ? -1 : 1) * Math.min(32, len * (0.06 + rand() * 0.05));
+  const mx = (a.x + b.x) / 2 - (dy / len) * bow;
+  const my = Math.max(soil, (a.y + b.y) / 2 + (dx / len) * bow);
+  return `M${f1(a.x)},${f1(a.y)} Q${f1(mx)},${f1(my)} ${f1(b.x)},${f1(b.y)}`;
+}
+
 
 /** Lowercase without accents, so "cafe" finds "Café". */
 export function fold(text) {

@@ -205,18 +205,29 @@ class GraphBuilder:
             self._node(notes[s], faded=s in faded, focus=s == focus)
             for s in sorted(everyone, key=lambda s: (notes[s].type, notes[s].title.lower(), s))
         ]
+        # One thread per pair: a note that links back to its project (or any two notes
+        # that link each other) would otherwise be drawn twice, one over the other.
+        # The direction kept starts at the project, else at the first link found.
+        pairs: dict[frozenset[str], tuple[str, str]] = {}
+        for e in self.index.edges:
+            if e.source not in everyone or e.target not in everyone:
+                continue
+            # Two faded neighbours of a project are not part of its story.
+            if e.source in faded and e.target in faded:
+                continue
+            key = frozenset((e.source, e.target))
+            if key not in pairs or (
+                notes[e.source].type == "project" and notes[e.target].type != "project"
+            ):
+                pairs[key] = (e.source, e.target)
         edges: list[EdgeData] = [
             {
-                "id": f"{e.source}->{e.target}",
-                "source": e.source,
-                "target": e.target,
-                "faded": e.source in faded or e.target in faded,
+                "id": f"{source}->{target}",
+                "source": source,
+                "target": target,
+                "faded": source in faded or target in faded,
             }
-            for e in self.index.edges
-            if e.source in everyone
-            and e.target in everyone
-            # Two faded neighbours of a project are not part of its story.
-            and not (e.source in faded and e.target in faded)
+            for source, target in pairs.values()
         ]
         sources = everyone if ghost_sources is None else ghost_sources
         seen: set[str] = set()
