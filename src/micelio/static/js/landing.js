@@ -315,21 +315,24 @@ function dive(scene, svg) {
 async function start() {
   const scene = document.getElementById("scene");
   const svg = document.getElementById("forest");
-  if (!scene || !svg || !window.d3) return;
+  // The scene stays hidden until it is drawn (landing.css), then fades in: no painting
+  // framed one way and then another, no title changing size. Shown whatever happens.
+  const reveal = () => scene && scene.classList.add("drawn");
+  if (!scene || !svg || !window.d3) return reveal();
   let data;
   try {
     const palette = document.documentElement.dataset.palette;  // a visitor's own (look.js)
     const response = await fetch(palette ? `/api/landing?palette=${encodeURIComponent(palette)}` : "/api/landing", { headers: { Accept: "application/json" } });
-    if (!response.ok) return;
+    if (!response.ok) return reveal();
     data = await response.json();
   } catch {
-    return;
+    return reveal();
   }
   const strings = await loadStrings();
   const state = { pulseTimer: null };
   const redraw = () => draw(svg, data, strings, state);
   fitHeadline();
-  redraw();
+  try { redraw(); } finally { reveal(); }
   tooltips(scene, svg);
   dive(scene, svg);
   if (document.fonts) document.fonts.ready.then(fitHeadline);

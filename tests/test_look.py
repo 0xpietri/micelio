@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import json
 import re
+import shutil
+import subprocess
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -11,7 +14,7 @@ from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
 from micelio.app import create_app
-from micelio.appearance import Appearance, AppearanceStore
+from micelio.appearance import PALETTES, Appearance, AppearanceStore, ramp_tables
 from micelio.config import TEXT_FONTS, TITLE_FONTS, Config, TypographyConfig, VaultConfig
 from micelio.pages import theme_css
 
@@ -200,7 +203,10 @@ def test_recolored_and_uploaded_backgrounds_reach_every_page(client: TestClient)
     _, _, _, soil, ramp = backdrop(html).groups()
     assert soil == "40"
     assert ramp.split(" ")[0] == "#16161e"
-    assert '<script type="module" src="/static/js/backdrop.js"></script>' in html
+    # The recoloring filter is in the page itself: the first paint has the right colors.
+    assert '<filter id="bgmap-page" class="bg-ramp"' in html
+    assert 'preserveAspectRatio="xMidYMid slice" filter="url(#bgmap-page)"></image>' in html
+    assert "backdrop.js" not in html
     token = re.search(r'name="csrf" value="([^"]+)"', client.get("/appearance").text)
     assert token
     client.post(
@@ -211,6 +217,57 @@ def test_recolored_and_uploaded_backgrounds_reach_every_page(client: TestClient)
     html = client.get("/projects").text
     assert 'href="/appearance/background?v=1"' in html
     assert backdrop(html).group(5) == ""  # an upload is not recolored unless asked
+
+
+def test_the_landing_paints_recolored_from_the_start(client: TestClient) -> None:
+    landing = client.get("/").text
+    assert "bgmap-page" not in landing  # the psychedelic palette keeps the painting
+    save(client, palette="tokyo-night", recolor="on")
+    landing = client.get("/").text
+    forest = landing.split('<svg class="forest"', 1)[1].split("</svg>", 1)[0]
+    r, _g, b = ramp_tables(PALETTES["tokyo-night"].ramp or ())
+    assert f'<feFuncR type="table" tableValues="{r}"/>' in forest
+    assert f'<feFuncB type="table" tableValues="{b}"/>' in forest
+    assert 'filter="url(#bgmap-page)"></image>' in forest
+    assert "ramp-early.js" not in landing  # the owner sees the site's own look
+
+
+def test_the_landing_fades_in_once_drawn() -> None:
+    css = (STATIC / "css" / "landing.css").read_text("utf-8")
+    assert ".scene:not(.drawn) .forest, .scene:not(.drawn) .hero { opacity: 0; }" in css
+    assert "@media (scripting: enabled)" in css  # without scripts it shows at once
+    script = (STATIC / "js" / "landing.js").read_text("utf-8")
+    start = script.split("async function start()", 1)[1]
+    # Every way out of start() shows the scene, drawn or not.
+    assert start.count("return reveal();") == 3
+    assert "try { redraw(); } finally { reveal(); }" in start
+
+
+def test_ramp_tables_match_the_browser() -> None:
+    ramp = PALETTES["catppuccin"].ramp
+    assert ramp
+    tables = ramp_tables(ramp)
+    # The ends are the ramp's darkest and lightest colors; 25 steps per channel.
+    assert all(len(t.split(" ")) == 25 for t in tables)
+
+    def channels(color: str) -> list[str]:
+        return [f"{int(color[i : i + 2], 16) / 255:.3f}" for i in (1, 3, 5)]
+
+    assert [t.split(" ")[0] for t in tables] == channels(ramp[0])
+    assert [t.split(" ")[-1] for t in tables] == channels(ramp[-1])
+    node = shutil.which("node")
+    if node is None:
+        pytest.skip("node is not installed")
+    draw = (STATIC / "js" / "draw.js").as_uri()
+    call = f"m.rampFilter({json.dumps(list(ramp))})"
+    code = f"import({json.dumps(draw)}).then((m) => console.log({call}))"
+    # Our own module, run by the Node.js found on PATH.
+    out = subprocess.run(  # noqa: S603
+        [node, "-e", code], capture_output=True, text=True, check=True
+    ).stdout
+    found = re.findall(r'tableValues="([^"]+)"', out)
+    for js, py in zip(found, tables, strict=True):
+        assert [round(float(v), 2) for v in js.split()] == [round(float(v), 2) for v in py.split()]
 
 
 def test_no_light_theme_is_left() -> None:

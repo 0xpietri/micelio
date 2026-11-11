@@ -25,6 +25,12 @@ All notable changes to this project are documented here. The format follows
   its color, journal entries on gold dots, sources on dashes, and links between notes are
   thin and faint. The threads no longer glow, so names read better.
 
+### Fixed
+
+- Pages no longer flash the background in its original colors before the chosen palette
+  recolors it: the recoloring comes with the page itself. The landing waits until its
+  scene is drawn and then fades in, instead of jumping from one framing to another.
+
 ## [0.1.1] - 2026-11-11
 
 ### Added

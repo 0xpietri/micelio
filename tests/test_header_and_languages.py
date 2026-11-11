@@ -3,9 +3,12 @@ signing out or in as icons; and a visitor's own look, kept in their browser (§7
 
 from __future__ import annotations
 
+import re
+
 from fastapi.testclient import TestClient
 
 from .test_graph import client_for
+from .test_look import STATIC
 from .test_public import SiteFor
 from .test_public import site_for as site_for  # the fixture
 
@@ -84,3 +87,24 @@ def test_a_visitor_palette_only_recolors_their_own_requests(site_for: SiteFor) -
     # An unknown name is the site's own look.
     assert visitor.get("/theme.css?palette=neon").text == visitor.get("/theme.css").text
     assert visitor.get("/api/landing?palette=neon").json()["palette"]["key"] == "psychedelic"
+
+
+def test_a_visitor_palette_recolors_the_background_before_it_paints(site_for: SiteFor) -> None:
+    site = site_for()
+    site.sign_in()
+    page = site.client.get("/appearance").text
+    form = r'id="look-form"[^>]*>\s*<input type="hidden" name="csrf" value="([^"]+)"'
+    token = re.search(form, page)
+    assert token
+    data = {"csrf": token.group(1), "palette": "catppuccin", "recolor": "on", "soil": "52"}
+    assert site.client.post("/appearance", data=data, follow_redirects=False).status_code == 303
+    assert "bgmap-page" in site.client.get("/").text
+    site.client.cookies.clear()
+    for path in ("/", "/projects"):
+        html = site.client.get(path).text
+        # Right after the background's SVG, before anything paints, the visitor's own
+        # palette (from look-early.js) swaps the server's filter tables.
+        assert re.search(r"</svg>\s*<script src=\"/static/js/ramp-early.js\"></script>", html), path
+    script = (STATIC / "js" / "ramp-early.js").read_text("utf-8")
+    assert 'querySelectorAll("filter.bg-ramp")' in script
+    assert 'removeAttribute("filter")' in script  # a palette that keeps the painting
