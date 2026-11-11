@@ -109,6 +109,18 @@
         {% endfor %}
       </div>
 
+      <h3>{{ t("appearance.board") }}</h3>
+      <p class="muted small">{{ t("appearance.board_help") }}</p>
+      <div class="choices boards">
+        {% for color in board_colors %}{% for font in board_fonts %}
+        <label class="choice board-choice">
+          <input type="radio" name="board" value="{{ color }}.{{ font }}"{% if color == appearance.board_color and font == appearance.board_font %} checked{% endif %}>
+          <span class="board-sample board-{{ color }} chalk-{{ font }}">{{ t("appearance.board_sample") }}</span>
+          <span class="choice-name">{{ t("appearance.board_" ~ color) }} · {{ t("font." ~ font) }}</span>
+        </label>
+        {% endfor %}{% endfor %}
+      </div>
+
       <h3>{{ t("appearance.sizes") }}</h3>
       {% for name, (low, high, step, unit) in sizes.items() %}
       <label class="range">{{ t("appearance." ~ name) }}
@@ -161,6 +173,25 @@ title_effect = "{{ appearance.title_effect }}"</pre>
       <button type="submit" class="link">{{ t("appearance.remove") }}</button>
     </form>
     {% endif %}
+  </section>
+
+  <section class="upload avatar-upload">
+    <h2>{{ t("appearance.avatar") }}</h2>
+    <p class="muted small">{{ t("appearance.avatar_help") }}</p>
+    <div class="row">
+      {% if appearance.avatar_type %}<img class="avatar-thumb" src="/appearance/avatar?v={{ appearance.avatar_version }}" alt="" width="64" height="64">{% else %}<span class="avatar-thumb avatar-mushroom" aria-hidden="true"></span>{% endif %}
+      <form method="post" action="/appearance/avatar" enctype="multipart/form-data" class="row">
+        <input type="hidden" name="csrf" value="{{ form_token }}">
+        <input type="file" name="image" accept="image/png,image/jpeg,image/webp" aria-label="{{ t('appearance.avatar_upload') }}">
+        <button type="submit">{{ t("appearance.avatar_upload") }}</button>
+      </form>
+      {% if appearance.avatar_type %}
+      <form method="post" action="/appearance/avatar/remove">
+        <input type="hidden" name="csrf" value="{{ form_token }}">
+        <button type="submit" class="link">{{ t("appearance.avatar_remove") }}</button>
+      </form>
+      {% endif %}
+    </div>
   </section>
 
   <details class="prompt" id="prompt" data-soil="{{ appearance.soil }}">

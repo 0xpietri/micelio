@@ -13,6 +13,9 @@ Served from `/static/vendor`, never from a CDN, so the Content Security Policy c
 | [Atkinson Hyperlegible](https://fonts.google.com/specimen/Atkinson+Hyperlegible) by the Braille Institute (SIL OFL 1.1) | @fontsource 5.1.0 | `fonts/atkinson-hyperlegible/atkinson-hyperlegible-latin-{400,700}.woff2` | `files/atkinson-hyperlegible-latin-{400,700}-normal.woff2` from `@fontsource/atkinson-hyperlegible` |
 | [Literata](https://fonts.google.com/specimen/Literata) by TypeTogether (SIL OFL 1.1) | @fontsource 5.1.0 | `fonts/literata/literata-latin-{400,700}.woff2` | `files/literata-latin-{400,700}-normal.woff2` from `@fontsource/literata` |
 | [Space Grotesk](https://fonts.google.com/specimen/Space+Grotesk) by Florian Karsten (SIL OFL 1.1) | @fontsource 5.1.0 | `fonts/space-grotesk/space-grotesk-latin-{400,700}.woff2` | `files/space-grotesk-latin-{400,700}-normal.woff2` from `@fontsource/space-grotesk` |
+| [Caveat](https://fonts.google.com/specimen/Caveat) by Impallari Type (SIL OFL 1.1) | @fontsource 5.1.0 | `fonts/caveat/caveat-latin-{500,700}.woff2` | `files/caveat-latin-{500,700}-normal.woff2` from `@fontsource/caveat` (tarball integrity `sha512-k7X12XF3BKtUlqV81Vcvc5k88dFJvg11txEOFyF39kspJ9rKfuWk3h4dTxovANahvGpdYaDuK1d1ywt2tBVi6g==`) |
+| [Patrick Hand](https://fonts.google.com/specimen/Patrick+Hand) by Patrick Wagesreiter (SIL OFL 1.1) | @fontsource 5.1.0 | `fonts/patrick-hand/patrick-hand-latin-400.woff2` | `files/patrick-hand-latin-400-normal.woff2` from `@fontsource/patrick-hand` (tarball integrity `sha512-jzi0MnS4LnohFQ35Q0fmPQeNQAz+n7l5uEVxrKkDoNn/oKpu9uTu70126YAILMI+L4H3+I3THHn4L5H94SBYEQ==`) |
+| [Gochi Hand](https://fonts.google.com/specimen/Gochi+Hand) by Huerta Tipográfica (SIL OFL 1.1) | @fontsource 5.1.0 | `fonts/gochi-hand/gochi-hand-latin-400.woff2` | `files/gochi-hand-latin-400-normal.woff2` from `@fontsource/gochi-hand` (tarball integrity `sha512-9pR00T4Ry+8nTUfTJ3YY59a7IRA+qyU71PH9mI26B4+motIUuVVTCxuwFnGryE2q0uuBNioswPtAEryQ5JXK/w==`) |
 
 The d3 tarballs were checked against the registry's integrity hashes:
 
@@ -30,4 +33,9 @@ then, and the landing's d3-force draws every graph now.
 The landing's included background, `../img/psychedelic-dusk.webp`, was painted for this
 project with an image generator from the prompt in `docs/reports/step-5.md` and is
 released under the project's MIT license.
+
+The takeaway chalkboard's frame, `../img/log-frame.webp` (logs, leaves and fly agarics), was
+made for this project with an image generator, cut out to a transparent PNG and scaled to
+768 × 512; it is a 9-slice `border-image` (slices 100 125 130 125) and is released under
+the project's MIT license.
 

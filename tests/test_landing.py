@@ -410,6 +410,9 @@ def test_appearance_needs_sign_in(make_site: SiteFactory) -> None:
         "/appearance", data={"palette": "rose-pine"}, follow_redirects=False
     )
     assert response.status_code == 401
+    files = {"image": ("me.png", png(200, 200), "image/png")}
+    response = site.client.post("/appearance/avatar", files=files, follow_redirects=False)
+    assert response.status_code == 401
     site.sign_in()
     page = site.client.get("/appearance")
     assert page.status_code == 200
@@ -455,3 +458,91 @@ def test_vendored_d3_force_and_font() -> None:
     readme = (STATIC / "vendor" / "README.md").read_text(encoding="utf-8")
     assert "d3-force" in readme
     assert "Shrikhand" in readme
+
+
+def test_profile_picture_upload_serve_theme_and_remove(client: TestClient) -> None:
+    token = form_token(client)
+    # Without a picture the speech bubble keeps its little mushroom.
+    assert "/appearance/avatar" not in client.get("/theme.css").text
+    assert client.get("/appearance/avatar").status_code == 404
+    page = client.get("/appearance").text
+    assert "avatar-mushroom" in page
+
+    files = {"image": ("me.png", png(200, 200), "image/png")}
+    response = client.post(
+        "/appearance/avatar", files=files, data={"csrf": token}, follow_redirects=False
+    )
+    assert response.headers["location"] == "/appearance?done=avatar_uploaded"
+    assert "Profile picture uploaded." in client.get("/appearance?done=avatar_uploaded").text
+    picture = client.get("/appearance/avatar")
+    assert picture.status_code == 200
+    assert picture.headers["content-type"] == "image/png"
+    theme = client.get("/theme.css").text
+    assert 'url("/appearance/avatar?v=1")' in theme
+    assert (
+        '<img class="avatar-thumb" src="/appearance/avatar?v=1"' in client.get("/appearance").text
+    )
+    # Saving the rest of the page keeps the picture.
+    client.post("/appearance", data={"csrf": token, "palette": "rose-pine"})
+    assert client.get("/appearance/avatar").status_code == 200
+
+    response = client.post(
+        "/appearance/avatar/remove", data={"csrf": token}, follow_redirects=False
+    )
+    assert response.headers["location"] == "/appearance?done=avatar_removed"
+    assert client.get("/appearance/avatar").status_code == 404
+    assert "/appearance/avatar" not in client.get("/theme.css").text
+
+
+@pytest.mark.parametrize(
+    ("data", "code"),
+    [
+        (b"", "empty"),
+        (b"GIF89a" + bytes(40), "type"),
+        (png(40, 40), "avatar_small"),
+        (png(200, 200) + bytes(2 * 1024 * 1024), "avatar_size"),
+    ],
+)
+def test_rejected_profile_pictures_say_why(client: TestClient, data: bytes, code: str) -> None:
+    files = {"image": ("me.png", data, "image/png")}
+    response = client.post(
+        "/appearance/avatar",
+        files=files,
+        data={"csrf": form_token(client)},
+        follow_redirects=False,
+    )
+    assert response.headers["location"] == f"/appearance?error={code}"
+    assert client.get("/appearance/avatar").status_code == 404
+    assert 'role="alert"' in client.get(f"/appearance?error={code}").text
+
+
+def test_profile_picture_forms_need_the_token(client: TestClient, tmp_path: Path) -> None:
+    files = {"image": ("me.png", png(200, 200), "image/png")}
+    response = client.post(
+        "/appearance/avatar", files=files, data={"csrf": "x"}, follow_redirects=False
+    )
+    assert response.headers["location"] == "/appearance?error=form"
+    response = client.post("/appearance/avatar/remove", follow_redirects=False)
+    assert response.headers["location"] == "/appearance?error=form"
+    assert not (tmp_path / "data" / "avatar").exists()
+
+
+def test_chalkboard_choice_reaches_the_theme(client: TestClient) -> None:
+    theme = client.get("/theme.css").text
+    assert "--board-bg: var(--board-green-bg);" in theme
+    assert "--board-font: var(--font-caveat);" in theme
+    page = client.get("/appearance").text
+    assert page.count('name="board"') == 9
+    assert 'value="green.caveat" checked' in page
+
+    token = form_token(client)
+    client.post("/appearance", data={"csrf": token, "board": "white.gochi-hand"})
+    theme = client.get("/theme.css").text
+    assert "--board-bg: var(--board-white-bg);" in theme
+    assert "--board-ink: var(--board-white-ink);" in theme
+    assert "--board-font: var(--font-gochi-hand);" in theme
+    assert 'value="white.gochi-hand" checked' in client.get("/appearance").text
+
+    # Anything else keeps the current board.
+    client.post("/appearance", data={"csrf": token, "board": "pink.comic-sans"})
+    assert "--board-font: var(--font-gochi-hand);" in client.get("/theme.css").text

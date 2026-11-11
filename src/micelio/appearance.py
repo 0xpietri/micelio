@@ -35,6 +35,13 @@ from micelio.config import (
     TitleFont,
 )
 
+# The chalkboard that closes a concept (`> [!takeaway]`): its color and the hand it is
+# written in. The chalk's color is not a choice: it follows the palette (micelio.css).
+BoardColor = Literal["black", "green", "white"]
+BOARD_COLORS: tuple[BoardColor, ...] = ("black", "green", "white")
+BoardFont = Literal["caveat", "patrick-hand", "gochi-hand"]
+BOARD_FONTS: tuple[BoardFont, ...] = ("caveat", "patrick-hand", "gochi-hand")
+
 SITE_DB = "site.sqlite3"
 BACKGROUNDS = "backgrounds"
 BUILTIN_BACKGROUND = "img/psychedelic-dusk.webp"  # under /static
@@ -42,6 +49,9 @@ BUILTIN_SOIL = 52
 
 MAX_UPLOAD_BYTES = 8 * 1024 * 1024
 MIN_WIDTH, MIN_HEIGHT = 1200, 800
+MAX_AVATAR_BYTES = 2 * 1024 * 1024
+MIN_AVATAR_SIDE = 64
+AVATARS = "avatar"
 MAX_TEXT = 120
 MAX_NAME = 40
 
@@ -201,6 +211,10 @@ class Appearance:
     text_size: int = 16  # px
     graph_labels: int = 100  # percent
     title_effect: TitleEffect = "poster"
+    board_color: BoardColor = "green"
+    board_font: BoardFont = "caveat"
+    avatar_type: ImageType | None = None  # the owner's picture, set while one exists
+    avatar_version: int = 0  # bumps on each upload, for cache busting
 
     @property
     def uses_own(self) -> bool:
@@ -256,6 +270,14 @@ def text_font_named(value: object, fallback: TextFont) -> TextFont:
 
 def title_effect_named(value: object, fallback: TitleEffect) -> TitleEffect:
     return next((k for k in TITLE_EFFECTS if k == value), fallback)
+
+
+def board_color_named(value: object, fallback: BoardColor) -> BoardColor:
+    return next((k for k in BOARD_COLORS if k == value), fallback)
+
+
+def board_font_named(value: object, fallback: BoardFont) -> BoardFont:
+    return next((k for k in BOARD_FONTS if k == value), fallback)
 
 
 def category_colors(config: Config, palette: Palette) -> dict[str, str]:
@@ -338,6 +360,19 @@ def check_upload(data: bytes) -> ImageType:
     return kind
 
 
+def check_avatar(data: bytes) -> ImageType:
+    """Accept a profile picture or raise ``ImageError`` with ``empty``, ``avatar_size``,
+    ``type`` or ``avatar_small``."""
+    if not data:
+        raise ImageError("empty")
+    if len(data) > MAX_AVATAR_BYTES:
+        raise ImageError("avatar_size")
+    kind, width, height = image_info(data)
+    if min(width, height) < MIN_AVATAR_SIDE:
+        raise ImageError("avatar_small")
+    return kind
+
+
 # -- the store ------------------------------------------------------------------------
 
 
@@ -410,6 +445,10 @@ class AppearanceStore:
         recolor = saved.get("recolor")
         soil = saved.get("soil", defaults.soil)
         version = saved.get("own_version", 0)
+        avatar_type = next((k for k in MEDIA_TYPES if k == saved.get("avatar_type")), None)
+        if avatar_type is not None and not self.avatar_path(avatar_type).is_file():
+            avatar_type = None
+        avatar_version = saved.get("avatar_version", 0)
         return Appearance(
             palette=palette,
             background=background,
@@ -435,6 +474,10 @@ class AppearanceStore:
                 type_defaults.graph_labels,
             ),
             title_effect=title_effect_named(saved.get("title_effect"), type_defaults.title_effect),
+            board_color=board_color_named(saved.get("board_color"), "green"),
+            board_font=board_font_named(saved.get("board_font"), "caveat"),
+            avatar_type=avatar_type,
+            avatar_version=avatar_version if isinstance(avatar_version, int) else 0,
         )
 
     def save(self, appearance: Appearance) -> None:
@@ -503,5 +546,34 @@ class AppearanceStore:
         for kind in MEDIA_TYPES:
             self.own_path(kind).unlink(missing_ok=True)
         updated = replace(self.current(), background="builtin", own_type=None, recolor=None)
+        self.save(updated)
+        return updated
+
+    # -- the owner's profile picture (the speaker of `> [!said]` callouts) -----------
+
+    def avatar_path(self, kind: str) -> Path:
+        return self.folder / AVATARS / f"avatar.{kind}"
+
+    def store_avatar(self, data: bytes) -> Appearance:
+        """Validate and keep ``data`` as the profile picture, replacing any earlier one."""
+        kind = check_avatar(data)
+        folder = self.folder / AVATARS
+        folder.mkdir(parents=True, exist_ok=True)
+        target = self.avatar_path(kind)
+        partial = target.with_suffix(".part")
+        partial.write_bytes(data)
+        partial.replace(target)
+        for other in MEDIA_TYPES:
+            if other != kind:
+                self.avatar_path(other).unlink(missing_ok=True)
+        now = self.current()
+        updated = replace(now, avatar_type=kind, avatar_version=now.avatar_version + 1)
+        self.save(updated)
+        return updated
+
+    def remove_avatar(self) -> Appearance:
+        for kind in MEDIA_TYPES:
+            self.avatar_path(kind).unlink(missing_ok=True)
+        updated = replace(self.current(), avatar_type=None)
         self.save(updated)
         return updated

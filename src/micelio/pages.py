@@ -5,14 +5,15 @@ from __future__ import annotations
 import hashlib
 import hmac
 from collections import Counter
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
 from datetime import date, datetime
-from typing import Annotated
+from typing import Annotated, cast
 
 from fastapi import APIRouter, Form, HTTPException, Query, Request
 from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
+from markupsafe import Markup
 
 from micelio.appearance import (
     Appearance,
@@ -30,7 +31,7 @@ from micelio.guide import Guide, GuideBuilder
 from micelio.i18n import active_language, category_names
 from micelio.landing import background_url
 from micelio.looks import Look, NodeLooks, clean_look
-from micelio.render import Renderer, href_for
+from micelio.render import DEFAULT_TITLED_CALLOUTS, Renderer, fill_callout_titles, href_for
 from micelio.sharing import SharedProjects
 from micelio.vault.index import IndexView, Note, VaultIndex
 from micelio.vault.public import PublicView
@@ -116,6 +117,20 @@ def theme_css(colors: dict[str, str], appearance: Appearance) -> str:
     rules = [":root { " + " ".join(f"--pal-{k}: {v};" for k, v in tokens.items()) + " }"]
     rules += [":root { " + " ".join(f"--{k}: {v};" for k, v in look.items()) + " }"]
     rules += [f".cat-{key} {{ --cat: {color}; }}" for key, color in colors.items()]
+    # The takeaway chalkboard (micelio.css holds each board's colors, made from the palette).
+    board = appearance.board_color
+    rules += [
+        ":root { "
+        f"--board-bg: var(--board-{board}-bg); --board-ink: var(--board-{board}-ink); "
+        f"--board-title: var(--board-{board}-title); "
+        f"--board-font: var(--font-{appearance.board_font}); "
+        "}"
+    ]
+    if appearance.avatar_type:
+        # The owner's picture takes the place of the little mushroom beside `> [!said]`.
+        avatar = f'url("/appearance/avatar?v={appearance.avatar_version}")'
+        rules += [f".callout-said::before {{ background: {avatar} center / cover no-repeat; }}"]
+        rules += [".callout-said::before { border-radius: 50%; }"]
     return "\n".join(rules) + "\n"
 
 
@@ -150,6 +165,13 @@ class Pages:
             Renderer(public, ghosts=False, guide_headings=config.guide.headings),
             GraphBuilder(config, public, self.colors, dress),
         )
+
+        def callout_titles(body: Markup) -> Markup:
+            t = cast("Callable[[str], str]", templates.env.globals["t"])
+            titles = {kind: t(f"callout.{kind}") for kind in DEFAULT_TITLED_CALLOUTS}
+            return fill_callout_titles(body, titles)
+
+        templates.env.filters["callout_titles"] = callout_titles
         templates.env.globals.update(
             href=href_for,
             show_date=dates.show,

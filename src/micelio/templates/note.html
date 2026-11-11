@@ -35,7 +35,7 @@
   <p class="type-banner question"><span class="guide-icon question" aria-hidden="true"></span> {{ t("question.banner") }}</p>
   {% endif %}
 
-  <div class="prose">{{ body }}</div>
+  <div class="prose">{{ body|callout_titles }}</div>
 
   {% if guide %}{{ guide_pager(guide, note.slug) }}{% endif %}
 

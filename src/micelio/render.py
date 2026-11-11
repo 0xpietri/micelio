@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import re
 import threading
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from html import escape
 
 import nh3
@@ -26,6 +26,12 @@ from micelio.vault.sections import drop_section
 
 _WIKILINK = re.compile(r"(!?)\[\[([^\[\]|#\n]*)(#[^\[\]|\n]*)?(?:\|([^\[\]\n]*))?\]\]")
 _CALLOUT = re.compile(r"^\[!([A-Za-z][\w-]*)\][+-]?[ \t]*(.*)$")
+# Callouts drawn without a heading unless the note gives one: `said` is a speech bubble
+# holding the owner's own words, `takeaway` the small sign that closes a concept.
+_UNTITLED_CALLOUTS = frozenset({"said"})
+# Callouts whose default heading is an interface string in the reader's language: the
+# cached HTML keeps an empty placeholder that ``fill_callout_titles`` fills per request.
+DEFAULT_TITLED_CALLOUTS = ("takeaway",)
 _LEADING_H1 = re.compile(r"\A\s*#[ \t]+[^\n]*\n?")
 _FENCE_BLOCK = re.compile(r"^(```|~~~).*?^\1[^\n]*$", re.DOTALL | re.MULTILINE)
 
@@ -91,8 +97,18 @@ def _callout_rule(state: StateCore) -> None:
                     if closing.type == "blockquote_close" and closing.level == depth:
                         closing.tag = "div"
                         break
+                if kind in _UNTITLED_CALLOUTS and not match.group(2).strip():
+                    if rest.strip():
+                        inline.content = rest
+                    else:
+                        del tokens[i + 1 : i + 4]
+                    i += 1
+                    continue
                 head_open = Token("paragraph_open", "p", 1)
                 head_open.attrSet("class", "callout-title")
+                if kind in DEFAULT_TITLED_CALLOUTS and not match.group(2).strip():
+                    head_open.attrSet("class", f"callout-title callout-title-{kind}")
+                    title = ""
                 head_inline = Token("inline", "", 0, content=title, children=[])
                 head_close = Token("paragraph_close", "p", -1)
                 if rest.strip():
@@ -101,6 +117,16 @@ def _callout_rule(state: StateCore) -> None:
                 else:
                     tokens[i + 1 : i + 4] = [head_open, head_inline, head_close]
         i += 1
+
+
+def fill_callout_titles(body: Markup, titles: Mapping[str, str]) -> Markup:
+    """Put each default callout heading (``DEFAULT_TITLED_CALLOUTS``) in the reader's
+    language into HTML from ``Renderer.html``."""
+    for kind, text in titles.items():
+        empty = Markup(f'<p class="callout-title callout-title-{kind}"></p>')  # noqa: S704
+        filled = Markup('<p class="callout-title callout-title-{}">{}</p>').format(kind, text)
+        body = Markup(str(body).replace(str(empty), str(filled)))  # noqa: S704
+    return body
 
 
 class Renderer:

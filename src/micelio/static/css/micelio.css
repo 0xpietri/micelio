@@ -290,12 +290,121 @@ a.tag:hover { background: color-mix(in srgb, var(--pal-button-alt, #22d3ee) 30%,
 
 .callout { margin: 1.25rem 0; padding: 0.75rem 1rem; border-left: 4px solid var(--link); border-radius: 10px; background: var(--surface); }
 .callout > :last-child { margin-bottom: 0; }
+.callout > :first-child { margin-top: 0; }
 .callout-title { margin-top: 0; font-weight: 700; }
 .callout-warning, .callout-caution, .callout-attention { border-color: #ff8a1f; }
 .callout-danger, .callout-error, .callout-bug { border-color: var(--error); }
 .callout-tip, .callout-success, .callout-check, .callout-done { border-color: var(--ok); }
 .callout-question, .callout-help, .callout-faq { border-color: var(--sun); }
 .callout-quote, .callout-cite { border-color: var(--muted); }
+
+/* The owner's own words, `> [!said]`: a speech bubble whose tail points at the speaker,
+   a little mushroom in the category's color unless the owner uploaded a profile picture
+   (theme.css then swaps the picture in, §7b). */
+.callout-said {
+  position: relative;
+  margin: 1.5rem 0 1.5rem 3.4rem;
+  padding: 0.8rem 1.05rem;
+  border: 2px solid color-mix(in srgb, var(--cat) 70%, var(--text));
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--cat) 16%, var(--surface));
+  font-size: 1.05em;
+}
+.callout-said::before {
+  content: "";
+  position: absolute;
+  left: -3.4rem;
+  bottom: -0.2rem;
+  width: 2.5rem;
+  height: 2.5rem;
+}
+.callout-said::before, .avatar-mushroom {
+  background:
+    radial-gradient(circle at 34% 30%, var(--text) 0 6%, transparent 7%),
+    radial-gradient(circle at 64% 22%, var(--text) 0 5%, transparent 6%),
+    radial-gradient(ellipse 50% 100% at 50% 100%, var(--cat) 0 96%, transparent 100%) top / 100% 52% no-repeat,
+    linear-gradient(var(--text), var(--text)) 50% 100% / 32% 50% no-repeat;
+  border-radius: 0 0 6px 6px;
+}
+.callout-said::after {
+  content: "";
+  position: absolute;
+  left: -0.62rem;
+  bottom: 0.7rem;
+  width: 1rem;
+  height: 1rem;
+  background: inherit;
+  border-left: inherit;
+  border-bottom: inherit;
+  transform: rotate(45deg) skew(12deg, 12deg);
+}
+.avatar-thumb { display: inline-block; width: 64px; height: 64px; border-radius: 50%; object-fit: cover; flex: none; }
+.avatar-mushroom { border-radius: 0; }
+
+/* What you should know, `> [!takeaway]`: a chalkboard in a frame of logs, leaves and fly
+   agarics (static/img/log-frame.webp, a 9-slice border image), written by hand in chalk.
+   The board (black, green or white) and the hand are chosen on the Appearance page
+   (theme.css sets --board-*); the chalk's colors come from the palette, never chosen. */
+:root {
+  --board-black-bg: #17171a;
+  --board-black-ink: color-mix(in srgb, var(--pal-stem, #fff1d0) 35%, #fbfaf6);
+  --board-black-title: var(--sun);
+  --board-green-bg: #23352c;
+  --board-green-ink: color-mix(in srgb, var(--pal-stem, #fff1d0) 30%, #f7f5ee);
+  --board-green-title: color-mix(in srgb, var(--sun) 80%, #fff);
+  --board-white-bg: #f4f2ec;
+  --board-white-ink: color-mix(in srgb, var(--ink) 80%, #000);
+  --board-white-title: color-mix(in srgb, var(--pal-accent, #ff2fa0) 70%, #000);
+}
+.board-black { --board-bg: var(--board-black-bg); --board-ink: var(--board-black-ink); --board-title: var(--board-black-title); }
+.board-green { --board-bg: var(--board-green-bg); --board-ink: var(--board-green-ink); --board-title: var(--board-green-title); }
+.board-white { --board-bg: var(--board-white-bg); --board-ink: var(--board-white-ink); --board-title: var(--board-white-title); }
+.chalk-caveat { --board-font: var(--font-caveat); }
+.chalk-patrick-hand { --board-font: var(--font-patrick-hand); }
+.chalk-gochi-hand { --board-font: var(--font-gochi-hand); }
+
+.callout-takeaway, .board-sample {
+  border: 24px solid transparent;
+  border-image: url("../img/log-frame.webp") 100 125 130 125 / 58px 72px 75px 72px / 6px stretch;
+  border-radius: 0;
+  background:
+    radial-gradient(ellipse at 30% 25%, rgba(255, 255, 255, 0.07), transparent 55%),
+    radial-gradient(ellipse at 75% 80%, rgba(128, 128, 128, 0.06), transparent 50%),
+    var(--board-bg, var(--board-green-bg));
+  background-clip: padding-box;
+  color: var(--board-ink, var(--board-green-ink));
+  font-family: var(--board-font, var(--font-caveat));
+  line-height: 1.3;
+  text-shadow: 0 0 1px color-mix(in srgb, var(--board-ink, #f4f1e8) 55%, transparent);
+}
+.callout-takeaway {
+  margin: 2.4rem 0.4rem 2.6rem;
+  padding: 1.6rem 1.7rem 1.9rem;
+  font-size: 1.45em;
+}
+.callout-takeaway > .callout-title {
+  margin-bottom: 0.3rem;
+  font-family: var(--board-font, var(--font-caveat));
+  font-weight: 700;
+  font-size: 1.2em;
+  color: var(--board-title, var(--sun));
+  text-decoration: underline wavy color-mix(in srgb, var(--board-title, #ffe58a) 55%, transparent);
+  text-underline-offset: 0.25em;
+}
+.callout-takeaway a { color: inherit; text-decoration-style: dashed; }
+@media (max-width: 600px) {
+  .callout-takeaway { margin-left: 0; margin-right: 0; padding: 1.3rem 1.1rem 1.6rem; font-size: 1.3em; }
+}
+/* The nine boards on the Appearance page */
+.board-sample {
+  display: block;
+  min-height: 6.5rem;
+  padding: 0.5rem 0.7rem;
+  border-width: 14px;
+  border-image-width: 29px 36px 38px 36px;
+  border-image-outset: 3px;
+  font-size: 1.35rem;
+}
 
 /* Forms */
 form label { display: block; margin-bottom: 1rem; color: var(--muted); }
