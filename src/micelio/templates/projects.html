@@ -16,7 +16,7 @@
           {{ mushroom(row.note, scene=True, notes=row.members) }}
           <span class="specimen-body">
             <strong class="row-title">{{ row.note.title }}</strong>
-            <span class="eyebrow">{{ status_badge(row.note.status) }} {{ t("projects.notes", count=row.members) }}</span>
+            <span class="eyebrow">{{ status_badge(row.note.status) }} {{ t("projects.notes", count=row.members) }}{% if sign_in.sees_everything(request) and is_shared(row.note) %} <span class="badge shared" title="{{ t('share.hint_on') }}">{{ t("share.shared") }}</span>{% endif %}</span>
             <span class="muted small">
               {% if row.last_journal %}{{ t("projects.last", date=show_date(row.last_date)) }}{% else %}{{ t("projects.never") }}{% endif %}
             </span>

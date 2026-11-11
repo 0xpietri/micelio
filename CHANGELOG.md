@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- A Share switch on each project's page, a card on the soil line at the right like the growth card: a mushroom
+  ("Spores in the air") when the project is shared, only its mycelium ("Underground") when
+  it is private, in the growth card's colors. On a phone both cards share one row. The owner clicks it to share a project and the notes
+  it links to with anyone, no account needed; visitors see the mushroom. Shared projects
+  carry a badge on the projects list.
+
 ### Changed
 
 - Graph threads are drawn once per pair: a note that links back to its project (or two

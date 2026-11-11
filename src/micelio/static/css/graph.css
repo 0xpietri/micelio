@@ -265,3 +265,51 @@ form .check, .check {
 }
 .growth-dates { margin: 0.4rem 0 0; font-size: 0.72rem; font-variant-numeric: tabular-nums; }
 .graph-tip-hint { display: block; margin-top: 0.25rem; color: var(--sun); font-size: 0.78rem; }
+
+/* The Share switch (§9): a card like the growth card, at the right of a project's scene on
+   the soil line. A mushroom over its mycelium when the project is shared, only the mycelium
+   under a faint soil line when it is private, in the growth card's colors. */
+.scene-cards { position: absolute; z-index: 2; left: max(1rem, env(safe-area-inset-left, 0px)); right: max(1rem, env(safe-area-inset-right, 0px)); bottom: 1rem; display: flex; justify-content: space-between; align-items: flex-end; gap: 0.5rem; pointer-events: none; }
+.scene-cards > * { pointer-events: auto; }
+.hero-scene .scene-cards > .growth { position: relative; left: auto; right: auto; top: auto; bottom: auto; transform: none; }
+.share-switch { order: 2; margin: 0; }
+@media (min-width: 720px) {
+  .hero-scene.has-soil .scene-cards { bottom: auto; top: calc(var(--soil-y) - 0.5rem); transform: translateY(-100%); }
+}
+.share-toggle { display: flex; flex-direction: column; align-items: center; gap: 0.15rem; margin: 0; padding: 0.45rem 0.8rem 0.5rem; color: var(--text); font: inherit; font-size: 0.8rem; cursor: pointer; }
+span.share-toggle { cursor: default; }
+button.share-toggle:hover, .share-toggle:focus-visible { border-color: var(--cat, var(--accent)); }
+.share-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.share-caption { color: var(--muted); font-size: 0.92rem; font-weight: 700; white-space: nowrap; }
+.share-switch.on .share-caption { color: var(--sun); }
+.share-art { order: -1; width: 4.4rem; height: 4.9rem; overflow: visible; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.share-soil { stroke: color-mix(in srgb, var(--text) 30%, transparent); stroke-width: 0.6; stroke-dasharray: 1.5 2.5; }
+/* The mycelium: threads in the category color, as the growth card's bars. */
+.share-roots path { stroke: var(--cat, var(--accent)); stroke-width: 1.4; filter: drop-shadow(0 0 3px var(--cat, var(--accent))); }
+.share-roots circle { fill: var(--sun); }
+.share-switch:not(.on) .share-roots { animation: share-pulse 3.4s ease-in-out infinite; }
+/* The mushroom: the growth card's mushroom, larger: cap in the category color, light stem and spots. */
+.share-shroom .cap { fill: var(--cat, var(--accent)); stroke: none; filter: drop-shadow(0 0 4px color-mix(in srgb, var(--cat, var(--accent)) 70%, transparent)); }
+.share-shroom .spot { fill: var(--text); opacity: 0.85; }
+.share-shroom .gills, .share-shroom .stem-line { stroke: color-mix(in srgb, var(--ink) 60%, transparent); stroke-width: 0.7; }
+.share-shroom .stem { fill: var(--text); opacity: 0.92; }
+.share-shroom .ring { fill: color-mix(in srgb, var(--text) 75%, var(--ink)); }
+.share-shroom .glow { fill: var(--sun); animation: share-twinkle 2.6s ease-in-out infinite; }
+.share-shroom .glow:nth-of-type(2n) { animation-delay: 1.3s; }
+.share-art { transition: transform 0.2s ease; transform-origin: 50% 65%; }
+button.share-toggle:hover .share-art { transform: scale(1.05); }
+@keyframes share-pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+@keyframes share-twinkle { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .share-roots, .share-shroom .glow { animation: none !important; }
+}
+/* On a phone both cards wait in the sky under the title, in one row of the same height. */
+@media (max-width: 719px) {
+  .scene-page .scene-cards { bottom: auto; top: calc(var(--top-room) + 5.6rem); align-items: stretch; }
+  .hero-scene .scene-cards > .growth { flex: 1; min-width: 0; width: auto; font-size: 0.74rem; }
+  .scene-page .growth-dates { font-size: 0.64rem; }
+  .share-switch { display: flex; flex: 0 0 5.6rem; }
+  .share-toggle { width: 100%; justify-content: center; gap: 0.05rem; padding: 0.35rem 0.35rem 0.4rem; }
+  .share-art { width: 2.9rem; height: 3.2rem; }
+  .share-caption { font-size: 0.68rem; white-space: normal; text-align: center; line-height: 1.15; }
+}

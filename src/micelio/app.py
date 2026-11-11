@@ -34,6 +34,7 @@ from micelio.i18n import (
 )
 from micelio.landing_web import LandingPages
 from micelio.pages import Pages
+from micelio.sharing import SharedProjects
 from micelio.static_files import ClearStaleCache, FreshStaticFiles, fingerprint
 from micelio.vault import PublicView, VaultIndex
 
@@ -122,7 +123,7 @@ def create_app(
     install_security_headers(app)
 
     dates = Dates(language, config.site.timezone)
-    public = PublicView(vault)
+    public = PublicView(vault, SharedProjects(looks).all)
     app.include_router(Pages(config, vault, templates, dates, looks, sign_in, public).router())
     app.include_router(LandingPages(config, vault, looks, templates, sign_in, t, public).router())
 
