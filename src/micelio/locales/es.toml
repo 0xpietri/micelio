@@ -244,6 +244,16 @@ not_found_help = "Acá no hay ninguna nota. Puede que la hayan renombrado o movi
 sign_in_help = "Si este cuaderno es tuyo, iniciá sesión para ver todas las notas."
 back = "Volver a los proyectos"
 
+[growth]
+dormant = "Dormido"
+germinating = "Germinando"
+growing = "Creciendo"
+fruiting = "Fructificando"
+added = "+{count} notas en 30 días"
+score = "Puntaje de actividad {score}: cada nota nueva vale dos, cada edición o entrada del diario uno (últimos 30 días)"
+weeks = "Notas nuevas o editadas, semana por semana (12 semanas)"
+week = "{count} esa semana"
+
 [changes]
 title = "Novedades"
 whats_new = "Novedades"

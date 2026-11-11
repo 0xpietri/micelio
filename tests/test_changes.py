@@ -95,7 +95,9 @@ def test_every_page_has_the_footer_but_the_landing(monkeypatch: pytest.MonkeyPat
     for path in ("/projects", "/explore", "/journal", "/health"):
         html = client.get(path).text
         assert 'class="site-foot"' in html, path
-        assert f"Micelio {__version__} · abcdef1 · Novedades" in html, path
+        assert f"v{__version__}" in html, path
+        assert "compilación abcdef1" in html, path  # in the tooltip
+        assert 'class="foot-version"' in html, path
         assert 'href="/changes"' in html
     assert 'class="site-foot"' not in client.get("/").text
     page = client.get("/changes")

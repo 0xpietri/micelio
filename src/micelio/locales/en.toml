@@ -245,6 +245,16 @@ not_found_help = "There is no note here. It may have been renamed or moved."
 sign_in_help = "If this notebook is yours, sign in to see every note."
 back = "Back to the projects"
 
+[growth]
+dormant = "Dormant"
+germinating = "Germinating"
+growing = "Growing"
+fruiting = "Fruiting"
+added = "+{count} notes in 30 days"
+score = "Activity score {score}: new notes count twice, edits and journal entries once (last 30 days)"
+weeks = "Notes added or edited, week by week (12 weeks)"
+week = "{count} that week"
+
 [changes]
 title = "What's new"
 whats_new = "What's new"

@@ -7,7 +7,7 @@ import hmac
 from collections import Counter
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
-from datetime import date
+from datetime import date, datetime
 
 from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse, Response
@@ -18,6 +18,7 @@ from micelio.auth.web import SignIn
 from micelio.config import NOTE_TYPES, STATUSES, Category, Config
 from micelio.formatting import Dates
 from micelio.graph import GraphBuilder, ScopeError, UnknownNodeError, parse_scope
+from micelio.growth import growth
 from micelio.i18n import active_language, category_names
 from micelio.landing import background_url
 from micelio.looks import Look, NodeLooks, clean_look
@@ -254,6 +255,13 @@ class Pages:
                 "body": reader.renderer.html(note),
                 "members": [m for m in members if m.type != "journal"],
                 "journals": self._journals_touching(vault, {slug, *member_slugs})[:10],
+                "growth": growth(
+                    [note, *(m for m in members if m.type != "journal")],
+                    self._journals_touching(vault, {slug, *member_slugs}),
+                    self.dates.created,
+                    self.dates.updated,
+                    datetime.now(self.dates.zone).date(),
+                ),
                 "nav": "projects",
             }
             return render(request, "project.html", context, reader)

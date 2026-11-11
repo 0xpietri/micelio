@@ -122,6 +122,8 @@
 .scene-page .hero-scene .graph-tools { top: calc(var(--top-room) - 0.2rem); }
 @media (max-width: 720px) {
   .scene-page { --top-room: 7.4rem; }
+  /* The graph's buttons get their own line above the title on a phone. */
+  .scene-page .hero-heading { padding-top: calc(var(--top-room) + 2.6rem); }
 }
 
 /* /explore: the graph over the underground, the panel as a glass slab */
@@ -207,3 +209,12 @@ form .check, .check {
 .look-editor input[type="color"] { width: 3rem; height: 2rem; padding: 0; border: 2px solid var(--ink); border-radius: 8px; background: none; cursor: pointer; }
 .look-editor .muted.small { margin: 0; }
 .dress-hint { margin: 0.3rem 0 0; }
+
+/* How a project grows: a small glass card in the scene's bottom left corner. */
+.growth { position: absolute; z-index: 2; left: max(1rem, env(safe-area-inset-left, 0px)); bottom: 1rem; width: min(17rem, calc(100% - 2rem)); padding: 0.55rem 0.8rem 0.6rem; font-size: 0.8rem; }
+.growth-head { display: flex; justify-content: space-between; align-items: baseline; gap: 0.6rem; margin: 0 0 0.4rem; }
+.growth-head strong { color: var(--sun); font-size: 0.92rem; }
+.growth-weeks { display: block; width: 100%; height: 2.2rem; overflow: visible; }
+.growth-weeks rect { fill: var(--cat, var(--accent)); opacity: 0.8; }
+.growth-weeks rect:last-of-type { opacity: 1; filter: drop-shadow(0 0 3px var(--cat, var(--accent))); }
+.growth.stage-dormant .growth-weeks rect { opacity: 0.35; filter: none; }

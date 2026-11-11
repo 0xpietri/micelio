@@ -25,14 +25,18 @@ All notable changes to this project are documented here. The format follows
   in their browser and never changes the site for anyone else.
 - Anyone can switch the interface language (English, Español) with the flag; the choice
   is kept in a cookie.
-- A footer on every page but the landing with the version, the build's commit and
-  "What's new": the changes since the last version, unfolded with a click. `/changes` lists every
-  change, newest first. The changelog ships inside the package and the image, so the
+- A small, faint version in the bottom corner of every page but the landing, with a dot
+  when the build brought news; it leads to `/changes`, which lists every change, newest
+  first (the build's commit shows on hover). The changelog ships inside the package and the image, so the
   site never asks GitHub.
 - On a project's page the owner clicks its mushroom to choose its species, color and
   size; on a source's page, its mineral (diamond, emerald, amber, quartz, amethyst) and
   color. Saved at once in the data folder, never in the notes, and shown on every graph,
   the project list and the landing.
+- A project's scene shows how it grows: a small card in its corner with twelve weekly
+  bars (notes added or edited, journal entries) and a stage, Dormant, Germinating,
+  Growing or Fruiting, from the last thirty days. It replaces the category, type and
+  status line over the title.
 
 ### Changed
 
