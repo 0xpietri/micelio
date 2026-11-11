@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-11
+
 ### Added
 
 - A ⚙ in every graph's top right corner with the viewer's settings: space between nodes,
@@ -144,5 +146,6 @@ self-hosted. The project was called Mycelium while it was built; it is released 
 - A sample vault in `examples/vault`, CI on Linux, macOS and Windows, and releases from a
   tag (image, package and GitHub release).
 
-[Unreleased]: https://github.com/0xpietri/micelio/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/0xpietri/micelio/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/0xpietri/micelio/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/0xpietri/micelio/releases/tag/v0.1.0
