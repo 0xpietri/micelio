@@ -13,10 +13,10 @@ import hashlib
 import os
 from pathlib import Path
 
-from starlette.datastructures import Headers, MutableHeaders
+from starlette.datastructures import Headers
 from starlette.responses import FileResponse, Response
 from starlette.staticfiles import NotModifiedResponse, StaticFiles
-from starlette.types import ASGIApp, Message, Receive, Scope, Send
+from starlette.types import Scope
 
 PathLike = str | os.PathLike[str]
 
@@ -52,54 +52,3 @@ class FreshStaticFiles(StaticFiles):
         if self.is_not_modified(response.headers, Headers(scope=scope)):
             return NotModifiedResponse(response.headers)
         return response
-
-
-STATIC_COOKIE = "micelio_static"
-
-
-def fingerprint(directory: Path) -> str:
-    """A short hash of every file under ``directory``: changes with any static file."""
-    digest = hashlib.sha256()
-    for path in sorted(p for p in directory.rglob("*") if p.is_file()):
-        digest.update(path.relative_to(directory).as_posix().encode("utf-8"))
-        digest.update(b"\0")
-        digest.update(path.read_bytes())
-    return digest.hexdigest()[:16]
-
-
-class ClearStaleCache:
-    """Make a browser drop what it cached from an older build, once per build.
-
-    Builds before 0.1.1 sent static files with no caching headers and an old date, so
-    browsers may keep them for months without asking again. The first page a browser
-    gets from a new build says ``Clear-Site-Data: "cache"`` and sets a cookie with the
-    build's fingerprint; later pages say nothing until the static files change again.
-    Pure ASGI, so it only touches the response headers of HTML pages.
-    """
-
-    def __init__(self, app: ASGIApp, build: str) -> None:
-        self.app = app
-        self.build = build
-        self.cookie = f"{STATIC_COOKIE}={build}"
-
-    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        if scope["type"] != "http" or scope["method"] != "GET":
-            await self.app(scope, receive, send)
-            return
-        cookies = Headers(scope=scope).get("cookie", "")
-        if self.cookie in (part.strip() for part in cookies.split(";")):
-            await self.app(scope, receive, send)
-            return
-
-        async def tell(message: Message) -> None:
-            if message["type"] == "http.response.start":
-                headers = MutableHeaders(scope=message)
-                if headers.get("content-type", "").startswith("text/html"):
-                    headers.append("clear-site-data", '"cache"')
-                    headers.append(
-                        "set-cookie",
-                        f"{self.cookie}; Max-Age=31536000; Path=/; SameSite=Lax; HttpOnly",
-                    )
-            await send(message)
-
-        await self.app(scope, receive, tell)

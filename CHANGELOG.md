@@ -38,6 +38,10 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- The site could stay loading forever in Chrome on Android: the first page after each
+  new version asked the browser to clear its whole cache (`Clear-Site-Data`), which Chrome
+  on a phone can take minutes to do. Pages no longer ask for that; static files are still
+  checked against their content on every visit, so new styles and scripts still arrive.
 - Pages no longer flash the background in its original colors before the chosen palette
   recolors it: the recoloring comes with the page itself. The landing waits until its
   scene is drawn and then fades in, instead of jumping from one framing to another.
