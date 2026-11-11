@@ -8,6 +8,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- Graph threads are drawn once per pair: a note that links back to its project (or two
+  notes that link each other) no longer shows two threads. Threads are almost straight
+  now, with one soft bow, so they cross and tangle less.
 - A project's growth card stands on the soil line, beside the mushrooms (on a phone it
   sits under the title), with a small mushroom that grows with the stage and breathes.
 - A project's scene grows down with its underground: more notes or more spacing make it

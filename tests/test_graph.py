@@ -96,7 +96,8 @@ def test_all_has_every_note_and_the_ghost(builder: GraphBuilder, example_index: 
     assert ghost["type"] == "ghost"
     assert ghost["href"] is None
     assert len(nodes) == len(example_index.notes) + 1
-    assert len(data["edges"]) == len(example_index.edges) + 1
+    pairs = {frozenset((e.source, e.target)) for e in example_index.edges}
+    assert len(data["edges"]) == len(pairs) + 1
     assert data["hidden_types"] == ["journal", "source"]
     assert data["scope"] == "all"
 
@@ -223,6 +224,37 @@ def test_hidden_types_follow_the_config(make_vault: VaultFactory) -> None:
         {"vault": VaultConfig(root=index.root), "graph": {"hide_by_default": []}}
     )
     assert GraphBuilder(config, index).build(Scope("all"))["hidden_types"] == []
+
+
+def test_two_notes_linking_each_other_get_one_thread(make_vault: VaultFactory) -> None:
+    # A concept note links back to its project; the pair is drawn once, from the project.
+    index = make_vault(
+        {
+            "projects/P.md": "---\ntype: project\n---\n[[A]] [[B]]",
+            "notes/A.md": "back to [[P]] and to [[B]]",
+            "notes/B.md": "and [[A]]",
+        }
+    )
+    builder = GraphBuilder(index.config, index)
+    for scope in (Scope("all"), Scope("project", "p"), Scope("note", "a")):
+        edges = builder.build(scope)["edges"]
+        pairs = [frozenset((e["source"], e["target"])) for e in edges]
+        assert len(pairs) == len(set(pairs)), scope
+    edges = builder.build(Scope("all"))["edges"]
+    assert {(e["source"], e["target"]) for e in edges if "p" in (e["source"], e["target"])} == {
+        ("p", "a"),
+        ("p", "b"),
+    }
+    assert len(edges) == 3
+
+
+def test_graph_threads_are_soft_bows() -> None:
+    # Graph threads are one gentle curve each; only the landing keeps wild hyphae.
+    graph = (STATIC / "js" / "graph.js").read_text(encoding="utf-8")
+    assert "threadPath(" in graph
+    assert "hyphaPath" not in graph
+    draw = (STATIC / "js" / "draw.js").read_text(encoding="utf-8")
+    assert "export function threadPath" in draw
 
 
 def test_empty_vault(make_vault: VaultFactory) -> None:

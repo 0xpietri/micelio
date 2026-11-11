@@ -4,8 +4,8 @@
 // always draws the same map. Plain ES module, no build step.
 
 import {
-  DEFS, MINERALS, SVG_NS, cloud, el, f1, fold, fragment, hyphaPath, lighter, loadStrings, mix, painter,
-  paletteFromCss, rampFilter, reduced, seededRandom, shade, tr,
+  DEFS, MINERALS, SVG_NS, cloud, el, f1, fold, fragment, lighter, loadStrings, mix, painter,
+  paletteFromCss, rampFilter, reduced, seededRandom, shade, threadPath, tr,
 } from "./draw.js";
 import { labelText, lengthFor, load, save } from "./graph-settings.js";
 import { graphSection } from "./graph-panel.js";
@@ -479,15 +479,13 @@ function drawFree(layer, laid, L, strings, opts) {
   const visible = opts.visible || (() => true);
   const dimmed = opts.dimmed || (() => false);
   const hyphae = el("g");
-  const twigs = el("g");
   const pulses = [];
   let markup = "";
-  let twigMarkup = "";
   for (const l of laid.links) {
     const a = l.source;
     const b = l.target;
     if (!visible(a) || !visible(b)) continue;
-    const { d, twigs: tw } = hyphaPath(a, b, a.id + b.id, -Infinity);
+    const d = threadPath(a, b, [a.id, b.id].sort().join("|"));
     const ghost = a.ghost || b.ghost;
     const t = thread(a, b, L);
     const cls = ["hypha", `k-${t.kind}`, l.faded ? "faded" : "", dimmed(a) && dimmed(b) ? "dim" : ""].join(" ").trim();
@@ -497,7 +495,6 @@ function drawFree(layer, laid, L, strings, opts) {
     }
   }
   hyphae.appendChild(fragment(markup));
-  twigs.appendChild(fragment(twigMarkup));
   const marks = el("g");
   const labels = el("g");
   const shown = laid.nodes.filter(visible).sort((a, b) => DRAW_ORDER[a.ghost ? "ghost" : a.type] - DRAW_ORDER[b.ghost ? "ghost" : b.type]);
@@ -515,7 +512,7 @@ function drawFree(layer, laid, L, strings, opts) {
     labels.appendChild(text);
   }
   const plane = el("g", { class: "pulses" });
-  layer.replaceChildren(hyphae, twigs, plane, marks, labels);
+  layer.replaceChildren(hyphae, plane, marks, labels);
   declutter(labels);
   pulsing(plane, pulses, opts.state, opts.pulseEvery || 700);
 }
@@ -589,14 +586,13 @@ function drawForest(svg, data, L, strings, state, settings, zoom = 1) {
   }
 
   let markup = "";
-  let twigMarkup = "";
   const pulses = [];
   for (const l of links) {
     const s = l.source;
     const t = l.target;
     const from = s.type === "project" ? { x: s.x, y: soil + 6 } : s;
     const to = t.type === "project" ? { x: t.x, y: soil + 6 } : t;
-    const { d, twigs } = hyphaPath(from, to, s.id + t.id, soil + 8);
+    const d = threadPath(from, to, [s.id, t.id].sort().join("|"), soil + 8);
     const ghost = s.ghost || t.ghost;
     const look = thread(s, t, L);
     markup += `<path class="hypha k-${look.kind}${l.faded ? " faded" : ""}" d="${d}" ${look.attrs}/>`;
@@ -639,9 +635,7 @@ function drawForest(svg, data, L, strings, state, settings, zoom = 1) {
   const plane = el("g", { class: "pulses" });
   const hyphae = el("g");
   hyphae.appendChild(fragment(markup));
-  const twigLayer = el("g");
-  twigLayer.appendChild(fragment(twigMarkup));
-  svg.replaceChildren(el("defs", {}, L.defs(bg.ramp)), image, hyphae, twigLayer, plane, marks, labels);
+  svg.replaceChildren(el("defs", {}, L.defs(bg.ramp)), image, hyphae, plane, marks, labels);
   declutter(labels);
   pulsing(plane, pulses, state, 1000);
   return vb;
