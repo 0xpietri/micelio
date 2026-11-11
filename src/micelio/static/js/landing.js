@@ -280,6 +280,36 @@ function tooltips(scene, svg) {
   svg.addEventListener("focusout", () => { tip.hidden = true; });
 }
 
+/* ---------- diving underground ---------- */
+
+/** A click on a note's knot sinks the view under the soil, the sky sliding up, then
+ * opens /explore centered on that note. Modified clicks and reduced motion go straight. */
+function dive(scene, svg) {
+  svg.addEventListener("click", (e) => {
+    const a = e.target.closest && e.target.closest("a.knot");
+    if (!a || e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+    const slug = (a.getAttribute("href") || "").split("/").pop();
+    if (!slug) return;
+    e.preventDefault();
+    const target = `/explore?focus=${encodeURIComponent(decodeURIComponent(slug))}`;
+    if (reduced() || scene.classList.contains("diving")) {
+      window.location.assign(target);
+      return;
+    }
+    // The camera falls toward the knot: it becomes the middle of the zoom.
+    const box = scene.getBoundingClientRect();
+    const r = a.getBoundingClientRect();
+    scene.style.setProperty("--dive-x", `${Math.round(r.left + r.width / 2 - box.left)}px`);
+    scene.style.setProperty("--dive-y", `${Math.round(r.top + r.height / 2 - box.top)}px`);
+    a.classList.add("chosen");
+    scene.classList.add("diving");
+    try { sessionStorage.setItem("micelio.dive", "1"); } catch { /* a private window */ }
+    setTimeout(() => window.location.assign(target), 1100);
+  });
+  // Coming back with the browser's Back button shows the forest again.
+  window.addEventListener("pageshow", (e) => { if (e.persisted) scene.classList.remove("diving"); });
+}
+
 /* ---------- start ---------- */
 
 async function start() {
@@ -301,6 +331,7 @@ async function start() {
   fitHeadline();
   redraw();
   tooltips(scene, svg);
+  dive(scene, svg);
   if (document.fonts) document.fonts.ready.then(fitHeadline);
   let timer = null;
   window.addEventListener("resize", () => {

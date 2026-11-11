@@ -25,6 +25,37 @@ function filterFn() {
   };
 }
 
+/** Arriving from the landing (``?focus=<slug>``): rise out of the soil onto that note,
+ * its neighbors lit and the rest dimmed until the first touch. */
+function arrive(graph) {
+  const slug = new URLSearchParams(window.location.search).get("focus");
+  const stage = graphEl.closest(".explore-stage");
+  let dived = false;
+  try {
+    dived = sessionStorage.getItem("micelio.dive") === "1";
+    sessionStorage.removeItem("micelio.dive");
+  } catch { /* a private window */ }
+  if (dived && stage) {
+    stage.classList.add("arriving");
+    stage.addEventListener("animationend", () => stage.classList.remove("arriving"), { once: true });
+  }
+  if (!slug) return;
+  const node = graph.nodes.find((n) => n.id === slug);
+  if (!node) return;
+  const near = new Set([slug]);
+  for (const e of graph.data.edges) {
+    const a = typeof e.source === "object" ? e.source.id : e.source;
+    const b = typeof e.target === "object" ? e.target.id : e.target;
+    if (a === slug) near.add(b);
+    if (b === slug) near.add(a);
+  }
+  graph.highlight((n) => near.has(n.id));
+  graph.fit(graph.nodes.filter((n) => near.has(n.id)));
+  const mark = graph.svg.querySelector(`a.node[data-id="${CSS.escape(slug)}"]`);
+  if (mark) mark.focus({ preventScroll: true });
+  graph.svg.addEventListener("pointerdown", () => graph.highlight(null), { once: true });
+}
+
 async function start() {
   if (!graphEl || !panel) return;
   const graph = await mountGraph(graphEl);
@@ -61,6 +92,7 @@ async function start() {
   };
 
   graph.filter(visible);
+  arrive(graph);
   panel.querySelectorAll("fieldset.filter input").forEach((box) => {
     box.addEventListener("change", () => {
       visible = filterFn();
