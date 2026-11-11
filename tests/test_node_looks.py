@@ -51,7 +51,8 @@ def test_clean_look_keeps_only_what_the_kind_has() -> None:
 
 
 def test_node_looks_save_and_reset(tmp_path: Path) -> None:
-    looks = NodeLooks(AppearanceStore(make_config(tmp_path)))
+    store = AppearanceStore(make_config(tmp_path))
+    looks = NodeLooks(store)
     assert looks.all() == {}
     looks.save("a", {"species": "coral", "size": 1.2})
     looks.save("b", {"mineral": "emerald"})
@@ -60,6 +61,7 @@ def test_node_looks_save_and_reset(tmp_path: Path) -> None:
     looks.save("a", {})
     assert looks.get("a") is None
     assert set(looks.all()) == {"b"}
+    store.close()  # an unclosed connection fails the run on Python 3.13
 
 
 def test_owner_dresses_a_project(client: TestClient) -> None:
