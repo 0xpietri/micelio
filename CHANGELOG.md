@@ -11,7 +11,8 @@ All notable changes to this project are documented here. The format follows
 - Two callouts for study notes. `> [!said]` shows the owner's own words in a speech bubble
   pointing at the speaker: a little mushroom in the category's color, or the owner's profile
   picture. `> [!takeaway]` closes a concept under "What you should know", handwritten in chalk on
-  a chalkboard framed by logs, leaves and fly agarics.
+  a chalkboard framed by logs, leaves and fly agarics. The Appearance page picks the board
+  (black, green or white) and the handwriting (three hands); the chalk follows the palette.
 - A profile picture on the Appearance page (PNG, JPEG or WebP, cut to a circle); without one,
   the little mushroom.
 - The guide is a numbered outline: sections and sub-sections (1, 1.1, 1.1.1) come from the

@@ -12,6 +12,8 @@ from fastapi.templating import Jinja2Templates
 from starlette.exceptions import HTTPException
 
 from micelio.appearance import (
+    BOARD_COLORS,
+    BOARD_FONTS,
     MAX_AVATAR_BYTES,
     MAX_NAME,
     MAX_UPLOAD_BYTES,
@@ -20,6 +22,8 @@ from micelio.appearance import (
     Appearance,
     AppearanceStore,
     ImageError,
+    board_color_named,
+    board_font_named,
     clean_text,
     in_range,
     palette_named,
@@ -49,8 +53,8 @@ from micelio.looks import NodeLooks
 from micelio.vault import PublicView, VaultIndex
 
 PROMPT_FIELDS = ("style", "sky", "horizon", "underground", "colors", "mood")
-_MESSAGES = frozenset({"saved", "uploaded", "removed"})
-_ERRORS = frozenset({"empty", "size", "type", "small", "form"})
+_MESSAGES = frozenset({"saved", "uploaded", "removed", "avatar_uploaded", "avatar_removed"})
+_ERRORS = frozenset({"empty", "size", "type", "small", "form", "avatar_size", "avatar_small"})
 
 
 class LandingPages:
@@ -209,6 +213,8 @@ class LandingPages:
                 "title_fonts": TITLE_FONTS,
                 "text_fonts": TEXT_FONTS,
                 "title_effects": TITLE_EFFECTS,
+                "board_colors": BOARD_COLORS,
+                "board_fonts": BOARD_FONTS,
                 "sizes": {
                     "title_size": (TITLE_SIZE_MIN, TITLE_SIZE_MAX, 5, "%"),
                     "text_size": (TEXT_SIZE_MIN, TEXT_SIZE_MAX, 1, "px"),
@@ -243,6 +249,7 @@ class LandingPages:
             text_size: Annotated[int, Form()] = 0,
             graph_labels: Annotated[int, Form()] = 0,
             title_effect: Annotated[str, Form()] = "",
+            board: Annotated[str, Form()] = "",
         ) -> Response:
             quiet = _wants_json(request)
             if not self._form_ok(request, csrf):
@@ -267,6 +274,8 @@ class LandingPages:
                     graph_labels, LABEL_SIZE_MIN, LABEL_SIZE_MAX, now.graph_labels
                 ),
                 title_effect=title_effect_named(title_effect, now.title_effect),
+                board_color=board_color_named(board.partition(".")[0], now.board_color),
+                board_font=board_font_named(board.partition(".")[2], now.board_font),
             )
             self.store.save(chosen)
             if quiet:

@@ -12,9 +12,11 @@
 @font-face { font-family: "Literata"; src: url("../vendor/fonts/literata/literata-latin-700.woff2") format("woff2"); font-weight: 600 800; font-display: swap; }
 @font-face { font-family: "Space Grotesk"; src: url("../vendor/fonts/space-grotesk/space-grotesk-latin-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
 @font-face { font-family: "Space Grotesk"; src: url("../vendor/fonts/space-grotesk/space-grotesk-latin-700.woff2") format("woff2"); font-weight: 600 800; font-display: swap; }
-/* Chalk handwriting for the takeaway chalkboard (not one of the Appearance choices). */
+/* Chalk handwriting for the takeaway chalkboard (its own choice on the Appearance page). */
 @font-face { font-family: "Caveat"; src: url("../vendor/fonts/caveat/caveat-latin-500.woff2") format("woff2"); font-weight: 400 500; font-display: swap; }
 @font-face { font-family: "Caveat"; src: url("../vendor/fonts/caveat/caveat-latin-700.woff2") format("woff2"); font-weight: 600 800; font-display: swap; }
+@font-face { font-family: "Patrick Hand"; src: url("../vendor/fonts/patrick-hand/patrick-hand-latin-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Gochi Hand"; src: url("../vendor/fonts/gochi-hand/gochi-hand-latin-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
 
 :root {
   --font-shrikhand: "Shrikhand", "Cooper Black", Georgia, serif;
@@ -26,6 +28,8 @@
   --font-literata: "Literata", Georgia, serif;
   --font-space-grotesk: "Space Grotesk", system-ui, sans-serif;
   --font-caveat: "Caveat", "Segoe Print", "Comic Sans MS", cursive;
+  --font-patrick-hand: "Patrick Hand", "Segoe Print", "Comic Sans MS", cursive;
+  --font-gochi-hand: "Gochi Hand", "Segoe Print", "Comic Sans MS", cursive;
 }
 
 /* Samples on the Appearance page */

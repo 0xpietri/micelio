@@ -473,6 +473,7 @@ def test_profile_picture_upload_serve_theme_and_remove(client: TestClient) -> No
         "/appearance/avatar", files=files, data={"csrf": token}, follow_redirects=False
     )
     assert response.headers["location"] == "/appearance?done=avatar_uploaded"
+    assert "Profile picture uploaded." in client.get("/appearance?done=avatar_uploaded").text
     picture = client.get("/appearance/avatar")
     assert picture.status_code == 200
     assert picture.headers["content-type"] == "image/png"
@@ -512,7 +513,7 @@ def test_rejected_profile_pictures_say_why(client: TestClient, data: bytes, code
     )
     assert response.headers["location"] == f"/appearance?error={code}"
     assert client.get("/appearance/avatar").status_code == 404
-    assert client.get(f"/appearance?error={code}").status_code == 200
+    assert 'role="alert"' in client.get(f"/appearance?error={code}").text
 
 
 def test_profile_picture_forms_need_the_token(client: TestClient, tmp_path: Path) -> None:
@@ -524,3 +525,24 @@ def test_profile_picture_forms_need_the_token(client: TestClient, tmp_path: Path
     response = client.post("/appearance/avatar/remove", follow_redirects=False)
     assert response.headers["location"] == "/appearance?error=form"
     assert not (tmp_path / "data" / "avatar").exists()
+
+
+def test_chalkboard_choice_reaches_the_theme(client: TestClient) -> None:
+    theme = client.get("/theme.css").text
+    assert "--board-bg: var(--board-green-bg);" in theme
+    assert "--board-font: var(--font-caveat);" in theme
+    page = client.get("/appearance").text
+    assert page.count('name="board"') == 9
+    assert 'value="green.caveat" checked' in page
+
+    token = form_token(client)
+    client.post("/appearance", data={"csrf": token, "board": "white.gochi-hand"})
+    theme = client.get("/theme.css").text
+    assert "--board-bg: var(--board-white-bg);" in theme
+    assert "--board-ink: var(--board-white-ink);" in theme
+    assert "--board-font: var(--font-gochi-hand);" in theme
+    assert 'value="white.gochi-hand" checked' in client.get("/appearance").text
+
+    # Anything else keeps the current board.
+    client.post("/appearance", data={"csrf": token, "board": "pink.comic-sans"})
+    assert "--board-font: var(--font-gochi-hand);" in client.get("/theme.css").text

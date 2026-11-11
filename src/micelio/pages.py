@@ -117,6 +117,15 @@ def theme_css(colors: dict[str, str], appearance: Appearance) -> str:
     rules = [":root { " + " ".join(f"--pal-{k}: {v};" for k, v in tokens.items()) + " }"]
     rules += [":root { " + " ".join(f"--{k}: {v};" for k, v in look.items()) + " }"]
     rules += [f".cat-{key} {{ --cat: {color}; }}" for key, color in colors.items()]
+    # The takeaway chalkboard (micelio.css holds each board's colors, made from the palette).
+    board = appearance.board_color
+    rules += [
+        ":root { "
+        f"--board-bg: var(--board-{board}-bg); --board-ink: var(--board-{board}-ink); "
+        f"--board-title: var(--board-{board}-title); "
+        f"--board-font: var(--font-{appearance.board_font}); "
+        "}"
+    ]
     if appearance.avatar_type:
         # The owner's picture takes the place of the little mushroom beside `> [!said]`.
         avatar = f'url("/appearance/avatar?v={appearance.avatar_version}")'

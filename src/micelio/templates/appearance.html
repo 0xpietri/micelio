@@ -109,6 +109,18 @@
         {% endfor %}
       </div>
 
+      <h3>{{ t("appearance.board") }}</h3>
+      <p class="muted small">{{ t("appearance.board_help") }}</p>
+      <div class="choices boards">
+        {% for color in board_colors %}{% for font in board_fonts %}
+        <label class="choice board-choice">
+          <input type="radio" name="board" value="{{ color }}.{{ font }}"{% if color == appearance.board_color and font == appearance.board_font %} checked{% endif %}>
+          <span class="board-sample board-{{ color }} chalk-{{ font }}">{{ t("appearance.board_sample") }}</span>
+          <span class="choice-name">{{ t("appearance.board_" ~ color) }} · {{ t("font." ~ font) }}</span>
+        </label>
+        {% endfor %}{% endfor %}
+      </div>
+
       <h3>{{ t("appearance.sizes") }}</h3>
       {% for name, (low, high, step, unit) in sizes.items() %}
       <label class="range">{{ t("appearance." ~ name) }}
