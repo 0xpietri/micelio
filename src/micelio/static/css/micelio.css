@@ -290,12 +290,76 @@ a.tag:hover { background: color-mix(in srgb, var(--pal-button-alt, #22d3ee) 30%,
 
 .callout { margin: 1.25rem 0; padding: 0.75rem 1rem; border-left: 4px solid var(--link); border-radius: 10px; background: var(--surface); }
 .callout > :last-child { margin-bottom: 0; }
+.callout > :first-child { margin-top: 0; }
 .callout-title { margin-top: 0; font-weight: 700; }
 .callout-warning, .callout-caution, .callout-attention { border-color: #ff8a1f; }
 .callout-danger, .callout-error, .callout-bug { border-color: var(--error); }
 .callout-tip, .callout-success, .callout-check, .callout-done { border-color: var(--ok); }
 .callout-question, .callout-help, .callout-faq { border-color: var(--sun); }
 .callout-quote, .callout-cite { border-color: var(--muted); }
+
+/* The owner's own words, `> [!said]`: a speech bubble whose tail points at a small
+   mushroom (the speaker), drawn in the category's color. */
+.callout-said {
+  position: relative;
+  margin: 1.5rem 0 1.5rem 3.4rem;
+  padding: 0.8rem 1.05rem;
+  border: 2px solid color-mix(in srgb, var(--cat) 70%, var(--text));
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--cat) 16%, var(--surface));
+  font-size: 1.05em;
+}
+.callout-said::before {
+  content: "";
+  position: absolute;
+  left: -3.4rem;
+  bottom: -0.2rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  background:
+    radial-gradient(circle at 34% 30%, var(--text) 0 6%, transparent 7%),
+    radial-gradient(circle at 64% 22%, var(--text) 0 5%, transparent 6%),
+    radial-gradient(ellipse 50% 100% at 50% 100%, var(--cat) 0 96%, transparent 100%) top / 100% 52% no-repeat,
+    linear-gradient(var(--text), var(--text)) 50% 100% / 32% 50% no-repeat;
+  border-radius: 0 0 6px 6px;
+}
+.callout-said::after {
+  content: "";
+  position: absolute;
+  left: -0.62rem;
+  bottom: 0.7rem;
+  width: 1rem;
+  height: 1rem;
+  background: inherit;
+  border-left: inherit;
+  border-bottom: inherit;
+  transform: rotate(45deg) skew(12deg, 12deg);
+}
+
+/* The sign that closes a concept, `> [!takeaway]`: a small plate on two posts. */
+.callout-takeaway {
+  position: relative;
+  max-width: 34rem;
+  margin: 2rem auto 2.4rem;
+  padding: 0.85rem 1.15rem;
+  border: 2px solid color-mix(in srgb, var(--sun) 60%, var(--ink));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--ink) 88%, #000);
+  box-shadow: 0.25rem 0.25rem 0 color-mix(in srgb, var(--accent) 70%, var(--ink));
+  text-align: center;
+  font-weight: 600;
+}
+.callout-takeaway::before,
+.callout-takeaway::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  width: 0.45rem;
+  height: 0.8rem;
+  background: color-mix(in srgb, var(--sun) 45%, var(--ink));
+}
+.callout-takeaway::before { left: 22%; }
+.callout-takeaway::after { right: 22%; }
 
 /* Forms */
 form label { display: block; margin-bottom: 1rem; color: var(--muted); }

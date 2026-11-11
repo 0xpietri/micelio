@@ -26,6 +26,9 @@ from micelio.vault.sections import drop_section
 
 _WIKILINK = re.compile(r"(!?)\[\[([^\[\]|#\n]*)(#[^\[\]|\n]*)?(?:\|([^\[\]\n]*))?\]\]")
 _CALLOUT = re.compile(r"^\[!([A-Za-z][\w-]*)\][+-]?[ \t]*(.*)$")
+# Callouts drawn without a heading unless the note gives one: `said` is a speech bubble
+# holding the owner's own words, `takeaway` the small sign that closes a concept.
+_UNTITLED_CALLOUTS = frozenset({"said", "takeaway"})
 _LEADING_H1 = re.compile(r"\A\s*#[ \t]+[^\n]*\n?")
 _FENCE_BLOCK = re.compile(r"^(```|~~~).*?^\1[^\n]*$", re.DOTALL | re.MULTILINE)
 
@@ -91,6 +94,13 @@ def _callout_rule(state: StateCore) -> None:
                     if closing.type == "blockquote_close" and closing.level == depth:
                         closing.tag = "div"
                         break
+                if kind in _UNTITLED_CALLOUTS and not match.group(2).strip():
+                    if rest.strip():
+                        inline.content = rest
+                    else:
+                        del tokens[i + 1 : i + 4]
+                    i += 1
+                    continue
                 head_open = Token("paragraph_open", "p", 1)
                 head_open.attrSet("class", "callout-title")
                 head_inline = Token("inline", "", 0, content=title, children=[])

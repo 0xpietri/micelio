@@ -8,6 +8,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Two callouts for study notes: `> [!said]` shows the owner's own words in a speech bubble
+  pointing at a small mushroom, and `> [!takeaway]` closes a concept on a small sign. Neither
+  shows a heading unless the note gives one.
 - The guide is a numbered outline: sections and sub-sections (1, 1.1, 1.1.1) come from the
   project's `## Guide` list and renumber themselves when a line is inserted. The order is a
   dropdown, previous / next skip the kinds you unticked, and the project's conversations

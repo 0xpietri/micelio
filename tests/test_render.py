@@ -127,3 +127,18 @@ def test_excerpt(vault: VaultIndex, body: str, expected: str) -> None:
     note = vault.notes["page"]
     note.body = body
     assert Renderer(vault).excerpt(note) == expected
+
+
+def test_said_and_takeaway_callouts_have_no_heading(vault: VaultIndex) -> None:
+    html = render(vault, "> [!said]\n> Exactly as I said it.\n\n> [!takeaway]\n>\n> Closing line.")
+    assert '<div class="callout callout-said">' in html
+    assert "<p>Exactly as I said it.</p>" in html
+    assert '<div class="callout callout-takeaway">' in html
+    assert "<p>Closing line.</p>" in html
+    assert "callout-title" not in html
+    assert "<p></p>" not in html
+
+
+def test_said_callout_keeps_a_given_heading(vault: VaultIndex) -> None:
+    html = render(vault, "> [!said] Marcos\n> Words")
+    assert '<p class="callout-title">Marcos</p>' in html
