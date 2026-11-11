@@ -173,6 +173,8 @@ note = "Nota"
 journal = "Diario"
 source = "Fuente"
 ghost = "Nota faltante"
+question = "Duda"
+gap = "Primordio"
 
 [status]
 draft = "Borrador"
@@ -360,3 +362,24 @@ literata = "Literata"
 literata_help = "Una serif de libro para notas largas"
 space-grotesk = "Space Grotesk"
 space-grotesk_help = "Geométrica, un poco técnica"
+
+[guide]
+title = "Guía"
+order = "Orden de la guía"
+by_guide = "Estructurada"
+by_time = "Por fecha"
+kinds = "Qué muestra la guía"
+notes = "Conceptos"
+questions = "Dudas"
+gaps = "Huecos"
+unplaced = "Todavía fuera de la guía"
+missing = "Un hueco: esta nota todavía no existe"
+not_authored = "Este proyecto todavía no tiene sección Guía, así que sus notas siguen el orden del índice."
+also_in = "También la guía de:"
+position = "{position} de {total}"
+
+[gap]
+banner = "Un primordio: algo que todavía falta para entender este tema. Cuando lo aprendas, brota como nota."
+
+[question]
+banner = "Una duda que surgió en el camino: del tema, pero no parte del esqueleto."

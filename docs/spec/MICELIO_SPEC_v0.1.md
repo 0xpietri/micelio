@@ -37,7 +37,7 @@ It is meant to be useful to anyone with an Obsidian-style vault, and to read as 
 
 ```yaml
 ---
-type: project        # project | note | journal | source
+type: project        # project | note | question | gap | journal | source
 category: science    # projects only; values come from the config
 status: draft        # draft | active | paused | closed
 tags: [astronomy, gravity]
@@ -56,6 +56,15 @@ public: false
 - Wikilinks are resolved the way Obsidian does: `[[name]]`, `[[name|label]]`, `[[name#heading]]`, `![[embed]]`, by file name first, then by `aliases` in frontmatter, case-insensitive; ambiguity goes to the shortest path.
 - A note **belongs to a project** when the project's index note links to it. Membership is never stored in the note itself.
 - A link to a missing note is drawn as a "ghost" node (dashed) and listed on `/health`.
+
+### 3.4 Project guides, questions and gaps (added 2026-11-11)
+
+- **Guide.** Every project and every note of a project shows the project's guide at the left: its notes in an order to follow, with the current note marked and previous / next at the foot of the note. Two orders: **structured** (the default) and **by date** (`created`). Checkboxes choose which kinds it lists (concepts, questions, gaps). The order and the checkboxes are kept in the browser's `localStorage` (`micelio.guide.v1`), like the graph settings. On a phone the guide folds above the page.
+- **The structured order is written in the vault**, by the model through the notes MCP, never by Micelio: a `## Guide` section in the project's index (headings from `[guide] headings`, `Guide` and `Guía` by default, compared without case or accents) holding an ordered list of links, with `###` headings for its stretches. The section is shown in the guide, not again in the rendered body. A project without it is guided in the order its index first links each note; notes the index links outside the guide come last, under "Not in the guide yet".
+- A note in more than one project shows the first project's guide by name; `?guide=<project>` picks another, and the guide's links keep it.
+- **`type: question`**: a side question asked along the way, on topic but not part of the project's skeleton (for example, "the contest that chose SHA-3"). Drawn as a drifting spore: lighter, ringed, with a small spore beside it.
+- **`type: gap`** (a **primordium**): something still missing to understand the project, written by the model where it belongs in the guide, with two lines on what is missing and why it matters. Drawn as a primordium, the knot a mushroom grows from: dashed and see-through in the project's color. When it is learned the model turns it into a `note` and it "comes out". A link in the guide to a note that does not exist yet also shows as a gap, to the owner only (visitors see no ghosts, §9). Gaps do not count for the project's growth (§7c).
+- Both live in `notes/` and follow the same rules as notes; they only change how they are drawn and listed.
 
 ## 4. Configuration (`micelio.toml`)
 
@@ -146,8 +155,8 @@ Since 2026-11-11 anyone can switch the interface language with the flag in the h
 | `/` | The landing: the owner's ideas drawn as a living forest floor (§7a) |
 | `/explore` | The graph of everything, full screen; side panel with search, filters (category, status, type) and the 5 latest journal notes |
 | `/projects` | Projects grouped by category: title, status, number of notes, last conversation |
-| `/projects/<slug>` | Thesis, open questions, the project's graph, its notes |
-| `/notes/<slug>` | The rendered note, backlinks, the projects it belongs to, its 1-hop neighborhood graph |
+| `/projects/<slug>` | Thesis, open questions, the project's graph, its notes, its guide (§3.4) |
+| `/notes/<slug>` | The rendered note, backlinks, the projects it belongs to, its 1-hop neighborhood graph, its project's guide (§3.4; `?guide=<project>` picks one) |
 | `/journal` | Conversations, newest first |
 | `/health` | Unknown frontmatter values, broken links, orphans (signed-in only) |
 | `/login`, `/logout` | Sign-in |
@@ -164,7 +173,7 @@ Markdown is rendered with markdown-it-py and sanitized with nh3. Wikilinks becom
 - **Drawing**: since 2026-11-10 the graphs are drawn as mycelium with the landing's own engine (§7c): SVG over the vendored `d3-force`, served from `/static`. 2D. (Steps 4–6 used Cytoscape.js; it was removed.)
 - **`/api/graph` is renderer-agnostic**: plain nodes and edges with `type`, `category`, `status`, `degree`, `public`. A 3D view (3d-force-graph) can be added later as one more page without touching the API.
 - **Color**: a project takes its category color. An atomic note takes the color of the project that links it; linked from projects of different categories, it is a **bridge**: neutral fill, double border.
-- **Shape** (§7c): project = its category's mushroom, grown by status; note = a spore cloud glowing in its category's color, with a dashed ring when it is a bridge; journal = golden spores; source = a crystal; missing note = a faint dashed ring. Links are glowing hyphae. Size grows with links.
+- **Shape** (§7c): project = its category's mushroom, grown by status; note = a spore cloud glowing in its category's color, with a dashed ring when it is a bridge; question = a drifting spore; gap = a dashed primordium (§3.4); journal = golden spores; source = a crystal; missing note = a faint dashed ring. Links are glowing hyphae. Size grows with links.
 - **Project graph**: the index, its notes, the links among them, and the bridges to other projects faded.
 - **Defaults**: journal and source nodes hidden on the global graph, with a toggle.
 - **Click** opens the note. Hover shows its title and status.
@@ -308,3 +317,4 @@ The deployment on factory (Caddy site, the notes MCP, the vault's Git timer, bac
 - 2026-11-10 (marcos): before the first release the project is renamed from Mycelium to **Micelio** everywhere: code, command, environment variables, `micelio.toml`, the image `ghcr.io/0xpietri/micelio`, the PyPI package `micelio` (`mycelium` was taken there), the repository and the site `micelio.pietri.dev`.
 - 2026-11-11 (marcos): `miceliodeploy` installs what `main` has without a new version; `miceliodeploy edge` makes a new version from the changes gathered since the last one and installs it. The site lists each version's changes in a footer and at `/changes`.
 - 2026-11-11 (marcos): a Share switch on each project's page shares the project and its notes with visitors (§9), kept in the data folder so the vault stays read-only.
+- 2026-11-11 (marcos): a guide at the left of each project and its notes (§3.4), structured by default or by date; two new kinds of note, `question` (side questions) and `gap` (primordia, what is still missing), with their own look. The model writes the order and the gaps in the vault; Micelio only reads them.

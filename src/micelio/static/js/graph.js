@@ -14,7 +14,7 @@ import { lookKey, openLookPanel } from "./node-look.js";
 export { fold, loadStrings, tr };
 
 const UNCATEGORIZED_SPECIES = "glowing-bonnets";
-const DRAW_ORDER = { ghost: 0, source: 1, note: 2, journal: 3, project: 4 };
+const DRAW_ORDER = { ghost: 0, source: 1, gap: 2, question: 2, note: 2, journal: 3, project: 4 };
 
 /* ---------- what the page knows: palette, background, categories ---------- */
 
@@ -74,6 +74,20 @@ function mark(node, L, k = 1) {
   }
   if (node.ghost) {
     return { r: 6 * k, top: 6 * k, markup: `<circle r="${f1(5 * k)}" fill="none" stroke="${pal.thread}" stroke-opacity=".55" stroke-dasharray="2 3"/><circle r="${f1(9 * k)}" fill="transparent"/>` };
+  }
+  if (node.type === "gap") {
+    // A primordium: the knot a mushroom grows from, not out yet. Dashed and see-through,
+    // in its project's color: something still missing to understand the project.
+    const r = 5.5 * k;
+    const color = L.color(node.category);
+    return { r, top: r * 1.4, markup: `<g class="cloud primordium"><path d="M${f1(-r)} ${f1(r * 0.55)}C${f1(-r)} ${f1(-r * 0.9)} ${f1(-r * 0.45)} ${f1(-r * 1.4)} 0 ${f1(-r * 1.4)}S${f1(r)} ${f1(-r * 0.9)} ${f1(r)} ${f1(r * 0.55)}Z" fill="${color}" fill-opacity=".22" stroke="${color}" stroke-width="1.5" stroke-dasharray="2.5 2.5"/><circle cy="${f1(-r * 0.35)}" r="${f1(r * 0.28)}" fill="${color}" fill-opacity=".7"/><circle r="${f1(r + 7)}" fill="transparent"/></g>` };
+  }
+  if (node.type === "question") {
+    // A question asked along the way: a drifting spore, its project's color ringed with
+    // light and a small spore beside it, lighter than a concept.
+    const r = (3 + Math.sqrt(degree) * 0.9) * k;
+    const color = L.color(node.category);
+    return { r, top: r, markup: `<g class="cloud drifting"><circle r="${f1(r + 3)}" fill="none" stroke="${pal.thread}" stroke-opacity=".7" stroke-width="1.1"/><circle r="${f1(r)}" fill="${color}" fill-opacity=".75" stroke="${pal.ink}" stroke-width="1.2"/><circle cx="${f1(r + 5)}" cy="${f1(-r - 3)}" r="${f1(1.4 * k)}" fill="${pal.thread}" fill-opacity=".8"/><circle r="${f1(r + 7)}" fill="transparent"/></g>` };
   }
   if (node.type === "journal") {
     const r = 4.5 * k;

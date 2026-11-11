@@ -126,7 +126,9 @@ def test_node_fields(builder: GraphBuilder, example_index: VaultIndex) -> None:
     orphan = nodes["a-stray-thought-with-no-home"]
     assert orphan["categories"] == []
     assert orphan["degree"] == 0
-    assert {n["type"] for n in nodes.values()} == {"project", "note", "journal", "source", "ghost"}
+    assert {n["type"] for n in nodes.values()} == {
+        *("project", "note", "question", "gap", "journal", "source", "ghost")
+    }
 
 
 def test_edges_reference_existing_nodes(builder: GraphBuilder) -> None:

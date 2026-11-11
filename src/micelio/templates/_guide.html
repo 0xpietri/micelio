@@ -1,0 +1,76 @@
+{#- A project's guide (§3.4), beside its page and beside each of its notes. Both orders are
+    in the page; guide.js shows one and filters the types, and remembers both in the browser.
+    Without JavaScript the structured order and every type show. #}
+{% macro guide_icon(step) -%}
+{%- if step.note is none %}<span class="guide-icon gap missing" aria-hidden="true"></span>
+{%- else %}<span class="guide-icon {{ step.note.type }}" aria-hidden="true"></span>{% endif -%}
+{%- endmacro %}
+
+{% macro step_kind(step) -%}{{ 'gap' if step.is_gap else ('question' if step.note.type == 'question' else 'note') }}{%- endmacro %}
+
+{% macro guide_list(guide, steps, order, current) %}
+<ol class="guide-steps" data-guide-list="{{ order }}"{% if order != "guide" %} hidden{% endif %}>
+  {%- set ns = namespace(chapter=none, unplaced=false) %}
+  {%- for step in steps %}
+  {%- if order == "guide" and not step.placed and not ns.unplaced %}{% set ns.unplaced = true %}
+  <li class="guide-chapter" data-guide-chapter>{{ t("guide.unplaced") }}</li>
+  {%- elif order == "guide" and step.placed and step.chapter and step.chapter != ns.chapter %}{% set ns.chapter = step.chapter %}
+  <li class="guide-chapter" data-guide-chapter>{{ step.chapter }}</li>
+  {%- endif %}
+  <li class="guide-step {{ step_kind(step) }}{% if current and step.slug == current %} current{% endif %}" data-kind="{{ step_kind(step) }}">
+    {{ guide_icon(step) }}
+    {%- if step.href %}
+    <a href="{{ step.href }}"{% if current and step.slug == current %} aria-current="page"{% endif %}>{{ step.title }}</a>
+    {%- else %}
+    <span class="guide-missing" title="{{ t('guide.missing') }}">{{ step.title }}</span>
+    {%- endif %}
+  </li>
+  {%- endfor %}
+</ol>
+{% endmacro %}
+
+{% macro guide_box(guide, current=none) %}
+{% set category = category_of(guide.project.category) %}
+<details class="guide glass{% if category %} cat-{{ category.key }}{% endif %}" data-guide>
+  <summary>
+    <span class="guide-title">{{ t("guide.title") }}</span>
+    <span class="muted small">{{ guide.project.title }}</span>
+  </summary>
+  {% if guide.others %}
+  <p class="guide-projects small">{{ t("guide.also_in") }}
+    {% for other in guide.others %}<a href="?guide={{ other.slug }}">{{ other.title }}</a>{% if not loop.last %} · {% endif %}{% endfor %}
+  </p>
+  {% endif %}
+  <div class="guide-orders" role="group" aria-label="{{ t('guide.order') }}">
+    <button type="button" class="chip" data-guide-order="guide" aria-pressed="true">{{ t("guide.by_guide") }}</button>
+    <button type="button" class="chip" data-guide-order="time" aria-pressed="false">{{ t("guide.by_time") }}</button>
+  </div>
+  <fieldset class="guide-kinds">
+    <legend class="visually-hidden">{{ t("guide.kinds") }}</legend>
+    <label class="check small"><input type="checkbox" data-guide-kind="note" checked> <span class="guide-icon note" aria-hidden="true"></span> {{ t("guide.notes") }}</label>
+    <label class="check small"><input type="checkbox" data-guide-kind="question" checked> <span class="guide-icon question" aria-hidden="true"></span> {{ t("guide.questions") }}</label>
+    <label class="check small"><input type="checkbox" data-guide-kind="gap" checked> <span class="guide-icon gap" aria-hidden="true"></span> {{ t("guide.gaps") }}</label>
+  </fieldset>
+  {% if guide.steps %}
+  {{ guide_list(guide, guide.steps, "guide", current) }}
+  {{ guide_list(guide, guide.by_time, "time", current) }}
+  {% else %}
+  <p class="muted small">{{ t("project.no_notes") }}</p>
+  {% endif %}
+  {% if not guide.authored and guide.steps %}<p class="muted small guide-hint">{{ t("guide.not_authored") }}</p>{% endif %}
+</details>
+{% endmacro %}
+
+{#- Previous and next in the guide, at the foot of a note: one pair per order. #}
+{% macro guide_pager(guide, current) %}
+{% for order in ("guide", "time") %}
+{% set pager = guide.pager(current, order) %}
+{% if pager.position %}
+<nav class="guide-pager" data-guide-pager="{{ order }}" aria-label="{{ t('guide.title') }}"{% if order != "guide" %} hidden{% endif %}>
+  {% if pager.previous %}<a class="prev" href="{{ pager.previous.href }}" rel="prev"><span aria-hidden="true">←</span> {{ pager.previous.title }}</a>{% else %}<span></span>{% endif %}
+  <span class="muted small">{{ t("guide.position", position=pager.position, total=pager.total) }}</span>
+  {% if pager.next %}<a class="next" href="{{ pager.next.href }}" rel="next">{{ pager.next.title }} <span aria-hidden="true">→</span></a>{% else %}<span></span>{% endif %}
+</nav>
+{% endif %}
+{% endfor %}
+{% endmacro %}

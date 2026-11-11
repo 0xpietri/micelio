@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% from "_macros.html" import status_badge, category_dot, graph_head, graph_box, mushroom %}
+{% from "_guide.html" import guide_box %}
 {% block title %}{{ note.title }} · {{ site_name() }}{% endblock %}
 {% block head %}{{ graph_head("graph-embed.js") }}{% endblock %}
 {#- The scene starts at the very top, under the header, so the painting is one piece. #}
@@ -81,7 +82,8 @@
     </div>
   </div>
 </section>
-<div class="project-page">
+<div class="project-page guided">
+{{ guide_box(guide) }}
 <article class="page{% if category %} cat-{{ category.key }}{% endif %}">
   <div class="prose">{{ body }}</div>
 
@@ -91,7 +93,7 @@
     <ul class="rows">
       {% for member in members %}
       <li class="row">
-        <span class="spore-icon{% if member.type == 'source' %} crystal{% endif %}" aria-hidden="true"></span>
+        <span class="spore-icon{% if member.type == 'source' %} crystal{% elif member.type in ('gap', 'question') %} {{ member.type }}{% endif %}" aria-hidden="true"></span>
         <a class="row-title" href="{{ href(member) }}">{{ member.title }}</a>
         {% if member.type != "note" %}<span class="badge">{{ t("type." ~ member.type) }}</span>{% endif %}
         {{ status_badge(member.status) }}
@@ -118,4 +120,5 @@
 </article>
 </div>
 <script type="module" src="/static/js/specimens.js"></script>
+<script type="module" src="/static/js/guide.js"></script>
 {% endblock %}

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import re
 import threading
+from collections.abc import Iterable
 from html import escape
 
 import nh3
@@ -21,6 +22,7 @@ from mdit_py_plugins.footnote import footnote_plugin
 from mdit_py_plugins.tasklists import tasklists_plugin
 
 from micelio.vault.index import IndexView, Note, is_attachment
+from micelio.vault.sections import drop_section
 
 _WIKILINK = re.compile(r"(!?)\[\[([^\[\]|#\n]*)(#[^\[\]|\n]*)?(?:\|([^\[\]\n]*))?\]\]")
 _CALLOUT = re.compile(r"^\[!([A-Za-z][\w-]*)\][+-]?[ \t]*(.*)$")
@@ -107,9 +109,13 @@ class Renderer:
     With ``ghosts=False`` (the public view, §9) a link that resolves to nothing renders
     as plain text, the same whether the note is missing or private."""
 
-    def __init__(self, index: IndexView, *, ghosts: bool = True) -> None:
+    def __init__(
+        self, index: IndexView, *, ghosts: bool = True, guide_headings: Iterable[str] = ()
+    ) -> None:
         self.index = index
         self.ghosts = ghosts
+        # A project's guide section is shown beside the page (§3.4), not in its body.
+        self.guide_headings = tuple(guide_headings)
         self._cache: dict[str, Markup] = {}
         self._generation = -1
         self._lock = threading.Lock()
@@ -152,6 +158,8 @@ class Renderer:
             if cached is not None:
                 return cached
         body = _LEADING_H1.sub("", note.body, count=1)
+        if note.type == "project" and self.guide_headings:
+            body = drop_section(body, self.guide_headings)
         raw = self.md.render(body)
         clean = nh3.clean(
             raw,

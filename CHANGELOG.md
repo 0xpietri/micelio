@@ -8,6 +8,14 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- A guide at the left of every project and of each of its notes: the project's notes in
+  order, structured (the default, as the project's `## Guide` section lists them, in
+  stretches) or by date, with checkboxes for concepts, questions and gaps, and previous /
+  next at the foot of each note. On a phone it folds above the page.
+- Two new kinds of note: questions (`type: question`), asked along the way and drawn as a
+  drifting spore, and gaps (`type: gap`), primordia of what is still missing to understand
+  a topic, drawn dashed and see-through until they become notes.
+
 - A Share switch on each project's page, a card on the soil line at the right like the growth card: a mushroom
   ("Spores in the air") when the project is shared, only its mycelium ("Underground") when
   it is private, in the growth card's colors. On a phone both cards share one row. The owner clicks it to share a project and the notes

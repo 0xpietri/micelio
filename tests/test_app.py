@@ -15,7 +15,7 @@ def test_healthz_reports_counts_only() -> None:
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "ok"
-    assert data["notes"] == 27
+    assert data["notes"] == 29
     assert set(data) == {"status", "version", "notes"}
     assert "Bayes" not in response.text
 
