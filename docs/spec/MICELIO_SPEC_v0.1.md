@@ -155,6 +155,7 @@ Since 2026-11-11 anyone can switch the interface language with the flag in the h
 | `/healthz` | Liveness for the container and monitoring |
 | `/appearance` | Palette, background, title and the background prompt guide (§7b, signed-in only) |
 | `/api/landing` | What the landing draws, as JSON (§7a) |
+| `/changes` | Every change, newest first, from the packaged `CHANGELOG.md` (§7c, visitors too) |
 
 Markdown is rendered with markdown-it-py and sanitized with nh3. Wikilinks become links to `/notes/<slug>`. Callouts (`> [!warning]`) and task lists render like Obsidian. Times are shown in the configured time zone. Links to projects go to `/projects/<slug>` (and `/notes/<project>` redirects there); links to missing notes render as dashed ghost text; `![[file.png]]` and other non-note embeds render as their name (attachments are not served in v0.1). Category colors, the palette and the type settings come from a generated `/theme.css`, so pages need no inline styles. There is one dark look built from the palette (§7c); the light theme of step 3 was dropped on 2026-11-10.
 
@@ -218,8 +219,9 @@ A signed-in page, `/appearance`, decided by marcos on 2026-11-10. What it saves 
 Decided by marcos on 2026-11-10: the landing's painting is part of the whole interface, and every graph is drawn as micelio.
 
 - **Background**: the painting (or the uploaded image, recolored when chosen) stays fixed behind every page. Reading pages show the horizon at the top and scroll into the underground; `/explore` shows only the underground. The landing keeps its own scene.
-- **Header** (2026-11-11): two lines. First the site's name and, at the right, the ⚙ menu (the viewer's graph settings on pages with a graph, then the look: a link to Appearance for the owner, the visitor's own look for visitors), the language flag and an icon to sign out or in. Below, the sections.
+- **Header** (2026-11-11): two lines. First the site's name (larger on wide screens) and, at the right, Appearance (the owner's page; for visitors a menu with their own look), the language flag and an icon to sign out or in. Below, the sections. The graph settings are a ⚙ in each graph's top right corner, next to + / − / Fit.
 - **A visitor's own look** (2026-11-11): palette, fonts, title effect and sizes, kept in the visitor's browser (`localStorage`); the palette's name goes to `/theme.css`, `/api/graph` and `/api/landing` as `?palette=`, which only recolor that answer. The site stays the owner's for everyone else.
+- **Footer** (2026-11-11): every page but the landing ends with the last version, the build's commit (`MICELIO_REVISION`, set by the image) and "What's new", which unfolds the changes since that version (else the version's own). `/changes` lists every version's changes. Each change adds its line to `CHANGELOG.md` under Unreleased.
 - **Glass**: text sits on ink-colored glass panels with the palette's dark outline; navigation is pill buttons; titles use the title font and effect of §7b.
 - **One dark look**: no light theme; the palette sets every color.
 - **Project page**: a scene at the top, the project's mushroom on the soil line, its notes as spore clouds below, the other projects its bridge notes reach standing faded at the sides; the title over the sky.
@@ -247,6 +249,7 @@ Decided by marcos on 2026-11-10: the landing's painting is part of the whole int
 - Docker image built from a multi-stage Dockerfile: Python 3.12 slim, `uv` with a lockfile, non-root user, read-only root filesystem, the vault mounted read-only, one data volume for SQLite.
 - Published to `ghcr.io/0xpietri/micelio` for `linux/amd64` on merges to `main` and on tags; `linux/arm64` only on release tags.
 - `compose.example.yml` runs it against the bundled sample vault in one command.
+- **New versions** (2026-11-11): the "New version" workflow (`version.yml`, started by `miceliodeploy edge` or by hand) numbers the version (the next patch after the last tag), moves `CHANGELOG.md`'s Unreleased changes under it, commits to `main`, tags `v<version>` and starts the image and package builds on that tag. Nobody tags by hand. Static files are served with `Cache-Control: no-cache` and a content ETag, since every build's files carry the same date.
 - **Two ways to install, both first-class:**
   - *Server*: the Docker image (Linux, or Docker Desktop on macOS and Windows). Release images are `amd64` + `arm64`, so Apple Silicon and a Raspberry Pi work.
   - *Personal computer, no Docker*: a Python package on PyPI. `uvx micelio serve --vault ~/Obsidian` (or `pipx`) opens it on `http://localhost:8765`. Bound to localhost, sign-in is off by default there; it turns on when bound to another address.
@@ -302,3 +305,4 @@ The deployment on factory (Caddy site, the notes MCP, the vault's Git timer, bac
 - 2026-11-09 (marcos): no hosted service for other people's notes. Technical users self-host, guided by `docs/guides/` (own computer with a tunnel, or a VPS); non-technical users get the Obsidian plugin (v0.3).
 - 2026-11-10 (marcos): a settings panel on the graphs for spacing, name size, shortened names shown whole on hover, and zoom, remembered per browser (§7).
 - 2026-11-10 (marcos): before the first release the project is renamed from Mycelium to **Micelio** everywhere: code, command, environment variables, `micelio.toml`, the image `ghcr.io/0xpietri/micelio`, the PyPI package `micelio` (`mycelium` was taken there), the repository and the site `micelio.pietri.dev`.
+- 2026-11-11 (marcos): `miceliodeploy` installs what `main` has without a new version; `miceliodeploy edge` makes a new version from the changes gathered since the last one and installs it. The site lists each version's changes in a footer and at `/changes`.

@@ -31,7 +31,7 @@ OPEN_PREFIXES = ("/static/", "/language/")
 # Pages anonymous visitors may read (GET and HEAD only). They are built from the public
 # notes alone (§9); the pages decide that through ``SignIn.sees_everything``.
 PUBLIC_PATHS = frozenset(
-    {"/", "/explore", "/projects", "/journal", "/api/graph", "/api/landing"}
+    {"/", "/explore", "/projects", "/journal", "/api/graph", "/api/landing", "/changes"}
     # The landing's own background, when the owner uploaded one (§7b).
     | {"/appearance/background"}
 )

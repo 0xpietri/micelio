@@ -86,7 +86,7 @@ body.landing main { padding: 0; max-width: none; margin: 0; }
   font-size: 0.85rem;
   z-index: 2;
 }
-.corner .icon-button, .corner .lang-menu > summary {
+.corner .icon-button, .corner .pill, .corner .lang-menu > summary {
   padding: 0.3rem 0.75rem;
   border: 2px solid var(--ink);
   border-radius: 999px;
@@ -97,7 +97,7 @@ body.landing main { padding: 0; max-width: none; margin: 0; }
   text-decoration: none;
   cursor: pointer;
 }
-.corner .icon-button:hover { background: var(--ink); }
+.corner .icon-button:hover, .corner .pill:hover { background: var(--ink); }
 
 .legend {
   position: absolute;

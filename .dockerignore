@@ -4,5 +4,6 @@
 !uv.lock
 !README.md
 !LICENSE
+!CHANGELOG.md
 !src/
 **/__pycache__

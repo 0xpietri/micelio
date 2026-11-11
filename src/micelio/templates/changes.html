@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}{{ t("changes.title") }} · {{ site_name() }}{% endblock %}
+{% block footer %}{% endblock %}
+{% block content %}
+<div class="page changes">
+  <h1>{{ t("changes.title") }}</h1>
+  <p class="muted">Micelio {{ changes.version }}{% if changes.build %} · {{ t("changes.build", build=changes.build) }}{% endif %}</p>
+  {% for release in changes.releases if release.html %}
+  <section>
+    <h2>{% if release.unreleased %}{{ t("changes.since", version=changes.version) }}{% else %}{{ release.version }}{% if release.date %} <span class="muted">· {{ release.date }}</span>{% endif %}{% endif %}</h2>
+    {{ release.html }}
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}

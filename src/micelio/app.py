@@ -12,7 +12,6 @@ from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.exception_handlers import http_exception_handler
 from fastapi.responses import JSONResponse, RedirectResponse, Response
-from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
@@ -21,6 +20,7 @@ from micelio.appearance import AppearanceStore
 from micelio.auth import resolve_auth
 from micelio.auth.store import AuthStore
 from micelio.auth.web import Clock, SignIn, install_security_headers
+from micelio.changes import Changes
 from micelio.config import Config
 from micelio.formatting import Dates
 from micelio.i18n import (
@@ -34,6 +34,7 @@ from micelio.i18n import (
 )
 from micelio.landing_web import LandingPages
 from micelio.pages import Pages
+from micelio.static_files import FreshStaticFiles
 from micelio.vault import PublicView, VaultIndex
 
 PACKAGE = Path(str(files("micelio")))
@@ -83,6 +84,9 @@ def create_app(
         t=t, site=config.site, language=ActiveLanguage(language), languages=language_menu
     )
 
+    changes = Changes()
+    templates.env.globals["changes"] = changes
+
     sign_in = SignIn(config, settings, store, templates, t, clock)
     app.state.sign_in = sign_in
     templates.env.globals["sign_in"] = sign_in
@@ -113,7 +117,7 @@ def create_app(
         )
         return response
 
-    app.mount("/static", StaticFiles(directory=PACKAGE / "static"), name="static")
+    app.mount("/static", FreshStaticFiles(directory=PACKAGE / "static"), name="static")
     sign_in.install(app)
     install_security_headers(app)
 
@@ -121,6 +125,11 @@ def create_app(
     public = PublicView(vault)
     app.include_router(Pages(config, vault, templates, dates, looks, sign_in, public).router())
     app.include_router(LandingPages(config, vault, looks, templates, sign_in, t, public).router())
+
+    @app.get("/changes", include_in_schema=False)
+    def changelog(request: Request) -> Response:
+        """Everything each version brought, newest first: the packaged CHANGELOG.md."""
+        return templates.TemplateResponse(request, "changes.html", {"nav": "changes"})
 
     @app.exception_handler(StarletteHTTPException)
     async def not_found(request: Request, exc: StarletteHTTPException) -> Response:

@@ -16,7 +16,7 @@ WORKDIR /src
 COPY pyproject.toml uv.lock ./
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-dev --no-install-project
-COPY README.md LICENSE ./
+COPY README.md LICENSE CHANGELOG.md ./
 COPY src ./src
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-dev --no-editable
@@ -24,6 +24,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # --- runtime: Python and the virtual environment, nothing else
 FROM python:${PYTHON_VERSION}-slim
 ARG VERSION=dev
+# The commit this image was built from, shown in the footer next to the version.
+ARG REVISION=
 LABEL org.opencontainers.image.title="Micelio" \
       org.opencontainers.image.description="Your Markdown notes as a living network of ideas" \
       org.opencontainers.image.source="https://github.com/0xpietri/micelio" \
@@ -42,7 +44,8 @@ ENV PATH=/app/.venv/bin:$PATH \
     MICELIO_VAULT=/vault \
     MICELIO_DATA=/data \
     MICELIO_HOST=0.0.0.0 \
-    MICELIO_PORT=8765
+    MICELIO_PORT=8765 \
+    MICELIO_REVISION=${REVISION}
 
 USER micelio
 WORKDIR /data

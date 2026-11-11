@@ -245,6 +245,13 @@ not_found_help = "There is no note here. It may have been renamed or moved."
 sign_in_help = "If this notebook is yours, sign in to see every note."
 back = "Back to the projects"
 
+[changes]
+title = "What's new"
+whats_new = "What's new"
+since = "New since {version}"
+all = "Every change"
+build = "build {build}"
+
 [explore]
 title = "Explore"
 search = "Search"
