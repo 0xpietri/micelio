@@ -192,6 +192,7 @@ class LandingPages:
                 "error": error if error in _ERRORS else "",
                 "soil_min": SOIL_MIN,
                 "soil_max": SOIL_MAX,
+                "soil_default": self.config.landing.soil,
                 "title_fonts": TITLE_FONTS,
                 "text_fonts": TEXT_FONTS,
                 "title_effects": TITLE_EFFECTS,

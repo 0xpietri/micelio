@@ -27,9 +27,18 @@
   if (num(look.title_size, 50, 200)) style.setProperty("--title-scale", String(look.title_size / 100));
   if (num(look.text_size, 10, 30)) style.setProperty("--text-size", look.text_size + "px");
   if (num(look.graph_labels, 50, 200)) style.setProperty("--label-scale", String(look.graph_labels / 100));
-  if (look.title_effect === "poster" || look.title_effect === "plain") {
-    var poster = look.title_effect === "poster";
-    style.setProperty("--title-stroke", poster ? "0.08em" : "0");
-    style.setProperty("--title-shadow", poster ? "0.05em 0.06em 0 var(--pal-accent)" : "none");
+  // The title effects, as in pages.TITLE_LOOKS: an outline and shadow, nothing, or a sign.
+  var plate = ["--title-plate-bg", "--title-plate-border", "--title-plate-shadow", "--title-plate-pad"];
+  var effects = {
+    poster: ["0.08em", "0.05em 0.06em 0 var(--pal-accent)", "transparent", "0 solid transparent", "none", "0"],
+    plain: ["0", "none", "transparent", "0 solid transparent", "none", "0"],
+    sign: ["0", "none", "color-mix(in srgb, var(--pal-ink) 88%, transparent)",
+      "2px solid color-mix(in srgb, var(--pal-sun) 55%, var(--pal-ink))",
+      "0.1em 0.1em 0 color-mix(in srgb, var(--pal-accent) 80%, var(--pal-ink))", "0.1em 0.42em 0.14em"]
+  };
+  if (Object.prototype.hasOwnProperty.call(effects, look.title_effect)) {
+    var names = ["--title-stroke", "--title-shadow"].concat(plate);
+    var values = effects[look.title_effect];
+    for (var i = 0; i < names.length; i++) style.setProperty(names[i], values[i]);
   }
 })();

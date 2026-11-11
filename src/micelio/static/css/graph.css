@@ -46,8 +46,9 @@
 .graph-tip span { color: var(--muted); }
 
 /* Marks */
-.hypha { fill: none; stroke: var(--pal-thread, #fff); stroke-linecap: round; stroke-opacity: 0.85; }
-.hypha.ghost { stroke-dasharray: 3 6; opacity: 0.45; }
+.hypha { fill: none; stroke-linecap: round; }
+.hypha:not([stroke]) { stroke: var(--pal-thread, #fff); stroke-opacity: 0.85; }
+.hypha.ghost, .hypha.k-ghost { opacity: 0.45; }
 .twig { fill: none; stroke: var(--pal-thread, #fff); stroke-opacity: 0.45; stroke-linecap: round; }
 .faded { opacity: 0.4; }
 .dim { opacity: 0.14; }
@@ -122,8 +123,7 @@
 .scene-page .hero-scene .graph-tools { top: calc(var(--top-room) - 0.2rem); }
 @media (max-width: 720px) {
   .scene-page { --top-room: 7.4rem; }
-  /* The graph's buttons get their own line above the title on a phone. */
-  .scene-page .hero-heading { padding-top: calc(var(--top-room) + 2.6rem); }
+
 }
 
 /* /explore: the graph over the underground, the panel as a glass slab */
@@ -208,10 +208,9 @@ form .check, .check {
 .look-editor .look-color { grid-template-columns: 1fr auto; align-items: center; }
 .look-editor input[type="color"] { width: 3rem; height: 2rem; padding: 0; border: 2px solid var(--ink); border-radius: 8px; background: none; cursor: pointer; }
 .look-editor .muted.small { margin: 0; }
-.dress-hint { margin: 0.3rem 0 0; }
 
 /* How a project grows: a small glass card in the scene's bottom left corner. */
-.growth { position: absolute; z-index: 2; left: max(1rem, env(safe-area-inset-left, 0px)); bottom: 1rem; width: min(17rem, calc(100% - 2rem)); padding: 0.55rem 0.8rem 0.6rem; font-size: 0.8rem; }
+.growth { position: absolute; z-index: 2; left: max(1rem, env(safe-area-inset-left, 0px)); bottom: 1rem; width: min(19rem, calc(100% - 2rem)); padding: 0.55rem 0.8rem 0.6rem; font-size: 0.8rem; }
 .growth-head { display: flex; justify-content: space-between; align-items: baseline; gap: 0.6rem; margin: 0 0 0.4rem; }
 .growth-head strong { color: var(--sun); font-size: 0.92rem; }
 .growth-weeks { display: block; width: 100%; height: 2.2rem; overflow: visible; }
@@ -223,3 +222,46 @@ form .check, .check {
 .explore-stage.arriving { animation: arrive 0.9s cubic-bezier(0.2, 0.7, 0.3, 1) both; }
 @keyframes arrive { from { opacity: 0; transform: translateY(18vh) scale(1.08); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .explore-stage.arriving { animation: none; } }
+/* On a wide scene the growth card stands on the soil line, beside the mushrooms. */
+@media (min-width: 720px) {
+  .hero-scene.has-soil .growth { bottom: auto; top: calc(var(--soil-y) - 0.5rem); transform: translateY(-100%); }
+}
+/* A project's title stays smaller than the site's name, in one or two short lines. */
+.hero-heading h1 { font-size: calc(clamp(1.3rem, 2.6vw, 1.9rem) * var(--title-scale, 1)); max-width: min(40rem, 100%); }
+
+/* The growth card's mushroom: bigger at each stage, breathing while alive, spores when fruiting. */
+.growth-head strong { display: inline-flex; align-items: flex-end; gap: 0.35rem; }
+.growth-shroom { width: 1.6rem; height: 1.6rem; overflow: visible; }
+.growth-shroom .cap { fill: var(--cat, var(--accent)); }
+.growth-shroom .stem { fill: var(--text); opacity: 0.9; }
+.growth-shroom .dot { fill: var(--text); opacity: 0.8; }
+.growth-shroom .spore { fill: var(--sun); opacity: 0; }
+.growth-shroom-body { transform-box: fill-box; transform-origin: 50% 100%; }
+.stage-dormant .growth-shroom-body { transform: scale(0.55); filter: grayscale(1); opacity: 0.6; }
+.stage-germinating .growth-shroom-body { animation: shroom-breathe 3.2s ease-in-out infinite; --s: 0.7; }
+.stage-growing .growth-shroom-body { animation: shroom-breathe 2.6s ease-in-out infinite; --s: 0.85; }
+.stage-fruiting .growth-shroom-body { animation: shroom-breathe 2.2s ease-in-out infinite; --s: 1; }
+.stage-fruiting .growth-shroom .spore { animation: shroom-spore 2.2s ease-out infinite; }
+.stage-fruiting .growth-shroom .s2 { animation-delay: 1.1s; }
+@keyframes shroom-breathe { 0%, 100% { transform: scale(calc(var(--s) * 0.9)); } 50% { transform: scale(var(--s)); } }
+@keyframes shroom-spore { 0% { opacity: 0; transform: translateY(4px); } 30% { opacity: 0.9; } 100% { opacity: 0; transform: translateY(-5px); } }
+@media (prefers-reduced-motion: reduce) {
+  .growth-shroom-body, .growth-shroom .spore { animation: none !important; }
+  .stage-germinating .growth-shroom-body { transform: scale(0.7); }
+  .stage-growing .growth-shroom-body { transform: scale(0.85); }
+}
+
+/* A project's scene grows down with its underground; its buttons sit on the soil line. */
+.scene-page .hero-scene.sized { height: var(--scene-h); }
+.scene-page .hero-scene.has-soil .graph-tools { top: calc(var(--soil-y) + 2.6rem); }
+.graph-forest .graph-svg.pannable { cursor: default; }
+/* On a phone the growth card waits in the sky, under the title, clear of the notes. */
+@media (max-width: 719px) {
+  .scene-page .growth { bottom: auto; top: calc(var(--top-room) + 5.6rem); left: 1rem; width: auto; right: 1rem; }
+}
+/* On a phone the graph's corner shows only the ⚙; opening it brings the other buttons. */
+@media (max-width: 719px) {
+  .graph-tools:not(.open) > :not(.graph-gear):not(.graph-panel) { display: none; }
+}
+.growth-dates { margin: 0.4rem 0 0; font-size: 0.72rem; font-variant-numeric: tabular-nums; }
+.graph-tip-hint { display: block; margin-top: 0.25rem; color: var(--sun); font-size: 0.78rem; }

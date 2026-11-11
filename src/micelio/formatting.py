@@ -6,7 +6,7 @@ import re
 from datetime import UTC, date, datetime
 from zoneinfo import ZoneInfo
 
-from babel.dates import format_date
+from babel.dates import format_date, format_skeleton
 
 from micelio.i18n import active_language
 from micelio.vault.index import Note
@@ -41,6 +41,10 @@ class Dates:
 
     def updated(self, note: Note) -> date:
         return _parse(note.updated) or self.modified(note)
+
+    def short(self, value: date) -> str:
+        """Day, month and year in numbers, in the language's order (1/10/2026, 10/1/2026)."""
+        return format_skeleton("yMd", value, locale=active_language(self.language))
 
     def show(self, value: date) -> str:
         return format_date(value, format="medium", locale=active_language(self.language))

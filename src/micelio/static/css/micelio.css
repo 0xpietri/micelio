@@ -395,3 +395,15 @@ form.inline { display: inline; }
 .changes h3 { margin: 0.8rem 0 0.2rem; font-size: 0.95rem; color: var(--sun); }
 .changes ul { margin: 0.2rem 0; padding-left: 1.2rem; }
 .changes li { margin: 0.2rem 0; }
+
+/* Titles can sit on a small sign in the theme's colors (title effect "sign" on the
+   Appearance page), so they read on any background; the plate is drawn from custom
+   properties the theme sets, and is nothing for the other effects. */
+.brand, h1, .headline {
+  background: var(--title-plate-bg, transparent);
+  border: var(--title-plate-border, 0 solid transparent);
+  box-shadow: var(--title-plate-shadow, none);
+  padding: var(--title-plate-pad, 0);
+  border-radius: 14px;
+}
+.brand, .hero-heading h1, .explore-panel h1 { display: inline-block; }
