@@ -66,7 +66,7 @@
   {#- The card on the soil line: how the project grows. #}
   <div class="scene-cards">
     {#- How the project grows: a stage and twelve weeks of notes (§7c). #}
-    <div class="growth glass stage-{{ growth.stage }}{% if category %} cat-{{ category.key }}{% endif %}" title="{{ t('growth.score', score=growth.score) }}">
+    <div class="growth glass stage-{{ growth.stage }}{% if category %} cat-{{ category.key }}{% endif %}" title="{{ t('growth.added', count=growth.added) }}">
       <div class="growth-main">
       <p class="growth-head">
         <strong>
@@ -81,7 +81,6 @@
           </svg>
           {{ t("growth." ~ growth.stage) }}
         </strong>
-        <span class="muted">{{ t("growth.added", count=growth.added) }}</span>
       </p>
       <svg class="growth-weeks" viewBox="0 0 120 30" preserveAspectRatio="none" role="img" aria-label="{{ t('growth.weeks') }}">
         {%- for count in growth.weeks %}

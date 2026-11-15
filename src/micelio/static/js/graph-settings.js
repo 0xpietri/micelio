@@ -8,7 +8,7 @@ export const STORAGE_KEY = "micelio.graph.v1";
 
 /** Range settings: [min, max, step, default]. Percentages, characters. */
 export const LIMITS = {
-  spacing: [50, 600, 10, 100],
+  spacing: [20, 200, 10, 100],
   labels: [60, 200, 10, 100],
   length: [12, 60, 2, 28],
 };

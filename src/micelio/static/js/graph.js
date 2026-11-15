@@ -757,8 +757,8 @@ function drawForest(svg, data, L, strings, state, settings, zoom = 1, { deep = t
   }
   const deepest = Math.max(soil + 300 * u, ...free.map((n) => n.y + 70));
   // Closed, the scene ends a little under the soil, where the button to dig waits.
-  // Open, it keeps room at the bottom for the bar that brings the reader back up.
-  const bottom = deep ? deepest + 70 * u : Math.min(deepest, soil + 150 * u);
+  // Open, it ends a little under the deepest note.
+  const bottom = deep ? deepest + 30 * u : Math.min(deepest, soil + 150 * u);
   const vb = { x: left, y: top, w, h: bottom - top, cx, soil, deep };
   // How far the digging has to reach to uncover every note.
   vb.reach = Math.max(1, ...free.map((n) => Math.hypot(n.x - cx, n.y - soil) + 60));
@@ -852,7 +852,7 @@ function html(tag, attrs = {}, text = "") {
 
 /** + / − / Fit and ⚙ in the graph's top right corner. The ⚙ opens the viewer's settings
  * (spacing, names; static/js/graph-panel.js), which tell every graph when they change. */
-function zoomButtons(host, strings, { hint, onZoom, onFit }) {
+function zoomButtons(host, strings, { hint, onZoom, onFit, every = false }) {
   const bar = html("div", { class: "graph-tools" });
   if (hint) {
     // Shown while pointed at or focused (CSS), and read out as the button's name.
@@ -870,8 +870,11 @@ function zoomButtons(host, strings, { hint, onZoom, onFit }) {
   button({ "data-zoom": "out", "aria-label": tr(strings, "graph.zoom_out"), title: tr(strings, "graph.zoom_out") }, "−", () => onZoom(1.3));
   button({ "data-zoom": "fit" }, tr(strings, "graph.fit"), onFit);
   const panel = html("div", { class: "graph-panel glass", hidden: "" });
-  graphSection(panel, strings);
+  graphSection(panel, strings, { every });
   const open = (yes) => {
+    // Inside a project's scene the panel fits in what is left below the buttons.
+    const room = host.getBoundingClientRect().bottom - bar.getBoundingClientRect().bottom - 16;
+    panel.style.setProperty("--panel-room", `${Math.max(160, Math.round(room))}px`);
     panel.hidden = !yes;
     gear.setAttribute("aria-expanded", String(yes));
     // On a phone only the ⚙ shows until it is opened (CSS).
@@ -948,8 +951,8 @@ function spread(svg, vb, color) {
   requestAnimationFrame(step);
 }
 
-/** The button that digs into a project's underground and folds it back up, and the bar
- * at the bottom with the way back and the switch for every connection. ``redraw`` draws
+/** The button that digs into a project's underground and, once open, waits at the soil
+ * line's left end to fold it back up. "Every connection" is in the ⚙ panel. ``redraw`` draws
  * again and returns the scene's view box; ``settle`` puts what stands on the soil line in
  * place once the scene has its new height. A project always opens closed: digging is not
  * remembered, on reload or on another project. The switch is one of the viewer's graph
@@ -965,12 +968,7 @@ function underground(host, svg, strings, settings, redraw, settle) {
     el("path", { d: "M12 2v9M12 11c-3 2-6 3-8 7M12 11c3 2 6 3 8 7M12 11c-.6 4 .4 7 0 11M7 15c-1 2-.5 4-2 6M17 15c1 2 .5 4 2 6" }));
   const word = html("span", {}, tr(strings, "graph.dig"));
   dig.append(roots, word);
-  const bar = html("div", { class: "forest-bar" });
-  const up = html("button", { type: "button", class: "surface-button" }, `↑ ${tr(strings, "graph.surface")}`);
-  up.title = tr(strings, "graph.fold_hint");
-  const every = html("button", { type: "button", class: "every-button", "aria-pressed": String(state.all), title: tr(strings, "graph.every_hint") }, tr(strings, "graph.every"));
-  bar.append(up, every);
-  host.append(dig, bar);
+  host.append(dig);
 
   let settling = null;
   const go = (down) => {
@@ -1004,15 +1002,6 @@ function underground(host, svg, strings, settings, redraw, settle) {
     }
   };
   dig.addEventListener("click", () => go(!state.deep));
-  up.addEventListener("click", () => go(false));
-  every.addEventListener("click", () => {
-    state.all = !state.all;
-    every.setAttribute("aria-pressed", String(state.all));
-    settings.every = state.all;
-    save(settings);
-    redraw();
-  });
-
   // While a note is pointed at or focused, all its connections light up (the hidden ones
   // too), the rest dims, and sparks run along each thread from the note that links to the
   // one it links: both ways when the two link each other (the API's ``both``).
@@ -1172,6 +1161,7 @@ export async function mountGraph(host) {
 
   zoomButtons(host, strings, {
     hint,
+    every: mode === "forest",
     // In a project's scene + / − spread the underground only; the sky stays.
     onZoom: (f) => {
       if (view) return view.zoom(f);
@@ -1210,7 +1200,8 @@ export async function mountGraph(host) {
   window.addEventListener("micelio:graph-settings", (e) => {
     const key = e.detail && e.detail.key;
     const fresh = load();
-    for (const k of ["spacing", "labels", "shorten", "length"]) settings[k] = fresh[k];
+    for (const k of ["spacing", "labels", "shorten", "length", "every"]) settings[k] = fresh[k];
+    if (forest) forest.state.all = settings.every;
     if (key === "labels") { labelZoom(); return redraw(); }
     if ((key === "spacing" || (extent && (key === "labels" || key === "shorten" || key === "length" || key === "reset"))) && laid) laid = layoutFree(data, settings.spacing, extent);
     redraw();

@@ -80,13 +80,16 @@ All notable changes to this project are documented here. The format follows
 ### Changed
 
 - A project always opens with its underground hidden, also after a reload or on another
-  project. Once open, the same bright button under the mushroom (now "Back to the
-  surface") folds it up again, like the one at the bottom; both buttons are a little smaller.
+  project. Once open, the same bright button (now "Back to the surface", a little smaller)
+  waits at the left of the soil line to fold it up again; the bar at the bottom is gone.
+- "Every connection" moved into the project graph's ⚙ settings. The spacing slider goes
+  from 20 % (tighter than before) to 200 %, and the settings no longer carry a note.
 - A project's title is a little larger, with the Share switch beside it on the same line: a
   small drawing and "Spores in the air" or "Underground", in one color.
-- The growth card is wider: its stage and note count line up, and the created and updated
-  dates sit beside them in two rows, like a note's dates card. It stands a little higher,
-  and "Dig deeper" a little lower.
+- The growth card is compact: the stage over twelve small weekly bars, with the created
+  and updated dates beside them in two rows, like a note's dates card. How many notes the
+  last 30 days brought shows on hover. It stands a little higher, and "Dig deeper" a
+  little lower.
 - In a project's scene the other projects show only their mushroom; the name appears when
   you point at it.
 - Notes in the graphs are dots in their category's palette color again (drafts are

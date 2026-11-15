@@ -10,8 +10,9 @@ function html(tag, attrs = {}, text = "") {
   return node;
 }
 
-/** Fill ``section`` with the settings' controls. */
-export function graphSection(section, strings) {
+/** Fill ``section`` with the settings' controls; ``every`` adds the project scene's
+ * "Every connection" switch. */
+export function graphSection(section, strings, { every = false } = {}) {
   const settings = load();
   const tell = (key) => window.dispatchEvent(new CustomEvent("micelio:graph-settings", { detail: { key } }));
   const inputs = {};
@@ -45,6 +46,16 @@ export function graphSection(section, strings) {
     inputs[key] = input;
     outputs[key] = out;
   };
+  let all = null;
+  // In a project's scene the switch it uses most comes first.
+  if (every) {
+    const row = html("label", { class: "menu-check", title: tr(strings, "graph.every_hint") });
+    all = html("input", { type: "checkbox", name: "graph-every" });
+    all.checked = settings.every;
+    all.addEventListener("change", () => set("every", all.checked));
+    row.append(all, document.createTextNode(` ${tr(strings, "graph.every")}`));
+    section.appendChild(row);
+  }
   range("spacing");
   range("labels");
   const check = html("label", { class: "menu-check" });
@@ -55,7 +66,6 @@ export function graphSection(section, strings) {
   section.appendChild(check);
   range("length");
   inputs.length.disabled = !settings.shorten;
-  section.appendChild(html("p", { class: "muted small" }, tr(strings, "graph.settings_note")));
   const reset = html("button", { type: "button", class: "link" }, tr(strings, "graph.reset"));
   reset.addEventListener("click", () => {
     const fresh = { ...defaults(), zoom: load().zoom };
@@ -66,6 +76,7 @@ export function graphSection(section, strings) {
       outputs[key].textContent = shown(key, fresh[key]);
     }
     box.checked = fresh.shorten;
+    if (all) all.checked = fresh.every;
     inputs.length.disabled = !fresh.shorten;
     tell("reset");
   });
