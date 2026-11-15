@@ -8,6 +8,11 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Edit your notes by hand from the site. Hover any paragraph, list, table or box such as
+  "What you should know" to change it as Markdown or delete it, and delete a heading with
+  everything under it. "Edit note" under the text opens the whole note as Markdown (tags,
+  type and status stay as they are), and "Undo" puts back what your last change replaced.
+  On a phone, tap "Edit parts" and then the part to change.
 - Nine new scenes to pick on the Appearance page, in three styles (blacklight, neon and
   brushstrokes), with a quiet dark underground so your own mycelium and the names on the
   graphs stand out. Each scene brings its soil line and its own illustrated mushrooms; the
