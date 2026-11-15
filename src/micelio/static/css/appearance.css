@@ -81,10 +81,17 @@
 .autosave:empty { visibility: hidden; }
 
 /* The prompt guide is folded: open it when making a background. */
-.look details.prompt { margin-top: 1.5rem; }
+.look details.prompt { margin: 0 0 1.25rem; }
 .look details.prompt > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 0.5rem; }
 .look details.prompt > summary::-webkit-details-marker { display: none; }
 .look details.prompt > summary::before { content: "▸"; color: var(--accent); transition: transform 0.15s; }
 .look details.prompt[open] > summary::before { transform: rotate(90deg); }
-.look details.prompt > summary h2 { display: inline; margin: 0; }
+.look details.prompt > summary h3 { display: inline; margin: 0; }
 .look details.prompt[open] > summary { margin-bottom: 0.75rem; }
+
+/* Mushrooms: painted in the palette or pictures, each with a small preview. */
+.choices.mushroom-choices { grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); }
+.mushroom-preview { display: flex; justify-content: center; align-items: flex-end; gap: 0.25rem; min-height: 4.5rem; padding: 0.4rem; border-radius: 8px; background: var(--surface-2); }
+.mushroom-preview img { width: 4rem; height: 4rem; object-fit: contain; }
+.mushroom-preview svg { width: 100%; height: 4rem; overflow: visible; }
+.look .palette-recolor { margin: -0.25rem 0 1rem; }

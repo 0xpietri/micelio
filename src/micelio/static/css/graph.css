@@ -298,10 +298,12 @@ button.share-toggle:hover, .share-toggle:focus-visible { border-color: var(--cat
 .share-shroom .glow:nth-of-type(2n) { animation-delay: 1.3s; }
 .share-art { transition: transform 0.2s ease; transform-origin: 50% 65%; }
 button.share-toggle:hover .share-art { transform: scale(1.05); }
+.share-picture { object-fit: contain; object-position: 50% 100%; width: 5.4rem; height: 4.9rem; }
+.share-switch:not(.on) .share-picture { animation: share-pulse 3.4s ease-in-out infinite; }
 @keyframes share-pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
 @keyframes share-twinkle { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
-  .share-roots, .share-shroom .glow { animation: none !important; }
+  .share-roots, .share-shroom .glow, .share-picture { animation: none !important; }
 }
 /* On a phone both cards wait in the sky under the title, in one row of the same height. */
 @media (max-width: 719px) {

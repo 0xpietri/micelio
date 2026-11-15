@@ -56,6 +56,11 @@ function look(data) {
 /** A square picture centered on the node's point, ``size`` units across. */
 // Pictures take the palette's colors through the painting's filter, like the mushrooms (§7b).
 const img = (href, size) => `<image href="${href}" x="${f1(-size / 2)}" y="${f1(-size / 2)}" width="${f1(size)}" height="${f1(size)}"${document.getElementById("bgmap-page") ? ' filter="url(#bgmap-page)"' : ""}/>`;
+/** A small node's picture in the illustrated style, ``size`` across, or "" when drawn. */
+function picture(name, size) {
+  const href = nodePicture(name);
+  return href ? img(href, size) : "";
+}
 
 function mark(node, L, k = 1) {
   const { pal, paint } = L;
@@ -86,6 +91,8 @@ function mark(node, L, k = 1) {
     // in its project's color: something still missing to understand the project.
     const r = 5.5 * k;
     const color = L.color(node.category);
+    const art = picture("gap", r * 3.4);
+    if (art) return { r, top: r * 1.4, markup: `<g class="cloud primordium">${art}<circle r="${f1(r + 7)}" fill="transparent"/></g>` };
     return { r, top: r * 1.4, markup: `<g class="cloud primordium"><path d="M${f1(-r)} ${f1(r * 0.55)}C${f1(-r)} ${f1(-r * 0.9)} ${f1(-r * 0.45)} ${f1(-r * 1.4)} 0 ${f1(-r * 1.4)}S${f1(r)} ${f1(-r * 0.9)} ${f1(r)} ${f1(r * 0.55)}Z" fill="${color}" fill-opacity=".22" stroke="${color}" stroke-width="1.5" stroke-dasharray="2.5 2.5"/><circle cy="${f1(-r * 0.35)}" r="${f1(r * 0.28)}" fill="${color}" fill-opacity=".7"/><circle r="${f1(r + 7)}" fill="transparent"/></g>` };
   }
   if (node.type === "question") {
@@ -93,6 +100,8 @@ function mark(node, L, k = 1) {
     // light and a small spore beside it, lighter than a concept.
     const r = (3 + Math.sqrt(degree) * 0.9) * k;
     const color = L.color(node.category);
+    const art = picture("question", r * 3.6);
+    if (art) return { r, top: r, markup: `<g class="cloud drifting">${art}<circle r="${f1(r + 7)}" fill="transparent"/></g>` };
     return { r, top: r, markup: `<g class="cloud drifting"><circle r="${f1(r + 3)}" fill="none" stroke="${pal.thread}" stroke-opacity=".7" stroke-width="1.1"/><circle r="${f1(r)}" fill="${color}" fill-opacity=".75" stroke="${pal.ink}" stroke-width="1.2"/><circle cx="${f1(r + 5)}" cy="${f1(-r - 3)}" r="${f1(1.4 * k)}" fill="${pal.thread}" fill-opacity=".8"/><circle r="${f1(r + 7)}" fill="transparent"/></g>` };
   }
   if (node.type === "journal") {
@@ -119,6 +128,9 @@ function mark(node, L, k = 1) {
   const ring = node.bridge
     ? `<circle r="${f1(r + 4)}" fill="none" stroke="${pal.sun}" stroke-opacity=".9" stroke-width="1.3" stroke-dasharray="2 3"/>`
     : "";
+  // In an illustrated style a note is a glowing spore ringed in its category's color.
+  const art = picture("note", r * 3);
+  if (art) return { r, top: r, markup: `<g class="cloud">${ring}${art}<circle r="${f1(r * 1.15)}" fill="none" stroke="${L.color(node.category)}" stroke-width="1.4" stroke-opacity=".85"/><circle r="${f1(r + 7)}" fill="transparent"/></g>` };
   return { r, top: r, markup: `<g class="cloud">${ring}<circle r="${f1(r)}" fill="${L.color(node.category)}" stroke="${pal.ink}" stroke-width="1.4"/><circle r="${f1(r + 7)}" fill="transparent"/></g>` };
 }
 

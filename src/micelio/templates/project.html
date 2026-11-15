@@ -32,6 +32,11 @@
       {% if not fixed %}<input type="hidden" name="shared" value="{{ '' if share.shared else 'on' }}">{% endif %}
       {% if fixed %}<span class="share-toggle glass" role="img" aria-label="{{ label }}{% if hint %}. {{ hint }}{% endif %}"{% if hint %} title="{{ hint }}"{% endif %}>{% else %}<button type="submit" class="share-toggle glass" role="switch" aria-checked="{{ 'true' if share.shared else 'false' }}" aria-label="{{ label }}. {{ hint }}" title="{{ hint }}">{% endif %}
         <span class="share-caption" aria-hidden="true">{{ label }}</span>
+        {#- In an illustrated style the card shows that style's own picture. #}
+        {% set share_style = backdrop().mushrooms %}
+        {% if share_style != "drawn" %}
+        <img class="share-art share-picture" src="/static/img/share/{{ share_style }}/{{ 'spores' if on else 'underground' }}.webp" alt="" width="72" height="72">
+        {% else %}
         <svg class="share-art" viewBox="6 2 52 58" aria-hidden="true" focusable="false">
           <path class="share-soil" d="M7 40H57"/>
           <g class="share-roots">
@@ -54,6 +59,7 @@
           </g>
           {% endif %}
         </svg>
+        {% endif %}
       {% if fixed %}</span>{% else %}</button>{% endif %}
     {% if share.owner %}</form>{% else %}</div>{% endif %}
     {% endif %}

@@ -46,7 +46,7 @@ def test_page_is_built_for_autosave(client: TestClient) -> None:
     # The Save buttons stay for browsers without JavaScript; the script hides them.
     assert html.count('class="save-fallback"') == 2
     assert '<details class="prompt" id="prompt"' in html
-    assert "<summary><h2>Make your own background</h2></summary>" in html
+    assert "<summary><h3>Make your own background</h3></summary>" in html
     script = (STATIC / "js" / "appearance.js").read_text("utf-8")
     assert "form[data-autosave]" in script
     assert "clickOutsideLeaves" in script

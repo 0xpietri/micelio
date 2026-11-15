@@ -206,7 +206,9 @@ class Appearance:
     palette: PaletteName = "psychedelic"
     background: Literal["builtin", "own"] = "builtin"  # builtin: the chosen scene
     scene: str = DEFAULT_SCENE
-    mushrooms: MushroomStyle | None = None  # None: the scene's (drawn for an upload)
+    # "drawn": painted in the palette's colors. Any picture style: pictures, in the scene's
+    # own style (an uploaded image keeps the one saved). None: the scene's default.
+    mushrooms: MushroomStyle | None = None
     own_type: ImageType | None = None  # set while an uploaded image exists
     own_version: int = 0  # bumps on each upload, for cache busting
     recolor: bool | None = None  # None: the scene's own default, off for an upload
@@ -241,9 +243,11 @@ class Appearance:
 
     @property
     def mushroom_style(self) -> MushroomStyle:
-        if self.mushrooms is not None:
-            return self.mushrooms
-        return "drawn" if self.uses_own else self.painting.mushrooms
+        if self.mushrooms == "drawn":
+            return "drawn"
+        if self.uses_own:
+            return self.mushrooms or "drawn"
+        return self.painting.mushrooms
 
     @property
     def colors(self) -> Palette:

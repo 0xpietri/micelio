@@ -8,7 +8,10 @@ export const reduced = () => window.matchMedia("(prefers-reduced-motion: reduce)
 /* ---------- small helpers ---------- */
 
 /** The kinds of mineral a source can be, and the color each has unless chosen (§7c). */
-export const MINERALS = { diamond: "#7fe7ff", emerald: "#3ddc84", amber: "#ffb020", quartz: "#f1ecff", amethyst: "#b07cff" };
+export const MINERALS = {
+  diamond: "#7fe7ff", emerald: "#3ddc84", amber: "#ffb020", quartz: "#f1ecff", amethyst: "#b07cff",
+  obsidian: "#5b4a78", opal: "#e6f0ff", malachite: "#1fa37a",
+};
 
 /** A project's own shade of its category's color, the same on every page: two projects
  * of one category are told apart until the owner picks a color (§7c). */
@@ -99,11 +102,21 @@ export function mineralPicture(kind, style = mushroomStyle()) {
   return `/static/img/minerals/${encodeURIComponent(style)}/${kind in MINERALS ? kind : "diamond"}.webp`;
 }
 
+const NODE_PICTURES = ["note", "journal", "question", "gap", "draft"];
+
 /** The picture of a kind of node in an illustrated ``style`` (``journal``: a golden
- * seed; ``draft``: a button mushroom), or "" when drawn. */
+ * seed; ``draft``: a button mushroom; also note, question, gap), or "" when drawn. */
 export function nodePicture(kind, style = mushroomStyle()) {
-  if (!style || style === "drawn" || !["journal", "draft"].includes(kind)) return "";
+  if (!style || style === "drawn" || !NODE_PICTURES.includes(kind)) return "";
   return `/static/img/nodes/${encodeURIComponent(style)}/${kind}.webp`;
+}
+
+/** The small pictures that go with an illustrated style (§7b): a source's mineral
+ * (``minerals``), a graph node (``nodes``: note, journal, question, gap, draft) or the Share
+ * card (``share``). "" when mushrooms are drawn. */
+export function stylePicture(group, name, style = mushroomStyle()) {
+  if (!style || style === "drawn") return "";
+  return `/static/img/${group}/${encodeURIComponent(style)}/${encodeURIComponent(name)}.webp`;
 }
 
 /** ``tint`` names the filter that recolors the pictures with the palette (§7b): by
@@ -231,11 +244,18 @@ export function painter(pal, style = mushroomStyle(), tint = document.getElement
     },
   };
 
-  const button = (c) => P("M-8,0 C-9,-6 -7,-10 -6,-12 L6,-12 C7,-10 9,-6 8,0 Z", STEM)
+  const pictured = (group, name, x, y, size) => {
+    const href = stylePicture(group, name, style);
+    const filter = tint ? ` filter="url(#${tint})"` : "";
+    return href ? `<image href="${href}" x="${x}" y="${y}" width="${size}" height="${size}"${filter}/>` : "";
+  };
+  const drawnButton = (c) => P("M-8,0 C-9,-6 -7,-10 -6,-12 L6,-12 C7,-10 9,-6 8,0 Z", STEM)
     + P("M-15,-10 C-17,-27 -9,-37 0,-37 C9,-37 17,-27 15,-10 Q0,-5 -15,-10 Z", c)
     + HL("M-9,-24 C-9,-30 -5,-34 -1,-34 C-5,-31 -7,-27 -7,-22 Z");
 
-  const crystal = (c) => P("M-20,10 L-24,-4 L-12,-22 L-2,-8 L4,-30 L16,-14 L24,-20 L22,10 Z", c, 3)
+  const button = (c) => pictured("nodes", "draft", -22, -44, 44) || drawnButton(c);
+
+  const drawnCrystal = (c) => P("M-20,10 L-24,-4 L-12,-22 L-2,-8 L4,-30 L16,-14 L24,-20 L22,10 Z", c, 3)
     + P("M-12,-22 L-2,-8 L-6,10 M4,-30 L-2,-8 M4,-30 L8,10 M16,-14 L8,10", "none", 1.6)
     + '<path d="M-11,-18 L-4,-9 L-8,4 L-18,-3 Z" fill="#fff" opacity=".35"/>';
 
@@ -254,9 +274,15 @@ export function painter(pal, style = mushroomStyle(), tint = document.getElement
     quartz: (c) => P("M-8,20 L-10,-5 L0,-22 L10,-5 L8,20 Z", c, 2.6)
       + P("M0,-22 L0,20 M-10,-5 L10,-5", "none", 1.2)
       + '<path d="M-8,-4 L-1,-19 L-1,-4 Z" fill="#fff" opacity=".45"/>',
-    amethyst: (c) => `<g transform="translate(0,9)">${crystal(c)}</g>`,
+    amethyst: (c) => `<g transform="translate(0,9)">${drawnCrystal(c)}</g>`,
   };
-  const mineral = (kind, c) => (minerals[kind] || minerals.diamond)(c);
+  // The minerals added with the pictures borrow a close shape when drawn.
+  minerals.obsidian = minerals.quartz;
+  minerals.opal = minerals.amber;
+  minerals.malachite = minerals.emerald;
+  const crystal = (c) => pictured("minerals", "amethyst", -26, -40, 52) || drawnCrystal(c);
+  const mineral = (kind, c) =>
+    pictured("minerals", minerals[kind] ? kind : "diamond", -24, -24, 48) || (minerals[kind] || minerals.diamond)(c);
 
   /** A project's mushroom; its status is its growth (§7a). */
   function mushroom(kind, color, status) {
