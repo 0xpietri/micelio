@@ -45,7 +45,6 @@
   <div class="note-foot">
     <button type="button" class="note-card glass said-add" data-said-add hidden>
       <span class="said-add-title"><span aria-hidden="true">+</span> {{ t("said.add") }}</span>
-      <span class="said-add-where muted">{{ t("said.add_end") }}</span>
     </button>
     <span class="said-extra"></span>
   </div>
@@ -53,27 +52,12 @@
 
   {% if guide %}{{ guide_pager(guide, note.slug) }}{% endif %}
 
-  {#- One place for everything around the note (§7): the graph, and the same notes as a
-      list, its projects first, each with the mark it has in the graph. #}
+  {#- One place for everything around the note (§7): the graph. Each node is a link, and
+      sparks run along the threads from the note that links to the one it links. #}
   <aside class="related">
     <section class="neighborhood">
       <h2>{{ t("note.graph") }}</h2>
       {{ graph_box("note:" ~ note.slug, t("note.graph_label"), "graph-small", mode="box") }}
-      {% if neighbors %}
-      <ul class="neighbors">
-        {% for other in neighbors %}
-        <li>
-          {%- if other.type == "project" -%}
-          {{ mushroom(other) }}
-          {%- else -%}
-          <span class="spore-icon{% if other.type == 'source' %} crystal{% elif other.type == 'journal' %} golden{% elif other.type in ('gap', 'question') %} {{ other.type }}{% endif %}" aria-hidden="true"></span>
-          {%- endif %}
-          <a href="{{ href(other) }}" title="{{ t('type.' ~ other.type) }}">{{ other.title }}</a>
-          {%- if other.type != "note" %}<span class="visually-hidden"> ({{ t("type." ~ other.type) }})</span>{% endif %}
-        </li>
-        {% endfor %}
-      </ul>
-      {% else %}<p class="muted">{{ t("note.no_neighbors") }}</p>{% endif %}
     </section>
   </aside>
 </article>

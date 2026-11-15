@@ -239,7 +239,6 @@ takeaway = "What you should know"
 
 [said]
 add = "Add a note"
-add_end = "At the end of the note"
 add_here = "Add a note here"
 write = "Write a note"
 placeholder = "Your words, as you would say them…"
@@ -271,8 +270,7 @@ updated = "Updated {date}"
 tags = "Tags"
 bridge = "Bridge between categories"
 graph = "Neighborhood"
-graph_label = "Graph of this note and the notes one link away. The same notes are listed as links under it."
-no_neighbors = "Nothing links here, and it links nowhere yet."
+graph_label = "Graph of this note and the notes one link away. Each one is a link; sparks run from the note that links to the one it links."
 
 [journal]
 title = "Journal"

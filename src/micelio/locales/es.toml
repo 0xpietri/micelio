@@ -238,7 +238,6 @@ takeaway = "Lo que tendrías que saber"
 
 [said]
 add = "Añadir nota"
-add_end = "Al final de la nota"
 add_here = "Añadir una nota acá"
 write = "Escribir nota"
 placeholder = "Tus palabras, como las dirías…"
@@ -270,8 +269,7 @@ updated = "Última edición: {date}"
 tags = "Etiquetas"
 bridge = "Puente entre categorías"
 graph = "Vecindario"
-graph_label = "Grafo de esta nota y de las notas a un enlace de distancia. Las mismas notas están abajo como enlaces."
-no_neighbors = "Nada enlaza acá y esta nota todavía no enlaza a ninguna."
+graph_label = "Grafo de esta nota y de las notas a un enlace de distancia. Cada una es un enlace; las chispas van de la nota que enlaza a la enlazada."
 
 [journal]
 title = "Diario"

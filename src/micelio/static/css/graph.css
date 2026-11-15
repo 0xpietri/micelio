@@ -321,3 +321,19 @@ button.share-toggle:hover .share-art { transform: scale(1.05); }
 .look-editor .look-specimen img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .look-editor .look-specimen:hover, .look-editor .look-specimen:focus-visible { border-color: color-mix(in srgb, var(--pal-accent) 60%, transparent); }
 .look-editor .look-specimen[aria-checked="true"] { border-color: var(--pal-accent); background: color-mix(in srgb, var(--pal-accent) 22%, var(--pal-ink)); }
+
+/* A note's Neighborhood: sparks run along each thread from the note that links to the one
+   it links (both ways when they link each other). Still when motion is reduced. */
+.flow {
+  fill: none;
+  stroke: var(--pal-spore, #ffd23f);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-dasharray: 0.1 11.9;
+  opacity: 0.9;
+  pointer-events: none;
+  animation: flow 1.6s linear infinite;
+}
+.flow.back { animation-direction: reverse; stroke: var(--pal-thread, #9ef); }
+@keyframes flow { from { stroke-dashoffset: 12; } to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) { .flow { animation: none; } }

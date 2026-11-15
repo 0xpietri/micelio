@@ -273,14 +273,6 @@ a.tag:hover { background: color-mix(in srgb, var(--pal-button-alt, #22d3ee) 30%,
 
 .related { margin-top: 2.5rem; padding-top: 0.5rem; border-top: 1px dashed var(--line); }
 
-/* A note's Neighborhood: under the graph, the same notes in one list. Each mark is the
-   height of the name's capital letters, on the name's line. */
-.neighbors { list-style: none; margin: 0.9rem 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr)); gap: 0.35rem 1.2rem; }
-.neighbors li { display: flex; align-items: baseline; gap: 0.4rem; min-width: 0; }
-.neighbors a { overflow-wrap: anywhere; }
-.neighbors .mushroom-icon { width: 1.25em; height: 1.25em; margin: 0 -0.15em; align-self: baseline; position: relative; top: 0.2em; }
-.neighbors .spore-icon { width: 0.62em; height: 0.62em; margin: 0 0.14em; border-width: 1.5px; align-self: baseline; }
-
 /* Rendered notes */
 .prose { margin-top: 1.25rem; }
 .prose h2 { margin-top: 1.6rem; color: var(--sun); }
@@ -776,8 +768,9 @@ form.inline { display: inline; }
 .note-foot { display: flex; justify-content: flex-end; align-items: flex-start; gap: 0.5rem; margin-top: 1.4rem; }
 .said-add {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  /* As tall as the dates card's two lines. */
+  min-height: 3.6rem;
   gap: 0;
   margin: 0;
   /* The dates card's own look: the plain button rules would make it a pill. */
@@ -794,7 +787,7 @@ form.inline { display: inline; }
   cursor: pointer;
 }
 .said-add[hidden] { display: none; }
-.said-add-title { color: var(--sun); font-weight: 700; }
+.said-add-title { color: var(--sun); font-weight: 700; font-size: 0.9rem; }
 .said-add-title > span { display: inline-block; min-width: 0.9em; }
 .said-add:hover, .said-add:focus-visible { border-color: var(--sun); }
 .said-add:focus-visible { outline: 3px solid var(--text); outline-offset: 2px; }

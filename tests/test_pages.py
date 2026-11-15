@@ -64,36 +64,22 @@ def test_project_page_lists_its_conversations(client: TestClient) -> None:
 def test_note_page(client: TestClient) -> None:
     html = client.get("/notes/priors-are-beliefs-you-can-update").text
     assert "Bridge between categories" in html
-    assert "Free will in a determined world" in html
-    assert "Learning Bayesian statistics" in html
-    assert 'class="mushroom-icon cat-study"' in html
-
-
-def neighbor_titles(html: str) -> list[str]:
-    block = html[html.index('<ul class="neighbors">') :]
-    block = block[: block.index("</ul>")]
-    return re.findall(r'<a href="[^"]+" title="[^"]+">([^<]+)</a>', block)
+    assert "Part of" not in html
 
 
 def test_note_page_keeps_only_the_neighborhood(client: TestClient) -> None:
     """The note's own "## Links" and the old Part of / Linked from lists are gone: the
-    Neighborhood lists the same notes, its projects first and the journal last."""
+    Neighborhood graph already shows every one of those notes."""
     html = client.get("/notes/can-planetary-gravity-affect-a-newborn").text
     prose = html[html.index('<div class="prose"') : html.index('<aside class="related">')]
     assert "Compare with" not in prose
     assert "<h2>Links</h2>" not in prose
     assert "Linked from" not in html
     assert "Part of" not in html
-    assert neighbor_titles(html) == [
-        "Do planets at birth leave a trace?",
-        "A planet&#39;s tidal pull is smaller than a nearby wall&#39;s",
-        "2026-11-09, voice call: planets",
-    ]
-    # Each one carries the mark it has in the graph: a mushroom, a dot, a golden dot.
-    block = html[html.index('<ul class="neighbors">') :]
-    assert block.index('class="mushroom-icon') < block.index('class="spore-icon"')
-    assert block.index('class="spore-icon"') < block.index('class="spore-icon golden"')
-    assert "(Journal)" in block
+    related = html[html.index('<aside class="related">') :]
+    assert "Neighborhood" in related
+    assert 'data-graph="/api/graph?scope=note' in related
+    assert "<li" not in related[: related.index("</aside>")]
 
 
 def test_links_section_shown_again_when_configured_off() -> None:
@@ -123,7 +109,6 @@ def test_spanish_links_heading_is_hidden_too(tmp_path: Path) -> None:
     html = client_for(root=tmp_path).get("/notes/a").text
     assert "Enlaces" not in html
     assert "Después" in html
-    assert neighbor_titles(html) == ["B"]
 
 
 def test_journal_newest_first(client: TestClient) -> None:

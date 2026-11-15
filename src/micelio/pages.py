@@ -40,23 +40,6 @@ from micelio.vault.public import PublicView
 _STATUS_ORDER = {status: i for i, status in enumerate(("active", "draft", "paused", "closed"))}
 
 
-# The order of a note's neighbors (§7): its projects, then what it links or is linked
-# from, the concepts first and the journal last.
-_NEIGHBOR_ORDER = {"project": 0, "note": 1, "question": 2, "gap": 3, "source": 4, "journal": 5}
-
-
-def neighbors(vault: IndexView, slug: str) -> list[Note]:
-    """Every note one link away from ``slug``, either direction, plus the projects it
-    belongs to: the same notes as its Neighborhood graph, as one list."""
-    around = (
-        vault.outlinks.get(slug, set())
-        | vault.backlinks.get(slug, set())
-        | vault.projects_of.get(slug, set())
-    ) - {slug}
-    found = (vault.notes[s] for s in around if s in vault.notes)
-    return sorted(found, key=lambda n: (_NEIGHBOR_ORDER.get(n.type, 9), n.title.lower(), n.slug))
-
-
 @dataclass(frozen=True, slots=True)
 class ProjectRow:
     note: Note
@@ -445,7 +428,6 @@ class Pages:
             context = {
                 "note": note,
                 "body": reader.renderer.html(note),
-                "neighbors": neighbors(vault, slug),
                 "guide": self._guide_for(vault, note, guide),
                 "nav": "journal" if note.type == "journal" else "",
             }
