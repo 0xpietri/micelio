@@ -67,6 +67,7 @@
   <div class="scene-cards">
     {#- How the project grows: a stage and twelve weeks of notes (§7c). #}
     <div class="growth glass stage-{{ growth.stage }}{% if category %} cat-{{ category.key }}{% endif %}" title="{{ t('growth.score', score=growth.score) }}">
+      <div class="growth-main">
       <p class="growth-head">
         <strong>
           {#- A small mushroom that grows with the stage; it breathes while the project is alive. #}
@@ -88,7 +89,12 @@
         <rect x="{{ loop.index0 * 10 + 1 }}" y="{{ '%.1f' % (30 - h) }}" width="8" height="{{ '%.1f' % h }}" rx="1.5"><title>{{ t('growth.week', count=count) }}</title></rect>
         {%- endfor %}
       </svg>
-      <p class="growth-dates muted">{{ t("growth.dates", created=short_date(created(note)), updated=short_date(updated(note))) }}</p>
+      </div>
+      {#- The dates in two rows, as in a note's dates card, beside the stage. #}
+      <dl class="growth-dates">
+        <div><dt>{{ t("growth.created") }}</dt><dd><time datetime="{{ created(note).isoformat() }}" title="{{ show_date(created(note)) }}">{{ short_date(created(note)) }}</time></dd></div>
+        <div><dt>{{ t("growth.updated") }}</dt><dd><time datetime="{{ updated(note).isoformat() }}" title="{{ show_date(updated(note)) }}">{{ short_date(updated(note)) }}</time></dd></div>
+      </dl>
     </div>
   </div>
 </section>

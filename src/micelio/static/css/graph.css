@@ -79,6 +79,9 @@
 .lbl.project { font-size: calc(13.5px * var(--label-scale, 1) * var(--label-zoom, 1) / var(--view-scale, 1)); font-weight: 800; }
 .lbl.project-small { font-size: calc(14px * var(--label-scale, 1) * var(--label-zoom, 1)); font-weight: 700; }
 .lbl.ghost { font-style: italic; fill: var(--muted); }
+/* In a project's scene the other projects show only their mushroom; the name comes when
+   the mushroom is pointed at. */
+.lbl.project-small:not(.open) { opacity: 0; pointer-events: none; }
 /* A note's Neighborhood: each node reads like a word, a small mark and its name on one
    line; the pair keeps its size on screen as the graph zooms out. */
 .token-k { transform: scale(calc(var(--label-scale, 1) * var(--label-zoom, 1) / var(--view-scale, 1))); }
@@ -216,8 +219,9 @@ form .check, .check {
 .look-editor .muted.small { margin: 0; }
 
 /* How a project grows: a small glass card in the scene's bottom left corner. */
-.growth { position: absolute; z-index: 2; left: max(1rem, env(safe-area-inset-left, 0px)); bottom: 1rem; width: min(19rem, calc(100% - 2rem)); padding: 0.55rem 0.8rem 0.6rem; font-size: 0.8rem; }
-.growth-head { display: flex; justify-content: space-between; align-items: baseline; gap: 0.6rem; margin: 0 0 0.4rem; }
+.growth { position: absolute; z-index: 2; left: max(1rem, env(safe-area-inset-left, 0px)); bottom: 1rem; display: flex; align-items: flex-start; gap: 0.6rem 1.1rem; width: min(30rem, calc(100% - 2rem)); padding: 0.55rem 0.8rem 0.6rem; font-size: 0.8rem; }
+.growth-main { flex: 1 1 13rem; min-width: 0; }
+.growth-head { display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; margin: 0 0 0.4rem; line-height: 1.6rem; }
 .growth-head strong { color: var(--sun); font-size: 0.92rem; }
 .growth-weeks { display: block; width: 100%; height: 2.2rem; overflow: visible; }
 .growth-weeks rect { fill: var(--cat, var(--accent)); opacity: 0.8; }
@@ -230,13 +234,13 @@ form .check, .check {
 @media (prefers-reduced-motion: reduce) { .explore-stage.arriving { animation: none; } }
 /* On a wide scene the growth card stands on the soil line, beside the mushrooms. */
 @media (min-width: 720px) {
-  .hero-scene.has-soil .growth { bottom: auto; top: calc(var(--soil-y) - 0.5rem); transform: translateY(-100%); }
+  .hero-scene.has-soil .growth { bottom: auto; top: calc(var(--soil-y) - 1.4rem); transform: translateY(-100%); }
 }
 /* A project's title stays smaller than the site's name, in one or two short lines. */
 .hero-heading h1 { font-size: calc(clamp(1.3rem, 2.6vw, 1.9rem) * var(--title-scale, 1)); max-width: min(40rem, 100%); }
 
 /* The growth card's mushroom: bigger at each stage, breathing while alive, spores when fruiting. */
-.growth-head strong { display: inline-flex; align-items: flex-end; gap: 0.35rem; }
+.growth-head strong { display: inline-flex; align-items: center; gap: 0.35rem; }
 .growth-shroom { width: 1.6rem; height: 1.6rem; overflow: visible; }
 .growth-shroom .cap { fill: var(--cat, var(--accent)); }
 .growth-shroom .stem { fill: var(--text); opacity: 0.9; }
@@ -269,7 +273,11 @@ form .check, .check {
 @media (max-width: 719px) {
   .graph-tools:not(.open) > :not(.graph-gear):not(.graph-panel) { display: none; }
 }
-.growth-dates { margin: 0.4rem 0 0; font-size: 0.72rem; font-variant-numeric: tabular-nums; }
+/* The dates as in a note's dates card: two rows, the word in the sun color. */
+.growth-dates { flex: none; margin: 0; padding-left: 1rem; border-left: 1px solid var(--line); font-size: 0.78rem; font-variant-numeric: tabular-nums; }
+.growth-dates > div { display: flex; align-items: baseline; gap: 0.5rem; line-height: 1.6rem; }
+.growth-dates dt { min-width: 3.4rem; color: var(--sun); font-weight: 700; }
+.growth-dates dd { margin: 0; }
 .graph-tip-hint { display: block; margin-top: 0.25rem; color: var(--sun); font-size: 0.78rem; }
 
 /* The Share switch (§9): a card like the growth card, at the right of a project's scene on
@@ -279,7 +287,7 @@ form .check, .check {
 .scene-cards > * { pointer-events: auto; }
 .hero-scene .scene-cards > .growth { position: relative; left: auto; right: auto; top: auto; bottom: auto; transform: none; }
 @media (min-width: 720px) {
-  .hero-scene.has-soil .scene-cards { bottom: auto; top: calc(var(--soil-y) - 0.5rem); transform: translateY(-100%); }
+  .hero-scene.has-soil .scene-cards { bottom: auto; top: calc(var(--soil-y) - 1.4rem); transform: translateY(-100%); }
 }
 .share-toggle { display: inline-flex; flex-direction: row; align-items: center; gap: 0.4rem; margin: 0; min-height: 0; padding: 0.2rem 0.85rem 0.2rem 0.45rem; border-radius: 999px; color: var(--text); font: inherit; font-size: 0.8rem; cursor: pointer; box-shadow: none; }
 span.share-toggle { cursor: default; }
@@ -314,7 +322,8 @@ button.share-toggle:hover .share-art { transform: scale(1.05); }
 @media (max-width: 719px) {
   .scene-page .scene-cards { bottom: auto; top: calc(var(--top-room) + 7.4rem); align-items: stretch; }
   .hero-scene .scene-cards > .growth { flex: 1; min-width: 0; width: auto; font-size: 0.74rem; }
-  .scene-page .growth-dates { font-size: 0.64rem; }
+  .scene-page .growth-dates { font-size: 0.7rem; padding-left: 0.7rem; }
+  .growth-dates > div { line-height: 1.35rem; }
   .share-caption { font-size: 0.82rem; }
 }
 
@@ -337,7 +346,7 @@ button.share-toggle:hover .share-art { transform: scale(1.05); }
 .scene-page .hero-scene.digging { transition: height 0.9s cubic-bezier(0.3, 0.7, 0.3, 1); }
 .graph-forest:not(.deep) > .graph-tools, .graph-forest:not(.deep) > .forest-bar { display: none; }
 .dig-button {
-  position: absolute; z-index: 3; left: var(--dig-x, 50%); top: calc(var(--soil-y, 70%) + 1.4rem); transform: translateX(-50%);
+  position: absolute; z-index: 3; left: var(--dig-x, 50%); top: calc(var(--soil-y, 70%) + 2.3rem); transform: translateX(-50%);
   display: inline-flex; align-items: center; gap: 0.45rem; min-height: 40px; padding: 0.4rem 1.05rem 0.4rem 0.85rem;
   border: 2px solid var(--ink); border-radius: 999px; background: var(--sun); color: var(--ink);
   font: inherit; font-size: 0.9rem; font-weight: 800; letter-spacing: 0.02em; cursor: pointer;

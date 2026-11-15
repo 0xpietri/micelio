@@ -84,6 +84,11 @@ All notable changes to this project are documented here. The format follows
   surface") folds it up again, like the one at the bottom; both buttons are a little smaller.
 - A project's title is a little larger, with the Share switch beside it on the same line: a
   small drawing and "Spores in the air" or "Underground", in one color.
+- The growth card is wider: its stage and note count line up, and the created and updated
+  dates sit beside them in two rows, like a note's dates card. It stands a little higher,
+  and "Dig deeper" a little lower.
+- In a project's scene the other projects show only their mushroom; the name appears when
+  you point at it.
 - Notes in the graphs are dots in their category's palette color again (drafts are
   see-through, dashed dots); only projects are mushrooms.
 - A note's Neighborhood reads like a list of words: each mark is about as tall as a capital

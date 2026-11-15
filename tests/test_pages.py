@@ -52,7 +52,7 @@ def test_project_page(client: TestClient) -> None:
     assert "Bayes theorem in one line" in titles(html)
     assert "McElreath - Statistical Rethinking" in titles(html)
     assert html.count('class="badge bridge"') == 2
-    assert "Created 10/1/2026" in html  # in the growth card, in numbers
+    assert ">10/1/2026</time>" in html  # in the growth card, in numbers
 
 
 def test_project_page_lists_its_conversations(client: TestClient) -> None:

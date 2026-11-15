@@ -125,5 +125,6 @@ def test_title_effects_and_soil_reset(client: TestClient) -> None:
 def test_growth_card_holds_the_dates_in_numbers(client: TestClient) -> None:
     html = client.get("/projects/learning-bayesian-statistics").text
     card = html.split('class="growth glass')[1].split("</section>")[0]
-    assert "Created 10/1/2026 · Updated" in card
+    assert '<dt>Created</dt><dd><time datetime="2026-10-01"' in card
+    assert ">10/1/2026</time>" in card
     assert "Created:" not in html

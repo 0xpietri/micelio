@@ -178,3 +178,17 @@ def test_the_share_card_shows_the_scene_style(site_for: SiteFor) -> None:
     page = site.client.get(f"/projects/{PRIVATE}").text
     assert "/static/img/share/" not in page
     assert 'class="share-shroom"' in page
+
+
+def test_the_growth_card_shows_its_dates_in_two_rows(site_for: SiteFor) -> None:
+    site = site_for(VAULT)
+    site.sign_in()
+    page = site.client.get(f"/projects/{PRIVATE}").text
+    dates = re.search(r'<dl class="growth-dates">(.*?)</dl>', page, re.S)
+    assert dates, "the growth card carries the dates beside its stage"
+    assert dates.group(1).count("<dt>") == 2
+    css = (
+        Path(__file__).parents[1] / "src" / "micelio" / "static" / "css" / "graph.css"
+    ).read_text("utf-8")
+    # Other projects in the scene show their name only when pointed at.
+    assert ".lbl.project-small:not(.open) { opacity: 0;" in css
