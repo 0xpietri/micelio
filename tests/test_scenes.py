@@ -93,6 +93,7 @@ def test_a_choice_saved_before_scenes_starts_on_the_default_scene(tmp_path: Path
     assert now.soil == SCENES[DEFAULT_SCENE].soil
     store.save(now)
     assert store.current().soil == SCENES[DEFAULT_SCENE].soil
+    store.close()
 
 
 def test_a_legacy_upload_keeps_its_soil(tmp_path: Path) -> None:
@@ -107,6 +108,7 @@ def test_a_legacy_upload_keeps_its_soil(tmp_path: Path) -> None:
     store.write_setting("appearance", raw)
     assert store.current().uses_own
     assert store.current().soil == 41
+    store.close()
 
 
 def test_picking_a_scene_brings_its_values(client: TestClient) -> None:
