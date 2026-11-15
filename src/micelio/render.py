@@ -160,6 +160,7 @@ class Renderer:
         *,
         ghosts: bool = True,
         guide_headings: Iterable[str] = (),
+        links_headings: Iterable[str] = (),
         anchors: bool = False,
     ) -> None:
         self.index = index
@@ -167,6 +168,8 @@ class Renderer:
         self.anchors = anchors
         # A project's guide section is shown beside the page (§3.4), not in its body.
         self.guide_headings = tuple(guide_headings)
+        # A note's own list of links: the Neighborhood under the note says the same.
+        self.links_headings = tuple(links_headings)
         self._cache: dict[str, Markup] = {}
         self._generation = -1
         self._lock = threading.Lock()
@@ -216,6 +219,8 @@ class Renderer:
             body = _LEADING_H1.sub("", note.body, count=1)
         if note.type == "project" and self.guide_headings:
             body = drop_section(body, self.guide_headings, keep_lines=self.anchors)
+        if note.type != "project" and self.links_headings:
+            body = drop_section(body, self.links_headings, keep_lines=self.anchors)
         raw = self.md.render(body)
         clean = nh3.clean(
             raw,

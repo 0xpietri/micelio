@@ -40,6 +40,23 @@ from micelio.vault.public import PublicView
 _STATUS_ORDER = {status: i for i, status in enumerate(("active", "draft", "paused", "closed"))}
 
 
+# The order of a note's neighbors (§7): its projects, then what it links or is linked
+# from, the concepts first and the journal last.
+_NEIGHBOR_ORDER = {"project": 0, "note": 1, "question": 2, "gap": 3, "source": 4, "journal": 5}
+
+
+def neighbors(vault: IndexView, slug: str) -> list[Note]:
+    """Every note one link away from ``slug``, either direction, plus the projects it
+    belongs to: the same notes as its Neighborhood graph, as one list."""
+    around = (
+        vault.outlinks.get(slug, set())
+        | vault.backlinks.get(slug, set())
+        | vault.projects_of.get(slug, set())
+    ) - {slug}
+    found = (vault.notes[s] for s in around if s in vault.notes)
+    return sorted(found, key=lambda n: (_NEIGHBOR_ORDER.get(n.type, 9), n.title.lower(), n.slug))
+
+
 @dataclass(frozen=True, slots=True)
 class ProjectRow:
     note: Note
@@ -158,7 +175,12 @@ class Pages:
         dress = self.node_looks.all
         self.everything = Reader(
             index,
-            Renderer(index, guide_headings=config.guide.headings, anchors=config.editing.enabled),
+            Renderer(
+                index,
+                guide_headings=config.guide.headings,
+                links_headings=config.note.links_headings,
+                anchors=config.editing.enabled,
+            ),
             GraphBuilder(config, index, self.colors, dress),
         )
         self.editor = SaidEditor(
@@ -168,7 +190,12 @@ class Pages:
         )
         self.public = Reader(
             public,
-            Renderer(public, ghosts=False, guide_headings=config.guide.headings),
+            Renderer(
+                public,
+                ghosts=False,
+                guide_headings=config.guide.headings,
+                links_headings=config.note.links_headings,
+            ),
             GraphBuilder(config, public, self.colors, dress),
         )
 
@@ -415,19 +442,10 @@ class Pages:
             note = self._note(vault, slug)
             if note.type == "project":
                 return RedirectResponse(href_for(note), status_code=308)
-            backlinks = sorted(
-                (vault.notes[s] for s in vault.backlinks.get(slug, set())),
-                key=lambda n: n.title.lower(),
-            )
-            projects = sorted(
-                (vault.notes[s] for s in vault.projects_of.get(slug, set())),
-                key=lambda n: n.title.lower(),
-            )
             context = {
                 "note": note,
                 "body": reader.renderer.html(note),
-                "backlinks": [b for b in backlinks if b.type != "project"],
-                "projects": projects,
+                "neighbors": neighbors(vault, slug),
                 "guide": self._guide_for(vault, note, guide),
                 "nav": "journal" if note.type == "journal" else "",
             }

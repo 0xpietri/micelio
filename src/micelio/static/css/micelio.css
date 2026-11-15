@@ -273,6 +273,14 @@ a.tag:hover { background: color-mix(in srgb, var(--pal-button-alt, #22d3ee) 30%,
 
 .related { margin-top: 2.5rem; padding-top: 0.5rem; border-top: 1px dashed var(--line); }
 
+/* A note's Neighborhood: under the graph, the same notes in one list. Each mark is the
+   height of the name's capital letters, on the name's line. */
+.neighbors { list-style: none; margin: 0.9rem 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr)); gap: 0.35rem 1.2rem; }
+.neighbors li { display: flex; align-items: baseline; gap: 0.4rem; min-width: 0; }
+.neighbors a { overflow-wrap: anywhere; }
+.neighbors .mushroom-icon { width: 1.25em; height: 1.25em; margin: 0 -0.15em; align-self: baseline; position: relative; top: 0.2em; }
+.neighbors .spore-icon { width: 0.62em; height: 0.62em; margin: 0 0.14em; border-width: 1.5px; align-self: baseline; }
+
 /* Rendered notes */
 .prose { margin-top: 1.25rem; }
 .prose h2 { margin-top: 1.6rem; color: var(--sun); }
@@ -763,32 +771,33 @@ form.inline { display: inline; }
 .callout-said.moving { outline: 3px dashed var(--sun); outline-offset: 4px; }
 .callout-said .said-move-tools { position: static; display: flex; margin-top: 0.6rem; width: max-content; max-width: 100%; flex-wrap: wrap; }
 
-/* Desktop: the floating "Add a note" beside the text, at the middle of the window. */
-.said-fab {
-  position: fixed;
-  top: 50%;
-  right: 1rem;
-  transform: translateY(-50%);
-  z-index: 15;
+/* "Add a note" where the note ends: a card like the dates card under the title, right
+   aligned like it, before the pager. */
+.note-foot { display: flex; justify-content: flex-end; align-items: flex-start; gap: 0.5rem; margin-top: 1.4rem; }
+.said-add {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  align-items: flex-start;
+  gap: 0;
+  margin: 0;
+  /* The dates card's own look: the plain button rules would make it a pill. */
+  padding: 0.45rem 0.75rem;
+  border-radius: 12px;
+  background: var(--glass);
+  box-shadow: 0 0 0 1px var(--line) inset, 6px 6px 0 color-mix(in srgb, var(--ink) 70%, transparent);
+  color: var(--text);
+  text-align: left;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 400;
+  line-height: inherit;
+  cursor: pointer;
 }
-.said-fab[style*="left"] { right: auto; }
-.said-fab-add {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.55rem 0.9rem 0.55rem 0.7rem;
-  border-radius: 999px;
-  background: var(--sun);
-  color: var(--ink);
-  font-weight: 700;
-  box-shadow: 0 3px 14px rgb(0 0 0 / 0.45);
-}
-.said-fab-add > span:first-child { font-size: 1.3rem; line-height: 1; }
-.said-fab.tight .said-fab-label { display: none; }
-.said-fab-add:focus-visible { outline: 3px solid var(--text); outline-offset: 2px; }
+.said-add[hidden] { display: none; }
+.said-add-title { color: var(--sun); font-weight: 700; }
+.said-add-title > span { display: inline-block; min-width: 0.9em; }
+.said-add:hover, .said-add:focus-visible { border-color: var(--sun); }
+.said-add:focus-visible { outline: 3px solid var(--text); outline-offset: 2px; }
 
 /* Phone: what a held blank space opens. */
 .said-popup {

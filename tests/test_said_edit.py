@@ -194,6 +194,9 @@ def test_the_owner_page_carries_lines_and_keys(site_for: SiteFor) -> None:
     assert "said-edit.js" in html
     keys = page_keys(site)
     assert keys["url"] == "/api/notes/n/said"
+    # "Add a note" is a card where the note ends, before the pager, not a floating button.
+    assert html.index('<div class="prose"') < html.index("data-said-add")
+    assert html.index("data-said-add") < html.index('<aside class="related">')
 
 
 def test_the_owner_inserts_a_bubble(site_for: SiteFor, tmp_path: Path) -> None:
@@ -236,6 +239,7 @@ def test_visitors_get_nothing(site_for: SiteFor) -> None:
     assert "data-said" not in html
     assert "data-l=" not in html
     assert "said-edit.js" not in html
+    assert "data-said-add" not in html
     words = site.client.get("/api/notes/n/said?start=5", follow_redirects=False)
     assert words.status_code in (303, 401, 404)
     response = site.client.post("/api/notes/n/said", json={"op": "delete", "start": 5})
@@ -261,3 +265,13 @@ def test_hidden_parts_keep_the_line_numbers(make_vault: VaultFactory) -> None:
     assert '<h2 data-l="8-9">After</h2>' in html
     assert '<p data-l="9-10">End.</p>' in html
     assert "data-l" not in Renderer(index, guide_headings=["Guía"]).html(index.notes["p"])
+
+
+def test_a_hidden_links_section_keeps_the_line_numbers(make_vault: VaultFactory) -> None:
+    """A note's "## Enlaces" is blanked too: a bubble added at the end goes before it."""
+    text = "---\ntype: note\n---\n# N\n\nIntro.\n\n## Enlaces\n- [[a]]\n\n## After\nEnd.\n"
+    index = make_vault({"notes/N.md": text})
+    html = Renderer(index, links_headings=["Links", "Enlaces"], anchors=True).html(index.notes["n"])
+    assert '<p data-l="2-3">Intro.</p>' in html
+    assert "Enlaces" not in html
+    assert '<h2 data-l="7-8">After</h2>' in html

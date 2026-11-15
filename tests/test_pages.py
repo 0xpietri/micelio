@@ -69,11 +69,61 @@ def test_note_page(client: TestClient) -> None:
     assert 'class="mushroom-icon cat-study"' in html
 
 
-def test_note_page_shows_ghost_and_backlinks(client: TestClient) -> None:
+def neighbor_titles(html: str) -> list[str]:
+    block = html[html.index('<ul class="neighbors">') :]
+    block = block[: block.index("</ul>")]
+    return re.findall(r'<a href="[^"]+" title="[^"]+">([^<]+)</a>', block)
+
+
+def test_note_page_keeps_only_the_neighborhood(client: TestClient) -> None:
+    """The note's own "## Links" and the old Part of / Linked from lists are gone: the
+    Neighborhood lists the same notes, its projects first and the journal last."""
     html = client.get("/notes/can-planetary-gravity-affect-a-newborn").text
+    prose = html[html.index('<div class="prose"') : html.index('<aside class="related">')]
+    assert "Compare with" not in prose
+    assert "<h2>Links</h2>" not in prose
+    assert "Linked from" not in html
+    assert "Part of" not in html
+    assert neighbor_titles(html) == [
+        "Do planets at birth leave a trace?",
+        "A planet&#39;s tidal pull is smaller than a nearby wall&#39;s",
+        "2026-11-09, voice call: planets",
+    ]
+    # Each one carries the mark it has in the graph: a mushroom, a dot, a golden dot.
+    block = html[html.index('<ul class="neighbors">') :]
+    assert block.index('class="mushroom-icon') < block.index('class="spore-icon"')
+    assert block.index('class="spore-icon"') < block.index('class="spore-icon golden"')
+    assert "(Journal)" in block
+
+
+def test_links_section_shown_again_when_configured_off() -> None:
+    config = Config.model_validate(
+        {
+            "vault": VaultConfig(root=EXAMPLE_VAULT),
+            "auth": {"mode": "none"},
+            "note": {"links_headings": []},
+        }
+    )
+    html = (
+        TestClient(create_app(config, environ={}))
+        .get("/notes/can-planetary-gravity-affect-a-newborn")
+        .text
+    )
+    assert "Compare with" in html
     assert 'class="ghost"' in html
-    assert "Linked from" in html
-    assert "2026-11-09, voice call: planets" in html
+
+
+def test_spanish_links_heading_is_hidden_too(tmp_path: Path) -> None:
+    (tmp_path / "notes").mkdir()
+    (tmp_path / "notes" / "a.md").write_text(
+        "---\ntype: note\n---\n# A\n\nTexto.\n\n## Enlaces\n- [[b]]\n\n## Después\nFin.\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "notes" / "b.md").write_text("---\ntype: note\n---\n# B\n", encoding="utf-8")
+    html = client_for(root=tmp_path).get("/notes/a").text
+    assert "Enlaces" not in html
+    assert "Después" in html
+    assert neighbor_titles(html) == ["B"]
 
 
 def test_journal_newest_first(client: TestClient) -> None:

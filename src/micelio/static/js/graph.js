@@ -424,21 +424,28 @@ function label(node, x, y, cls, settings) {
   return text;
 }
 
-/** Names that would sit on top of each other: the better connected node keeps its name,
- * the other one hides it until its node is pointed at (openLabels shows it). Run again
- * after every zoom, since the names keep their size on screen. */
+/** Names that would sit on top of each other: the better connected node keeps its name
+ * where it is; the other one first tries a line or two lower, and only when there is no
+ * room there either it hides until its node is pointed at (openLabels shows it). Run
+ * again after every zoom, since the names keep their size on screen. */
 function declutter(root) {
   const texts = [...root.querySelectorAll("text.lbl")].sort((a, b) => Number(b.dataset.rank) - Number(a.dataset.rank));
   const kept = [];
+  const overlaps = (box, pad) => kept.some((k) => box.x < k.x + k.width + pad && k.x < box.x + box.width + pad && box.y < k.y + k.height && k.y < box.y + box.height);
   for (const t of texts) {
     t.classList.remove("crowded");
+    if (t.dataset.y0 == null) t.dataset.y0 = t.getAttribute("y");
+    const y0 = Number(t.dataset.y0);
+    t.setAttribute("y", f1(y0));
     let box;
     try { box = t.getBBox(); } catch { continue; }
     if (!box.width) continue;
     const pad = box.height * 0.25;
-    const hit = kept.some((k) => box.x < k.x + k.width + pad && k.x < box.x + box.width + pad && box.y < k.y + k.height && k.y < box.y + box.height);
-    if (hit) t.classList.add("crowded");
-    else kept.push(box);
+    const step = box.height * 1.05;
+    const shift = [0, step, -2 * step, 2 * step].find((dy) => !overlaps({ x: box.x, y: box.y + dy, width: box.width, height: box.height }, pad));
+    if (shift == null) { t.classList.add("crowded"); continue; }
+    if (shift) t.setAttribute("y", f1(y0 + shift));
+    kept.push({ x: box.x, y: box.y + shift, width: box.width, height: box.height });
   }
 }
 
