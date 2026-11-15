@@ -32,6 +32,16 @@ arrow beside it.
 On a test project of 36 densely linked notes and 3 journal entries, the page went from
 208 drawn edges to 39 threads.
 
+## Follow-up: which note links which
+
+marcos asked (same night) for an animation showing which note links to which. Pointing at
+or focusing a note in the underground lights all its threads, dims the rest, and runs
+sparks along each thread from the linking note to the linked one. Mutual links run both
+ways once the API's `both` field from the note-page PR (#28) is merged; until then they
+run one way. The sparks are forest-scoped CSS (`.graph-forest .flow`), so they sit beside
+#28's own `.flow` without clashing. Touch screens have no pointer to hover: a tap still
+opens the note.
+
 ## Tests
 
 `tests/test_graph.py`: the spine is a tree reaching every note, keeps one thread to the

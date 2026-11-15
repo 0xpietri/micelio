@@ -14,6 +14,9 @@ All notable changes to this project are documented here. The format follows
 - The project graph draws one thread per note, branching from the project through its most
   linked notes, instead of every link at once. Point at a note to light up all its other
   connections, or switch on "Every connection" to see them all.
+- Pointing at a note in a project's underground dims the rest and sends sparks along its
+  threads, from the note that links to the one it links (both ways when they link each
+  other).
 - Nine new scenes to pick on the Appearance page, in three styles (blacklight, neon and
   brushstrokes), with a quiet dark underground so your own mycelium and the names on the
   graphs stand out. Each scene brings its soil line and its own illustrated mushrooms; the

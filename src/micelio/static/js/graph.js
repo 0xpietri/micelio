@@ -620,7 +620,7 @@ function drawForest(svg, data, L, strings, state, settings, zoom = 1, { deep = t
     const b = byId[l.target];
     const d = threadPath(a, b, [a.id, b.id].sort().join("|"), soil + 8);
     const look = thread(a, b, L);
-    markup += `<path class="hypha extra k-${look.kind}" data-a="${a.id}" data-b="${b.id}" d="${d}" ${look.attrs}/>`;
+    markup += `<path class="hypha extra k-${look.kind}" data-a="${a.id}" data-b="${b.id}"${l.both ? " data-both" : ""} d="${d}" ${look.attrs}/>`;
   }
   for (const l of spine) {
     const s = l.source;
@@ -630,7 +630,8 @@ function drawForest(svg, data, L, strings, state, settings, zoom = 1, { deep = t
     const d = threadPath(from, to, [s.id, t.id].sort().join("|"), soil + 8);
     const ghost = s.ghost || t.ghost;
     const look = thread(s, t, L);
-    markup += `<path class="hypha k-${look.kind}${l.faded ? " faded" : ""}" d="${d}" ${look.attrs}/>`;
+    // Drawn from the note that links to the one it links, so sparks can run that way.
+    markup += `<path class="hypha k-${look.kind}${l.faded ? " faded" : ""}" data-a="${s.id}" data-b="${t.id}"${l.both ? " data-both" : ""} d="${d}" ${look.attrs}/>`;
     if (!ghost) {
       pulses.push({ d, color: s.type === "project" ? L.projectColor(s) : L.pal.spore });
     }
@@ -835,13 +836,28 @@ function underground(host, svg, strings, settings, redraw) {
     redraw();
   });
 
-  // A note's other connections light up while it is pointed at or focused.
+  // While a note is pointed at or focused, all its connections light up (the hidden ones
+  // too), the rest dims, and sparks run along each thread from the note that links to the
+  // one it links: both ways when the two link each other (the API's ``both``).
   const light = (target) => {
-    for (const p of svg.querySelectorAll(".hypha.extra.lit")) p.classList.remove("lit");
+    svg.classList.remove("tracing");
+    for (const p of svg.querySelectorAll(".hypha.lit")) p.classList.remove("lit");
+    for (const f of svg.querySelectorAll(".flows")) f.remove();
     const a = target && target.closest && target.closest("a.node");
     if (!a) return;
     const id = CSS.escape(a.dataset.id);
-    for (const p of svg.querySelectorAll(`.hypha.extra[data-a="${id}"], .hypha.extra[data-b="${id}"]`)) p.classList.add("lit");
+    const threads = svg.querySelectorAll(`.hypha[data-a="${id}"], .hypha[data-b="${id}"]`);
+    if (!threads.length) return;
+    const flows = el("g", { class: "flows" });
+    for (const p of threads) {
+      p.classList.add("lit");
+      const d = p.getAttribute("d");
+      flows.appendChild(el("path", { class: "flow", d, pathLength: 100 }));
+      if (p.hasAttribute("data-both")) flows.appendChild(el("path", { class: "flow back", d, pathLength: 100 }));
+    }
+    const life = svg.querySelector("g.life");
+    if (life) life.insertBefore(flows, life.children[2] || null);
+    svg.classList.add("tracing");
   };
   svg.addEventListener("pointerover", (e) => light(e.target));
   svg.addEventListener("pointerout", () => light(null));
