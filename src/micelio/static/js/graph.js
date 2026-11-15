@@ -38,9 +38,8 @@ function look(data) {
     color: (key) => (key && cats[key] ? cats[key].color : neutral),
     species: (key) => (key && cats[key] ? cats[key].species : UNCATEGORIZED_SPECIES),
     /** A project's own color: its category's, shifted a little per project, so two
-     * projects of one category are told apart (the owner may choose it, ``node.look``). */
+     * projects of one category are told apart. */
     projectColor(node) {
-      if (node.look && node.look.color) return node.look.color;
       return shade(node.id, this.color(node.category), pal);
     },
     projectSpecies(node) { return (node.look && node.look.species) || this.species(node.category); },

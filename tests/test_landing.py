@@ -229,7 +229,7 @@ def test_store_round_trip_and_uploads(tmp_path: Path) -> None:
 
     removed = store.remove_background()
     assert not removed.uses_own
-    assert not removed.recolors  # an included scene keeps its own colors (§7b)
+    assert removed.recolors  # every included scene takes the palette (§7b)
     assert not any((tmp_path / "data" / "backgrounds").iterdir())
     store.close()
 
@@ -335,7 +335,11 @@ def test_palette_changes_every_page(client: TestClient) -> None:
     assert categories[0]["color"] == "#bb9af7"
     landing = client.get("/api/landing").json()
     assert landing["palette"]["key"] == "tokyo-night"
-    assert landing["background"]["recolor"] is False  # the box was left unticked
+    # Another palette recolors the scene even though the box was not sent ticked.
+    assert landing["background"]["recolor"] is True
+    # On the same palette the box counts.
+    save(client, palette="tokyo-night")
+    assert client.get("/api/landing").json()["background"]["recolor"] is False
     save(client, palette="tokyo-night", recolor="on")
     assert client.get("/api/landing").json()["background"]["recolor"] is True
 

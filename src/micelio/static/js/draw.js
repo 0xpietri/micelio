@@ -93,7 +93,9 @@ export function mushroomPicture(kind, style = mushroomStyle()) {
   return `/static/img/mushrooms/${encodeURIComponent(style)}/${SPECIES.includes(kind) ? kind : "glowing-bonnets"}.webp`;
 }
 
-export function painter(pal, style = mushroomStyle()) {
+/** ``tint`` names the filter that recolors the pictures with the palette (§7b): by
+ * default the one on the painting behind the page, when it is recolored. */
+export function painter(pal, style = mushroomStyle(), tint = document.getElementById("bgmap-page") ? "bgmap-page" : null) {
   const INK = pal.ink;
   const STEM = pal.stem;
   const P = (d, fill, sw = 3) =>
@@ -247,9 +249,11 @@ export function painter(pal, style = mushroomStyle()) {
   function mushroom(kind, color, status) {
     if (status === "draft") return button(color);
     const picture = mushroomPicture(kind, style);
-    // A picture is 512 px square with the stem's foot at the bottom middle.
+    // A picture is 512 px square with the stem's foot at the bottom middle. It takes the
+    // palette's colors through the same filter as the painting.
+    const filter = tint ? ` filter="url(#${tint})"` : "";
     const body = picture
-      ? `<image href="${picture}" x="-56" y="-111" width="112" height="112" preserveAspectRatio="xMidYMax meet"/>`
+      ? `<image href="${picture}" x="-42" y="-83" width="84" height="84" preserveAspectRatio="xMidYMax meet"${filter}/>`
       : (species[kind] || species[DRAWN_AS[kind]] || species["glowing-bonnets"])(color);
     if (status === "paused") return `<g filter="url(#paused)" opacity=".6">${body}</g>`;
     if (status === "closed") return `<g filter="url(#dried)"><g transform="rotate(-20) scale(.92,.82)">${body}</g></g>`;

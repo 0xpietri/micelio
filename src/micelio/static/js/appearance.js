@@ -219,6 +219,14 @@ async function start() {
       if (recolor) recolor.checked = radio.dataset.recolor === "on";
     });
   }
+  // Another palette recolors the scene again, even after the box was unticked; an
+  // uploaded image keeps its own colors.
+  for (const radio of document.querySelectorAll('input[name="palette"]')) {
+    radio.addEventListener("change", () => {
+      const painting = document.querySelector('input[name="background"]:checked');
+      if (recolor && painting) recolor.checked = painting.dataset.recolor === "on";
+    });
+  }
   const flush = autosave();
   clickOutsideLeaves(flush);
   const strings = await loadStrings();

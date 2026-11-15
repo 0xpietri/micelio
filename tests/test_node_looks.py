@@ -41,13 +41,14 @@ def graph_node(client: TestClient, slug: str, scope: str = "all") -> dict[str, o
 
 def test_clean_look_keeps_only_what_the_kind_has() -> None:
     raw = {"color": "#AABBCC", "size": 9, "species": "morel", "mineral": "amber", "x": 1}
-    assert clean_look(raw, "project") == {"color": "#aabbcc", "size": 1.6, "species": "morel"}
+    # A project's color follows the palette (§7b): only sources keep one.
+    assert clean_look(raw, "project") == {"size": 1.2, "species": "morel"}
     assert clean_look(raw, "source") == {"color": "#aabbcc", "mineral": "amber"}
     bad = {"color": "red; x", "size": True, "species": "toadstool", "mineral": "ruby"}
     assert clean_look(bad, "project") == {}
     assert clean_look(bad, "source") == {}
     assert clean_look([1, 2], "project") == {}
-    assert clean_look({"size": 0.1}, "project") == {"size": 0.6}
+    assert clean_look({"size": 0.1}, "project") == {"size": 0.3}
 
 
 def test_node_looks_save_and_reset(tmp_path: Path) -> None:
@@ -66,24 +67,17 @@ def test_node_looks_save_and_reset(tmp_path: Path) -> None:
 
 def test_owner_dresses_a_project(client: TestClient) -> None:
     assert graph_node(client, PROJECT)["look"] is None
-    answer = dress(client, PROJECT, {"species": "coral", "color": "#ff00aa", "size": 1.3})
+    answer = dress(client, PROJECT, {"species": "coral", "color": "#ff00aa", "size": 0.45})
     assert answer.status_code == 200
-    assert answer.json() == {
-        "ok": True,
-        "look": {"color": "#ff00aa", "species": "coral", "size": 1.3},
-    }
-    assert graph_node(client, PROJECT)["look"] == {
-        "color": "#ff00aa",
-        "species": "coral",
-        "size": 1.3,
-    }
+    assert answer.json() == {"ok": True, "look": {"species": "coral", "size": 0.45}}
+    assert graph_node(client, PROJECT)["look"] == {"species": "coral", "size": 0.45}
     assert graph_node(client, PROJECT, f"project:{PROJECT}")["look"]["species"] == "coral"
     landing = client.get("/api/landing").json()
     project = next(p for p in landing["projects"] if p["id"] == PROJECT)
     assert project["species"] == "coral"
-    assert project["color"] == "#ff00aa"
-    assert project["scale"] == 1.3
-    assert project["shade"] is False
+    assert project["color"] != "#ff00aa"
+    assert project["scale"] == 0.45
+    assert project["shade"] is True  # its category's color, shifted per project
     # The project list draws the same mushroom.
     assert 'data-species="coral"' in client.get("/projects").text
     # Back to the default.
