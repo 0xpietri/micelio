@@ -12,14 +12,12 @@
 <section class="hero-scene" aria-labelledby="project-map">
   <h2 class="visually-hidden" id="project-map">{{ t("project.graph") }}</h2>
   {{ graph_box("project:" ~ note.slug, t("project.graph_label"), mode="forest") }}
+  {#- The title and, on the same line, the Share switch (§9): a small drawing and what it
+      says, "Spores in the air" (shared) or "Underground" (private). Only the owner can flip
+      it; visitors just read it. Flipping changes the drawing and the words, not the color. #}
   <div class="hero-heading">
+    <div class="title-line">
     <h1>{{ note.title }}</h1>
-  </div>
-  {#- The cards on the soil line: the growth card at the left, the Share switch at the right. #}
-  <div class="scene-cards">
-    {#- The Share switch (§9), on the soil line at the right: a neon mushroom when visitors can
-        read the project, only its mycelium under the soil when it is private. Only the owner
-        can flip it; visitors just see the mushroom. #}
     {% set share = share_switch(request, note) %}
     {% if share %}
     {% set on = share.shared or share.in_note %}
@@ -63,8 +61,13 @@
       {% if fixed %}</span>{% else %}</button>{% endif %}
     {% if share.owner %}</form>{% else %}</div>{% endif %}
     {% endif %}
+    </div>
+  </div>
+  {#- The card on the soil line: how the project grows. #}
+  <div class="scene-cards">
     {#- How the project grows: a stage and twelve weeks of notes (§7c). #}
-    <div class="growth glass stage-{{ growth.stage }}{% if category %} cat-{{ category.key }}{% endif %}" title="{{ t('growth.score', score=growth.score) }}">
+    <div class="growth glass stage-{{ growth.stage }}{% if category %} cat-{{ category.key }}{% endif %}" title="{{ t('growth.added', count=growth.added) }}">
+      <div class="growth-main">
       <p class="growth-head">
         <strong>
           {#- A small mushroom that grows with the stage; it breathes while the project is alive. #}
@@ -78,7 +81,6 @@
           </svg>
           {{ t("growth." ~ growth.stage) }}
         </strong>
-        <span class="muted">{{ t("growth.added", count=growth.added) }}</span>
       </p>
       <svg class="growth-weeks" viewBox="0 0 120 30" preserveAspectRatio="none" role="img" aria-label="{{ t('growth.weeks') }}">
         {%- for count in growth.weeks %}
@@ -86,7 +88,12 @@
         <rect x="{{ loop.index0 * 10 + 1 }}" y="{{ '%.1f' % (30 - h) }}" width="8" height="{{ '%.1f' % h }}" rx="1.5"><title>{{ t('growth.week', count=count) }}</title></rect>
         {%- endfor %}
       </svg>
-      <p class="growth-dates muted">{{ t("growth.dates", created=short_date(created(note)), updated=short_date(updated(note))) }}</p>
+      </div>
+      {#- The dates in two rows, as in a note's dates card, beside the stage. #}
+      <dl class="growth-dates">
+        <div><dt>{{ t("growth.created") }}</dt><dd><time datetime="{{ created(note).isoformat() }}" title="{{ show_date(created(note)) }}">{{ short_date(created(note)) }}</time></dd></div>
+        <div><dt>{{ t("growth.updated") }}</dt><dd><time datetime="{{ updated(note).isoformat() }}" title="{{ show_date(updated(note)) }}">{{ short_date(updated(note)) }}</time></dd></div>
+      </dl>
     </div>
   </div>
 </section>

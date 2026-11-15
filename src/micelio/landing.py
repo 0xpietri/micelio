@@ -107,13 +107,14 @@ class LandingBuilder:
                     "category": category.key if category else None,
                     "species": look.get("species")
                     or (category.species if category else UNCATEGORIZED_SPECIES),
-                    "color": look.get("color")
-                    or (colors[category.key] if category else palette.spare[3]),
+                    "color": palette.slot(look["slot"])
+                    if "slot" in look
+                    else (colors[category.key] if category else palette.spare[3]),
                     "status": project.status if project.status in _GROWTH else "active",
                     "notes": sum(1 for m in members if notes[m].type == "note"),
                     "scale": look.get("size", 1.0),
                     # No color chosen: the page shifts the category's a little (§7c).
-                    "shade": "color" not in look,
+                    "shade": "slot" not in look,
                 }
             )
         project_ids = {p["id"] for p in projects}

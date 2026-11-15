@@ -329,3 +329,13 @@ def test_source_is_off_with_editing_off(site_for: SiteFor) -> None:
     site = site_for(editing=False)
     site.sign_in()
     assert site.client.get("/api/notes/n/source").status_code == 404
+
+
+def test_the_note_changes_only_from_edit() -> None:
+    script = (
+        Path(__file__).parents[1] / "src" / "micelio" / "static" / "js" / "said-edit.js"
+    ).read_text("utf-8")
+    # "Edit" is a card like "Add a comment"; pointing at the text offers nothing unless
+    # "Edit parts" (on a phone) is on.
+    assert 'class: "note-card glass said-add said-edit-note"' in script
+    assert 'if (!root.classList.contains("said-parts")) return;' in script

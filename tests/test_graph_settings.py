@@ -70,7 +70,7 @@ def test_defaults_and_cleaning() -> None:
     }
     assert from_null == defaults
     assert from_list == defaults
-    assert cleaned["spacing"] == 600  # clamped to the top
+    assert cleaned["spacing"] == 200  # clamped to the top
     assert cleaned["labels"] == 100  # not a number: the default
     assert cleaned["length"] in (12, 14)  # snapped to the slider's step
     assert cleaned["shorten"] is True  # not a boolean: the default
@@ -147,7 +147,7 @@ console.log(JSON.stringify([
 
 
 def test_settings_strings_exist_in_every_language() -> None:
-    keys = ("settings", "spacing", "labels", "shorten", "length", "chars", "settings_note")
+    keys = ("settings", "spacing", "labels", "shorten", "length", "chars", "every")
     for language in available_languages():
         strings = browser_strings(language)
         for key in (*keys, "reset", "zoom_in", "zoom_out", "fit"):
@@ -164,7 +164,7 @@ def test_every_graph_has_its_own_settings_gear() -> None:
     assert graph.count("function zoomButtons(") == 1
     assert graph.count("  zoomButtons(host, strings, {") == 1
     assert 'class: "graph-gear"' in graph
-    assert "graphSection(panel, strings)" in graph
+    assert "graphSection(panel, strings, { every })" in graph
     assert 'addEventListener("micelio:graph-settings"' in graph
     panel = (STATIC / "js" / "graph-panel.js").read_text("utf-8")
     assert 'from "./graph-settings.js"' in panel
@@ -200,17 +200,36 @@ def test_visitors_get_the_same_graph_code(site_for: SiteFor) -> None:
     assert strings["graph.settings"] == "Graph settings"
 
 
-def test_the_dug_underground_lasts_for_the_tab() -> None:
-    out = run_module(
-        "const store = new Map(); const s = {getItem: (k) => store.get(k) ?? null,"
-        " setItem: (k, v) => store.set(k, v)};"
-        " const before = m.dug('/projects/p', s); m.setDug('/projects/p', true, s);"
-        " const after = [m.dug('/projects/p', s), m.dug('/projects/q', s)];"
-        " m.setDug('/projects/p', false, s);"
-        " const no = () => { throw new Error('no'); };"
-        " const blocked = {getItem: no, setItem: no};"
-        " m.setDug('/x', true, blocked);"
-        " console.log(JSON.stringify([before, ...after, m.dug('/projects/p', s),"
-        " m.dug('/x', blocked), m.clean({every: true}).every]));"
-    )
-    assert out == [False, True, False, False, False, True]
+@needs_node
+def test_a_project_always_opens_closed() -> None:
+    # Digging is not remembered: a reload or another project starts with the underground
+    # hidden, and the same button folds it back up.
+    settings = (STATIC / "js" / "graph-settings.js").read_text(encoding="utf-8")
+    graph = (STATIC / "js" / "graph.js").read_text(encoding="utf-8")
+    assert "micelio.dug" not in settings + graph
+    assert "sessionStorage" not in settings + graph
+    assert "const state = { deep: false" in graph
+    assert "go(!state.deep)" in graph
+    out = run_module("console.log(JSON.stringify(m.clean({every: true}).every));")
+    assert out is True
+
+
+def test_notes_are_palette_dots_and_the_neighborhood_reads_like_words() -> None:
+    graph = (STATIC / "js" / "graph.js").read_text(encoding="utf-8")
+    # Notes and drafts are dots in their category's color, never pictures.
+    assert 'picture("note"' not in graph
+    assert 'nodePicture("draft")' not in graph
+    # The Neighborhood draws each node as a small mark with its name on the same line.
+    assert "function token(" in graph
+    assert 'inline: mode === "box"' in graph
+    assert 'text.setAttribute("text-anchor", "start")' in graph
+
+
+def test_every_connection_lives_in_the_settings_panel() -> None:
+    panel = (STATIC / "js" / "graph-panel.js").read_text("utf-8")
+    graph = (STATIC / "js" / "graph.js").read_text("utf-8")
+    assert 'name: "graph-every"' in panel
+    assert "settings_note" not in panel
+    # One way back up: the dig button; no bar at the bottom.
+    assert "forest-bar" not in graph
+    assert 'every: mode === "forest"' in graph

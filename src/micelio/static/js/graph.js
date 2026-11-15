@@ -7,7 +7,7 @@ import {
   DEFS, MINERALS, SVG_NS, cloud, el, f1, fold, fragment, lighter, loadStrings, mineralPicture, mix, nodePicture, painter,
   paletteFromCss, rampFilter, reduced, seededRandom, shade, threadPath, tr,
 } from "./draw.js";
-import { dug, labelText, lengthFor, load, save, setDug } from "./graph-settings.js";
+import { labelText, lengthFor, load, save } from "./graph-settings.js";
 import { graphSection } from "./graph-panel.js";
 import { lookKey, openLookPanel } from "./node-look.js";
 
@@ -40,6 +40,9 @@ function look(data) {
     /** A project's own color: its category's, shifted a little per project, so two
      * projects of one category are told apart. */
     projectColor(node) {
+      // The owner may give a drawn mushroom one of the palette's colors (by place).
+      const slot = node.look && node.look.slot;
+      if (Number.isInteger(slot) && pal.slots[slot]) return pal.slots[slot];
       return shade(node.id, this.color(node.category), pal);
     },
     projectSpecies(node) { return (node.look && node.look.species) || this.species(node.category); },
@@ -112,26 +115,83 @@ function mark(node, L, k = 1) {
     const r = 4.5 * k;
     return { r: r * 1.4, top: r * 1.4, markup: `<g class="cloud"><g transform="rotate(-35)"><ellipse rx="${f1(r * 0.85)}" ry="${f1(r * 1.45)}" fill="${pal.spore}" stroke="${pal.ink}" stroke-width="1.4"/><path d="M0 ${f1(-r * 1.2)}V${f1(r * 1.2)}" stroke="${pal.ink}" stroke-opacity=".45" stroke-width="1"/></g><circle r="${f1(r + 7)}" fill="transparent"/></g>` };
   }
-  if (node.status === "draft") {
-    // A draft concept: a button mushroom still closed, over a ring in its category's color.
-    const r = (4.5 + Math.sqrt(degree) * 1.1) * k;
-    const color = L.color(node.category);
-    const picture = nodePicture("draft");
-    const ring = `<circle cy="${f1(r * 0.55)}" r="${f1(r * 0.75)}" fill="${color}" fill-opacity=".35" stroke="${color}" stroke-width="1.2"/>`;
-    const body = picture
-      ? img(picture, r * 2.6)
-      : `<g transform="translate(0,${f1(r)}) scale(${(r / 26).toFixed(3)})">${paint.button(color)}</g>`;
-    return { r: r * 1.2, top: r * 1.3, markup: `<g class="cloud draft">${ring}${body}<circle r="${f1(r + 7)}" fill="transparent"/></g>` };
-  }
-  // A note: a plain dot in its category's color, so the links stay readable.
+  // A note is a plain dot in its category's palette color, so the links stay readable; a
+  // draft is the same dot, see-through and dashed. Only projects are mushrooms.
   const r = (3.6 + Math.sqrt(degree) * 1.25) * k;
+  const color = L.color(node.category);
   const ring = node.bridge
     ? `<circle r="${f1(r + 4)}" fill="none" stroke="${pal.sun}" stroke-opacity=".9" stroke-width="1.3" stroke-dasharray="2 3"/>`
     : "";
-  // In an illustrated style a note is a glowing spore ringed in its category's color.
-  const art = picture("note", r * 3);
-  if (art) return { r, top: r, markup: `<g class="cloud">${ring}${art}<circle r="${f1(r * 1.15)}" fill="none" stroke="${L.color(node.category)}" stroke-width="1.4" stroke-opacity=".85"/><circle r="${f1(r + 7)}" fill="transparent"/></g>` };
-  return { r, top: r, markup: `<g class="cloud">${ring}<circle r="${f1(r)}" fill="${L.color(node.category)}" stroke="${pal.ink}" stroke-width="1.4"/><circle r="${f1(r + 7)}" fill="transparent"/></g>` };
+  const dot = node.status === "draft"
+    ? `<circle r="${f1(r)}" fill="${color}" fill-opacity=".35" stroke="${color}" stroke-width="1.4" stroke-dasharray="2.2 2"/>`
+    : `<circle r="${f1(r)}" fill="${color}" stroke="${pal.ink}" stroke-width="1.4"/>`;
+  return { r, top: r, markup: `<g class="cloud${node.status === "draft" ? " draft" : ""}">${ring}${dot}<circle r="${f1(r + 7)}" fill="transparent"/></g>` };
+}
+
+/** A node of a note's Neighborhood drawn like a word: a small mark, about as tall as the
+ * capital letter of its name, with the name on the same line at its right. ``half`` is
+ * how far the mark reaches to the right of the node's point. */
+const TOKEN_H = 19;
+function token(node, L) {
+  if (node.type === "project") {
+    const s = TOKEN_H / 105;
+    const color = L.projectColor(node);
+    const body = L.paint.mushroom(L.projectSpecies(node), color, node.status);
+    return {
+      half: 8,
+      markup: `<g class="cloud"><circle r="9" fill="${color}" opacity=".35" filter="url(#softglow)"/><g transform="translate(0,${f1(TOKEN_H / 2)}) scale(${s.toFixed(3)})">${body}</g><circle r="11" fill="transparent"/></g>`,
+    };
+  }
+  const k = node.type === "source" ? 0.55 : node.type === "journal" ? 0.6 : 0.75;
+  const m = mark(node, L, k);
+  const half = node.type === "source" ? 13 * k : node.type === "journal" ? 11 * k
+    : node.type === "question" ? m.r * 1.8 : node.type === "gap" ? m.r * 1.7 : m.r * 1.1;
+  return { half, markup: m.markup };
+}
+
+/** How much room a Neighborhood token takes around its node's point (layout units at
+ * the home zoom), so the layout keeps names from running into each other. */
+function tokenExtent(node, settings) {
+  const font = (node.type === "project" ? 13.5 : 11) * (settings.labels / 100);
+  const scale = node.type === "project" ? 1.6 : lengthFor(node.degree);
+  const chars = [...labelText(node.title, settings, scale)].length;
+  const half = node.type === "project" ? 8 : node.type === "source" || node.type === "journal" ? 7 : 6;
+  return { left: half + 2, right: half + 5 + chars * font * 0.56, h: Math.max(font * 1.25, half * 2) / 2 };
+}
+
+/** A force that pushes apart nodes whose boxes (``extent``) overlap, along the shorter
+ * way out; a pinned node (the focus) stays and the other one moves. */
+function rectCollide(extent, pad = 6) {
+  let nodes = [];
+  const force = () => {
+    for (let i = 0; i < nodes.length; i++) {
+      const a = nodes[i];
+      const ea = extent(a);
+      for (let j = i + 1; j < nodes.length; j++) {
+        const b = nodes[j];
+        const eb = extent(b);
+        const ox = Math.min(a.x + ea.right, b.x + eb.right) - Math.max(a.x - ea.left, b.x - eb.left) + pad;
+        const oy = Math.min(a.y + ea.h, b.y + eb.h) - Math.max(a.y - ea.h, b.y - eb.h) + pad;
+        if (ox <= 0 || oy <= 0) continue;
+        const pinA = a.fx != null;
+        const pinB = b.fx != null;
+        if (pinA && pinB) continue;
+        const wa = pinA ? 0 : pinB ? 1 : 0.5;
+        const wb = 1 - wa;
+        if (oy < ox) {
+          const dir = b.y > a.y || (b.y === a.y && j % 2) ? 1 : -1;
+          a.y -= dir * oy * wa;
+          b.y += dir * oy * wb;
+        } else {
+          const dir = b.x + (eb.right - eb.left) / 2 > a.x + (ea.right - ea.left) / 2 ? 1 : -1;
+          a.x -= dir * ox * wa;
+          b.x += dir * ox * wb;
+        }
+      }
+    }
+  };
+  force.initialize = (n) => { nodes = n; };
+  return force;
 }
 
 /** A small picture of one kind of node, for legends. */
@@ -156,8 +216,9 @@ function describe(node, strings) {
 
 /** Seeded force layout in plain 2D. A focused graph keeps its focus in the middle.
  * ``spacing`` (percent) stretches the links, the push between nodes and their room. */
-function layoutFree(data, spacing = 100) {
-  const s = spacing / 100;
+function layoutFree(data, spacing = 100, extent = null) {
+  // A Neighborhood (``extent``: names on the same line as their marks) gets more room.
+  const s = (spacing / 100) * (extent ? 1.25 : 1);
   const nodes = data.nodes.map((n) => ({ ...n }));
   const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
   const links = data.edges.filter((e) => byId[e.source] && byId[e.target]).map((e) => ({ ...e }));
@@ -175,8 +236,15 @@ function layoutFree(data, spacing = 100) {
     .force("collide", d3.forceCollide((d) => (d.type === "project" ? 44 : 24) * Math.sqrt(s)))
     .force("x", d3.forceX(0).strength(0.04 / s))
     .force("y", d3.forceY(0).strength(0.05 / s));
+  if (extent) sim.force("names", rectCollide(extent));
   const ticks = Math.min(320, 80 + Math.round(40000 / Math.max(1, nodes.length)));
   for (let i = 0; i < ticks; i++) sim.tick();
+  if (extent) {
+    // A few more passes with only the names pushing, so none is left on top of another.
+    const names = rectCollide(extent);
+    names.initialize(nodes);
+    for (let i = 0; i < 30; i++) names();
+  }
   return { nodes, links };
 }
 
@@ -187,6 +255,19 @@ function bounds(nodes, pad = 60) {
   const x0 = Math.min(...xs) - pad;
   const y0 = Math.min(...ys) - pad - 40;
   return { x: x0, y: y0, w: Math.max(...xs) + pad - x0, h: Math.max(...ys) + pad - y0 };
+}
+
+/** The box around a Neighborhood's tokens, names included. */
+function boundsInline(nodes, extent, pad = 28) {
+  if (!nodes.length) return { x: -100, y: -100, w: 200, h: 200 };
+  const x0 = Math.min(...nodes.map((n) => n.x - extent(n).left)) - pad;
+  const x1 = Math.max(...nodes.map((n) => n.x + extent(n).right)) + pad;
+  const y0 = Math.min(...nodes.map((n) => n.y - extent(n).h)) - pad;
+  const y1 = Math.max(...nodes.map((n) => n.y + extent(n).h)) + pad;
+  // A small neighborhood is not blown up: its names keep about their reading size.
+  const w = Math.max(560, x1 - x0);
+  const h = Math.max(240, y1 - y0);
+  return { x: (x0 + x1 - w) / 2, y: (y0 + y1 - h) / 2, w, h };
 }
 
 /** ``box`` grown to the element's aspect ratio, centered. */
@@ -482,6 +563,23 @@ function declutter(root) {
   }
 }
 
+/** In a Neighborhood a name stays on its mark's line: when two would overlap, the less
+ * connected one hides until its node is pointed at, instead of moving away. */
+function declutterInline(root) {
+  const texts = [...root.querySelectorAll("text.lbl")].sort((a, b) => Number(b.dataset.rank) - Number(a.dataset.rank));
+  const kept = [];
+  for (const t of texts) {
+    t.classList.remove("crowded");
+    const r = t.getBoundingClientRect();
+    if (!r.width) continue;
+    if (kept.some((k) => r.left < k.right + 2 && k.left < r.right + 2 && r.top < k.bottom - 1 && k.top < r.bottom - 1)) {
+      t.classList.add("crowded");
+      continue;
+    }
+    kept.push(r);
+  }
+}
+
 function pulsing(layer, pulses, state, every) {
   clearInterval(state.timer);
   if (reduced() || !pulses.length) return;
@@ -559,6 +657,25 @@ function drawFree(layer, laid, L, strings, opts) {
   const labels = el("g");
   const shown = laid.nodes.filter(visible).sort((a, b) => DRAW_ORDER[a.ghost ? "ghost" : a.type] - DRAW_ORDER[b.ghost ? "ghost" : b.type]);
   for (const n of shown) {
+    if (opts.inline) {
+      // The Neighborhood: each node reads like a word, its mark and its name on one line.
+      const t = token(n, L);
+      const a = nodeLink(n, strings, true);
+      if (dimmed(n)) a.classList.add("dim");
+      const ring = n.focus ? `<circle class="focus-ring" r="${f1(t.half + 5)}"/>` : "";
+      const word = el("g", { class: "token-k" });
+      word.appendChild(fragment(`${ring}${t.markup}`));
+      const text = label(n, t.half + 4, 0, `inline ${n.type === "project" ? "project" : n.ghost ? "ghost minor" : "minor"}`, opts.settings);
+      text.setAttribute("text-anchor", "start");
+      text.setAttribute("dominant-baseline", "central");
+      if (n.focus) text.classList.add("focus");
+      word.appendChild(text);
+      const at = el("g", { transform: `translate(${f1(n.x)},${f1(n.y)})` });
+      at.appendChild(word);
+      a.appendChild(at);
+      marks.appendChild(a);
+      continue;
+    }
     const m = mark(n, L);
     const focusable = opts.focusAll || n.type === "project";
     const a = nodeLink(n, strings, focusable);
@@ -573,7 +690,8 @@ function drawFree(layer, laid, L, strings, opts) {
   }
   const plane = el("g", { class: "pulses" });
   layer.replaceChildren(hyphae, plane, marks, labels);
-  declutter(labels);
+  if (opts.inline) declutterInline(marks);
+  else declutter(labels);
   pulsing(plane, pulses, opts.state, opts.pulseEvery || 700);
 }
 
@@ -642,8 +760,8 @@ function drawForest(svg, data, L, strings, state, settings, zoom = 1, { deep = t
   }
   const deepest = Math.max(soil + 300 * u, ...free.map((n) => n.y + 70));
   // Closed, the scene ends a little under the soil, where the button to dig waits.
-  // Open, it keeps room at the bottom for the bar that brings the reader back up.
-  const bottom = deep ? deepest + 70 * u : Math.min(deepest, soil + 150 * u);
+  // Open, it ends a little under the deepest note.
+  const bottom = deep ? deepest + 30 * u : Math.min(deepest, soil + 150 * u);
   const vb = { x: left, y: top, w, h: bottom - top, cx, soil, deep };
   // How far the digging has to reach to uncover every note.
   vb.reach = Math.max(1, ...free.map((n) => Math.hypot(n.x - cx, n.y - soil) + 60));
@@ -737,7 +855,7 @@ function html(tag, attrs = {}, text = "") {
 
 /** + / − / Fit and ⚙ in the graph's top right corner. The ⚙ opens the viewer's settings
  * (spacing, names; static/js/graph-panel.js), which tell every graph when they change. */
-function zoomButtons(host, strings, { hint, onZoom, onFit }) {
+function zoomButtons(host, strings, { hint, onZoom, onFit, every = false }) {
   const bar = html("div", { class: "graph-tools" });
   if (hint) {
     // Shown while pointed at or focused (CSS), and read out as the button's name.
@@ -755,8 +873,11 @@ function zoomButtons(host, strings, { hint, onZoom, onFit }) {
   button({ "data-zoom": "out", "aria-label": tr(strings, "graph.zoom_out"), title: tr(strings, "graph.zoom_out") }, "−", () => onZoom(1.3));
   button({ "data-zoom": "fit" }, tr(strings, "graph.fit"), onFit);
   const panel = html("div", { class: "graph-panel glass", hidden: "" });
-  graphSection(panel, strings);
+  graphSection(panel, strings, { every });
   const open = (yes) => {
+    // Inside a project's scene the panel fits in what is left below the buttons.
+    const room = host.getBoundingClientRect().bottom - bar.getBoundingClientRect().bottom - 16;
+    panel.style.setProperty("--panel-room", `${Math.max(160, Math.round(room))}px`);
     panel.hidden = !yes;
     gear.setAttribute("aria-expanded", String(yes));
     // On a phone only the ⚙ shows until it is opened (CSS).
@@ -833,55 +954,57 @@ function spread(svg, vb, color) {
   requestAnimationFrame(step);
 }
 
-/** The button that digs into a project's underground and the bar that brings the reader
- * back up, with the switch for every connection. ``redraw`` draws again and returns the
- * scene's view box. Whether this page was dug stays for the tab (the Back button comes
- * back to it open); the switch is one of the viewer's graph settings. */
-function underground(host, svg, strings, settings, redraw) {
+/** The button that digs into a project's underground and, once open, waits at the soil
+ * line's left end to fold it back up. "Every connection" is in the ⚙ panel. ``redraw`` draws
+ * again and returns the scene's view box; ``settle`` puts what stands on the soil line in
+ * place once the scene has its new height. A project always opens closed: digging is not
+ * remembered, on reload or on another project. The switch is one of the viewer's graph
+ * settings. */
+function underground(host, svg, strings, settings, redraw, settle) {
   const scene = host.closest(".hero-scene") || host;
-  const state = { deep: dug(location.pathname), all: settings.every };
-  host.classList.toggle("deep", state.deep);
+  const state = { deep: false, all: settings.every };
+  host.classList.remove("deep");
 
-  const dig = html("button", { type: "button", class: "dig-button", title: tr(strings, "graph.dig_hint") });
+  const dig = html("button", { type: "button", class: "dig-button", "aria-expanded": "false", title: tr(strings, "graph.dig_hint") });
   // A small mycelium spreading from a stem.
   const roots = el("svg", { viewBox: "0 0 24 24", "aria-hidden": "true", focusable: "false" },
     el("path", { d: "M12 2v9M12 11c-3 2-6 3-8 7M12 11c3 2 6 3 8 7M12 11c-.6 4 .4 7 0 11M7 15c-1 2-.5 4-2 6M17 15c1 2 .5 4 2 6" }));
-  dig.append(roots, html("span", {}, tr(strings, "graph.dig")));
-  const bar = html("div", { class: "forest-bar" });
-  const up = html("button", { type: "button", class: "surface-button" }, `↑ ${tr(strings, "graph.surface")}`);
-  const every = html("button", { type: "button", class: "every-button", "aria-pressed": String(state.all), title: tr(strings, "graph.every_hint") }, tr(strings, "graph.every"));
-  bar.append(up, every);
-  host.append(dig, bar);
+  const word = html("span", {}, tr(strings, "graph.dig"));
+  dig.append(roots, word);
+  host.append(dig);
 
+  let settling = null;
   const go = (down) => {
     state.deep = down;
-    setDug(location.pathname, down);
     host.classList.toggle("deep", down);
+    // Open, the same button folds the underground back up.
+    dig.setAttribute("aria-expanded", String(down));
+    dig.title = tr(strings, down ? "graph.fold_hint" : "graph.dig_hint");
+    word.textContent = tr(strings, down ? "graph.surface" : "graph.dig");
     scene.classList.add("digging");
     const vb = redraw();
-    setTimeout(() => scene.classList.remove("digging"), 1000);
+    // The scene changes height for a moment: the soil line's buttons and cards follow it
+    // while it moves and take their place when it stops.
+    clearTimeout(settling);
+    const t0 = performance.now();
+    const follow = () => {
+      settle();
+      if (performance.now() - t0 < 1000) requestAnimationFrame(follow);
+    };
+    requestAnimationFrame(follow);
+    settling = setTimeout(() => { scene.classList.remove("digging"); settle(); }, 1000);
     const behavior = reduced() ? "auto" : "smooth";
     const top = scene.getBoundingClientRect().top + window.scrollY;
     if (down) {
       spread(svg, vb, getComputedStyle(host).getPropertyValue("--sun").trim() || "#fff");
       const soil = parseFloat(getComputedStyle(scene).getPropertyValue("--soil-y")) || 0;
       window.scrollTo({ top: Math.max(0, top + soil - window.innerHeight * 0.25), behavior });
-      up.focus({ preventScroll: true });
     } else {
       if (window.scrollY > top) window.scrollTo({ top, behavior });
       dig.focus({ preventScroll: true });
     }
   };
-  dig.addEventListener("click", () => go(true));
-  up.addEventListener("click", () => go(false));
-  every.addEventListener("click", () => {
-    state.all = !state.all;
-    every.setAttribute("aria-pressed", String(state.all));
-    settings.every = state.all;
-    save(settings);
-    redraw();
-  });
-
+  dig.addEventListener("click", () => go(!state.deep));
   // While a note is pointed at or focused, all its connections light up (the hidden ones
   // too), the rest dims, and sparks run along each thread from the note that links to the
   // one it links: both ways when the two link each other (the API's ``both``).
@@ -988,7 +1111,7 @@ export async function mountGraph(host) {
     // Zoomed out, the names keep a readable size on screen and the crowded ones hide.
     host.style.setProperty("--view-scale", String(Math.max(0.3, Math.min(1, scale))));
     clearTimeout(tidy);
-    tidy = setTimeout(() => declutter(svg), 120);
+    tidy = setTimeout(() => (mode === "box" ? declutterInline(svg) : declutter(svg)), 120);
   }, { onZoom: rememberZoom, ctrlWheel: embedded, maxOut: mode === "forest" ? 1 : mode === "box" ? 2 : 4, clamp: mode === "forest" });
 
   // Where the soil line is on screen, for what stands on it (the project's growth card).
@@ -1007,10 +1130,11 @@ export async function mountGraph(host) {
   let laid = null;
   let redraw;
   let fitBox;
+  let extent = null;
 
   let forest = null;
   if (mode === "forest") {
-    forest = underground(host, svg, strings, settings, () => { redraw(); return home; });
+    forest = underground(host, svg, strings, settings, () => { redraw(); return home; }, () => { soilLine(); forest.place(home); });
     redraw = () => {
       labels.close();
       home = drawForest(svg, data, L, strings, state, settings, depthZoom, forest.state);
@@ -1023,12 +1147,15 @@ export async function mountGraph(host) {
     svg.appendChild(el("defs", {}, L.defs(null)));
     const layer = el("g", { class: "layer" });
     svg.appendChild(layer);
-    laid = layoutFree(data, settings.spacing);
+    // A note's Neighborhood reads like a list of words: marks as tall as a capital letter,
+    // names on the same line, laid out so the names keep apart.
+    extent = mode === "box" ? (n) => tokenExtent(n, settings) : null;
+    laid = layoutFree(data, settings.spacing, extent);
     redraw = () => {
       labels.close();
-      drawFree(layer, laid, L, strings, { visible, dimmed, state, settings, focusAll: mode === "box", pulseEvery: mode === "box" ? 1100 : 700, flow: String(data.scope || "").startsWith("note:") });
+      drawFree(layer, laid, L, strings, { visible, dimmed, state, settings, inline: mode === "box", focusAll: mode === "box", pulseEvery: mode === "box" ? 1100 : 700, flow: String(data.scope || "").startsWith("note:") });
     };
-    fitBox = () => bounds(laid.nodes.filter((n) => visible(n)), mode === "box" ? 70 : 60);
+    fitBox = () => (extent ? boundsInline(laid.nodes.filter((n) => visible(n)), extent) : bounds(laid.nodes.filter((n) => visible(n)), 60));
   }
   const all = () => (laid ? laid.nodes.filter((n) => visible(n)) : []);
   const place = () => { if (view) view.show(fitBox(), settings.zoom[mode]); };
@@ -1037,6 +1164,7 @@ export async function mountGraph(host) {
 
   zoomButtons(host, strings, {
     hint,
+    every: mode === "forest",
     // In a project's scene + / − spread the underground only; the sky stays.
     onZoom: (f) => {
       if (view) return view.zoom(f);
@@ -1062,7 +1190,7 @@ export async function mountGraph(host) {
       e.preventDefault();
       e.stopPropagation();
       const now = node.type === "project"
-        ? { species: L.projectSpecies(node), color: L.projectColor(node), size: (node.look && node.look.size) || 1 }
+        ? { species: L.projectSpecies(node), color: L.projectColor(node), size: (node.look && node.look.size) || 1, slot: node.look ? node.look.slot : undefined, slots: L.pal.slots }
         : (() => { const m = L.mineral(node); return { mineral: m.kind, color: m.color }; })();
       openLookPanel(host, node, now, strings, (lookNow) => {
         node.look = lookNow;
@@ -1075,9 +1203,10 @@ export async function mountGraph(host) {
   window.addEventListener("micelio:graph-settings", (e) => {
     const key = e.detail && e.detail.key;
     const fresh = load();
-    for (const k of ["spacing", "labels", "shorten", "length"]) settings[k] = fresh[k];
+    for (const k of ["spacing", "labels", "shorten", "length", "every"]) settings[k] = fresh[k];
+    if (forest) forest.state.all = settings.every;
     if (key === "labels") { labelZoom(); return redraw(); }
-    if (key === "spacing" && laid) laid = layoutFree(data, settings.spacing);
+    if ((key === "spacing" || (extent && (key === "labels" || key === "shorten" || key === "length" || key === "reset"))) && laid) laid = layoutFree(data, settings.spacing, extent);
     redraw();
     if (key === "spacing" || key === "reset") place();
     labelZoom();

@@ -8,7 +8,7 @@ export const STORAGE_KEY = "micelio.graph.v1";
 
 /** Range settings: [min, max, step, default]. Percentages, characters. */
 export const LIMITS = {
-  spacing: [50, 600, 10, 100],
+  spacing: [20, 200, 10, 100],
   labels: [60, 200, 10, 100],
   length: [12, 60, 2, 28],
 };
@@ -70,24 +70,6 @@ export function save(settings, storage = globalThis.localStorage) {
     return true;
   } catch {
     return false;
-  }
-}
-
-/** Whether the reader dug into the project at ``path`` in this tab, so the Back button
- * comes back to its underground open. Kept for the tab only (sessionStorage). */
-export function dug(path, storage = globalThis.sessionStorage) {
-  try {
-    return storage.getItem(`micelio.dug:${path}`) === "1";
-  } catch {
-    return false;
-  }
-}
-
-export function setDug(path, yes, storage = globalThis.sessionStorage) {
-  try {
-    storage.setItem(`micelio.dug:${path}`, yes ? "1" : "0");
-  } catch {
-    /* blocked storage: the page opens closed next time */
   }
 }
 

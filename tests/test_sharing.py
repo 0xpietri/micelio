@@ -129,6 +129,23 @@ def test_a_project_public_in_its_note_shows_as_shared(site_for: SiteFor) -> None
     assert "<form" not in page
 
 
+def test_the_switch_sits_on_the_title_line(site_for: SiteFor) -> None:
+    # One line: the project's title, then the switch's drawing and its words.
+    site = site_for(VAULT)
+    site.sign_in()
+    page = site.client.get(f"/projects/{PRIVATE}").text
+    line = re.search(r'<div class="title-line">(.*?)</div>\s*</div>', page, re.S)
+    assert line, "the title has its own line in the scene's heading"
+    assert "<h1>" in line.group(1)
+    assert "share-switch" in line.group(1)
+    cards = page.split('<div class="scene-cards">', 1)[1].split("</section>", 1)[0]
+    assert "share-switch" not in cards
+    # Shared or not, the words keep one color: only the drawing and the words change.
+    static = Path(__file__).parents[1] / "src" / "micelio" / "static"
+    css = (static / "css" / "graph.css").read_text("utf-8")
+    assert ".share-switch.on .share-caption" not in css
+
+
 def test_only_the_owner_can_share(site_for: SiteFor) -> None:
     site = site_for(VAULT)
     anonymous = site.client.post(f"/projects/{PRIVATE}/share", data={"shared": "on"})
@@ -161,3 +178,17 @@ def test_the_share_card_shows_the_scene_style(site_for: SiteFor) -> None:
     page = site.client.get(f"/projects/{PRIVATE}").text
     assert "/static/img/share/" not in page
     assert 'class="share-shroom"' in page
+
+
+def test_the_growth_card_shows_its_dates_in_two_rows(site_for: SiteFor) -> None:
+    site = site_for(VAULT)
+    site.sign_in()
+    page = site.client.get(f"/projects/{PRIVATE}").text
+    dates = re.search(r'<dl class="growth-dates">(.*?)</dl>', page, re.S)
+    assert dates, "the growth card carries the dates beside its stage"
+    assert dates.group(1).count("<dt>") == 2
+    css = (
+        Path(__file__).parents[1] / "src" / "micelio" / "static" / "css" / "graph.css"
+    ).read_text("utf-8")
+    # Other projects in the scene show their name only when pointed at.
+    assert ".lbl.project-small:not(.open) { opacity: 0;" in css

@@ -26,12 +26,16 @@ MINERALS: tuple[str, ...] = (
     "malachite",
 )
 SIZE_MIN, SIZE_MAX = 0.3, 1.2
+# A drawn mushroom may take one of the palette's eight colors, by place, so it follows
+# the palette when that changes (Appearance.colors.slot).
+SLOTS = 8
 _KEY = "node_looks"
 _COLOR = re.compile(r"#[0-9a-f]{6}")
 
 
 class Look(TypedDict, total=False):
     color: str
+    slot: int
     size: float
     species: str
     mineral: str
@@ -43,7 +47,8 @@ def clean_look(raw: object, kind: str) -> Look:
     if not isinstance(raw, dict):
         return look
     color = raw.get("color")
-    # A project's color follows the palette (§7b); only a source keeps one of its own.
+    # A project's color follows the palette (§7b): one of its colors by place (``slot``);
+    # only a source keeps a color of its own.
     if kind == "source" and isinstance(color, str) and _COLOR.fullmatch(color.lower()):
         look["color"] = color.lower()
     if kind == "project":
@@ -53,6 +58,9 @@ def clean_look(raw: object, kind: str) -> Look:
         size = raw.get("size")
         if isinstance(size, int | float) and not isinstance(size, bool):
             look["size"] = round(min(SIZE_MAX, max(SIZE_MIN, float(size))), 2)
+        slot = raw.get("slot")
+        if isinstance(slot, int) and not isinstance(slot, bool) and 0 <= slot < SLOTS:
+            look["slot"] = slot
     elif kind == "source":
         mineral = raw.get("mineral")
         if isinstance(mineral, str) and mineral in MINERALS:

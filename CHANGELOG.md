@@ -79,6 +79,28 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- A project always opens with its underground hidden, also after a reload or on another
+  project. Once open, the same bright button (now "Back to the surface", a little smaller)
+  waits at the left of the soil line to fold it up again; the bar at the bottom is gone.
+- "Every connection" moved into the project graph's ⚙ settings. The spacing slider goes
+  from 20 % (tighter than before) to 200 %, and the settings no longer carry a note.
+- A project's title is a little larger, with the Share switch beside it on the same line: a
+  small drawing and "Spores in the air" or "Underground", in one color.
+- The growth card is compact: the stage over twelve small weekly bars, with the created
+  and updated dates beside them in two rows, like a note's dates card. How many notes the
+  last 30 days brought shows on hover. It stands a little higher, and "Dig deeper" a
+  little lower.
+- With drawn mushrooms, a project's mushroom can take one of the palette's eight colors
+  again: click it on the project's page and pick a dot (the striped one is its category's).
+  The color goes by place in the palette, so it follows when the palette changes.
+- In a project's scene the other projects show only their mushroom; the name appears when
+  you point at it.
+- Notes in the graphs are dots in their category's palette color again (drafts are
+  see-through, dashed dots); only projects are mushrooms.
+- A note's Neighborhood reads like a list of words: each mark is about as tall as a capital
+  letter, with its name on the same line, and the names keep apart.
+- Below a note, "Add a note" is now "Add a comment", and "Edit" is a card like it. Pointing
+  at the text no longer offers to change it; the note changes from "Edit".
 - The guide beside a project and its notes is headed by the project's name, a link to the
   project, with an arrow beside it to fold and open the guide; the word "Guide" is gone.
 - A note's page is simpler: everything around it is in the Neighborhood graph. The note's
