@@ -40,6 +40,9 @@ function look(data) {
     /** A project's own color: its category's, shifted a little per project, so two
      * projects of one category are told apart. */
     projectColor(node) {
+      // The owner may give a drawn mushroom one of the palette's colors (by place).
+      const slot = node.look && node.look.slot;
+      if (Number.isInteger(slot) && pal.slots[slot]) return pal.slots[slot];
       return shade(node.id, this.color(node.category), pal);
     },
     projectSpecies(node) { return (node.look && node.look.species) || this.species(node.category); },
@@ -1187,7 +1190,7 @@ export async function mountGraph(host) {
       e.preventDefault();
       e.stopPropagation();
       const now = node.type === "project"
-        ? { species: L.projectSpecies(node), color: L.projectColor(node), size: (node.look && node.look.size) || 1 }
+        ? { species: L.projectSpecies(node), color: L.projectColor(node), size: (node.look && node.look.size) || 1, slot: node.look ? node.look.slot : undefined, slots: L.pal.slots }
         : (() => { const m = L.mineral(node); return { mineral: m.kind, color: m.color }; })();
       openLookPanel(host, node, now, strings, (lookNow) => {
         node.look = lookNow;

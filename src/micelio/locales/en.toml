@@ -387,11 +387,12 @@ dress_source = "This source's mineral"
 dress_species = "Species"
 dress_mineral = "Mineral"
 dress_color = "Color"
+dress_auto = "Its category's"
 dress_size = "Size"
 dress_default = "Back to the default"
 dress_saved = "Saved"
 dress_failed = "Could not save"
-dress_hint = "Click the mushroom to change its species and size."
+dress_hint = "Click the mushroom to change its species, its size and, when drawn, its color."
 dress_hint_source = "Click the mineral to change its kind and color."
 
 [species]

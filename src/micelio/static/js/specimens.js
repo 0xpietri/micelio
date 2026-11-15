@@ -10,7 +10,9 @@ const soil = Math.round((1024 * Number(backdrop ? backdrop.dataset.soil : 52)) /
 const ramp = backdrop && backdrop.dataset.ramp ? backdrop.dataset.ramp.split(" ") : null;
 
 function colorOf(node) {
-  if (/^#[0-9a-f]{6}$/i.test(node.dataset.color || "")) return node.dataset.color;
+  // One of the palette's colors, chosen by the owner for a drawn mushroom (looks.py).
+  const slot = pal.slots[Number(node.dataset.slot)];
+  if (node.dataset.slot && slot) return slot;
   const value = getComputedStyle(node).getPropertyValue("--cat").trim();
   const base = /^#[0-9a-f]{6}$/i.test(value) ? value : mix(pal.thread, pal.ink, 0.45);
   return node.dataset.id ? shade(node.dataset.id, base, pal) : base;

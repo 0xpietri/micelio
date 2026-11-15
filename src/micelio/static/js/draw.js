@@ -406,5 +406,7 @@ export function paletteFromCss() {
     sun: get("sun", "#ffd23f"),
     accent: get("accent", "#ff2fa0"),
     crystals: [get("crystal", "#22d3ee"), get("crystal-alt", "#ffd23f")],
+    // The palette's eight colors, by place, for a mushroom the owner colored.
+    slots: Array.from({ length: 8 }, (_, i) => get(`slot-${i}`, "")),
   };
 }

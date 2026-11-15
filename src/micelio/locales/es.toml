@@ -386,11 +386,12 @@ dress_source = "El mineral de esta fuente"
 dress_species = "Especie"
 dress_mineral = "Mineral"
 dress_color = "Color"
+dress_auto = "El de su categoría"
 dress_size = "Tamaño"
 dress_default = "Volver al de siempre"
 dress_saved = "Guardado"
 dress_failed = "No se pudo guardar"
-dress_hint = "Hacé clic en el hongo para cambiarle la especie y el tamaño."
+dress_hint = "Hacé clic en el hongo para cambiarle la especie, el tamaño y, si es dibujado, el color."
 dress_hint_source = "Hacé clic en el mineral para cambiarle el tipo y el color."
 
 [species]

@@ -85,6 +85,23 @@ def test_owner_dresses_a_project(client: TestClient) -> None:
     assert graph_node(client, PROJECT)["look"] is None
 
 
+def test_a_drawn_mushroom_takes_a_palette_color(client: TestClient) -> None:
+    # One of the palette's eight colors, by place: it follows the palette when that changes.
+    answer = dress(client, PROJECT, {"slot": 2, "species": "morel"})
+    assert answer.json()["look"] == {"slot": 2, "species": "morel"}
+    assert graph_node(client, PROJECT)["look"]["slot"] == 2
+    project = next(p for p in client.get("/api/landing").json()["projects"] if p["id"] == PROJECT)
+    assert project["shade"] is False
+    theme = client.get("/theme.css").text
+    assert "--pal-slot-2:" in theme
+    assert project["color"].lower() in theme.lower()
+    assert 'data-slot="2"' in client.get("/projects").text
+    for bad in (8, -1, True, "2", 1.5):
+        assert "slot" not in clean_look({"slot": bad}, "project")
+    assert "slot" not in clean_look({"slot": 1}, "source")
+    dress(client, PROJECT, {})
+
+
 def test_owner_dresses_a_source(client: TestClient) -> None:
     look = {"mineral": "amethyst", "color": "#123456", "species": "morel"}
     answer = dress(client, SOURCE, look, key(client, f"/notes/{SOURCE}"))

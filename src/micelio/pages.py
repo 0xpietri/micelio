@@ -31,7 +31,7 @@ from micelio.growth import growth
 from micelio.guide import Guide, GuideBuilder
 from micelio.i18n import active_language, category_names
 from micelio.landing import background_url
-from micelio.looks import Look, NodeLooks, clean_look
+from micelio.looks import SLOTS, Look, NodeLooks, clean_look
 from micelio.render import DEFAULT_TITLED_CALLOUTS, Renderer, fill_callout_titles, href_for
 from micelio.sharing import SharedProjects
 from micelio.vault.index import IndexView, Note, VaultIndex
@@ -106,6 +106,8 @@ def theme_css(colors: dict[str, str], appearance: Appearance) -> str:
         "spore": palette.spore,
         "crystal": palette.crystals[0],
         "crystal-alt": palette.crystals[1],
+        # The palette's eight colors, for a drawn mushroom the owner colored (looks.py).
+        **{f"slot-{i}": palette.slot(i) for i in range(SLOTS)},
     }
     look = {
         "title-font": f"var(--font-{appearance.title_font})",

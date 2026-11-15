@@ -1,6 +1,7 @@
 // The owner dresses a project or a source (§7c): on its own page, clicking its mushroom
-// or mineral opens this panel. A mushroom has a species and a size (its color follows
-// the palette, pictures included); a mineral a type and a color. The choice is
+// or mineral opens this panel. A mushroom has a species and a size; a drawn one may
+// also take one of the palette's eight colors (by place, so it follows the palette;
+// pictures take the painting's colors); a mineral a type and a color. The choice is
 // saved in Micelio's data folder (never in the notes) through POST /api/looks/<slug>,
 // and the graph draws it at once.
 import { MINERALS, SPECIES, mushroomPicture, tr } from "./draw.js";
@@ -103,6 +104,29 @@ export function openLookPanel(host, node, now, strings, draw) {
     colorInput = color;
     colorRow.appendChild(color);
     panel.appendChild(colorRow);
+  }
+
+  // A drawn mushroom (no pictures): one of the palette's colors, or its category's.
+  if (project && !mushroomPicture(now.species) && now.slots && now.slots.some(Boolean)) {
+    panel.appendChild(html("span", { class: "look-species-head" }, tr(strings, "graph.dress_color")));
+    const group = html("div", { class: "look-swatches", role: "radiogroup", "aria-label": tr(strings, "graph.dress_color") });
+    const pick = (button, slot) => {
+      for (const other of group.children) other.setAttribute("aria-checked", other === button ? "true" : "false");
+      if (slot === null) delete look.slot;
+      else look.slot = slot;
+      changed();
+    };
+    const auto = html("button", { type: "button", class: "look-swatch auto", role: "radio", "aria-checked": Number.isInteger(now.slot) ? "false" : "true", title: tr(strings, "graph.dress_auto"), "aria-label": tr(strings, "graph.dress_auto") });
+    auto.addEventListener("click", () => pick(auto, null));
+    group.appendChild(auto);
+    now.slots.forEach((hex, slot) => {
+      if (!hex) return;
+      const button = html("button", { type: "button", class: "look-swatch", role: "radio", "aria-checked": now.slot === slot ? "true" : "false", "aria-label": `${tr(strings, "graph.dress_color")} ${slot + 1}`, title: hex });
+      button.style.setProperty("--swatch", hex);
+      button.addEventListener("click", () => pick(button, slot));
+      group.appendChild(button);
+    });
+    panel.appendChild(group);
   }
 
   let size = null;

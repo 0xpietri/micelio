@@ -90,6 +90,9 @@ All notable changes to this project are documented here. The format follows
   and updated dates beside them in two rows, like a note's dates card. How many notes the
   last 30 days brought shows on hover. It stands a little higher, and "Dig deeper" a
   little lower.
+- With drawn mushrooms, a project's mushroom can take one of the palette's eight colors
+  again: click it on the project's page and pick a dot (the striped one is its category's).
+  The color goes by place in the palette, so it follows when the palette changes.
 - In a project's scene the other projects show only their mushroom; the name appears when
   you point at it.
 - Notes in the graphs are dots in their category's palette color again (drafts are
