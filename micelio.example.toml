@@ -42,7 +42,10 @@ species = "chanterelle"
 
 [landing]
 palette = "psychedelic"              # psychedelic | tokyo-night | catppuccin | rose-pine
-soil = 52                            # where the ground starts, % of the background's height
+# The included scene: blacklight-planet | blacklight-moons | blacklight-nebula | blacklight-blue
+# | neon-moon | neon-sun | neon-dusk | brush-night | brush-hills | dusk (the first painting)
+scene = "blacklight-planet"
+soil = 52                            # where the ground starts in an uploaded image, %
 max_notes = 300                      # over this, only the most connected notes are drawn
 # The Appearance page (/appearance, signed in) can change palette, background and texts;
 # what it saves lives in the data folder and wins over these defaults.

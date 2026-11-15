@@ -91,6 +91,8 @@ function repaint(look) {
     fresh.addEventListener("load", () => theme.remove(), { once: true });
     theme.after(fresh);
   }
+  const art = document.querySelector('meta[name="micelio-mushrooms"]');
+  if (art && look && look.mushrooms) art.content = look.mushrooms;
   const backdrop = document.getElementById("backdrop");
   if (!backdrop || !look) return;
   const image = backdrop.querySelector("image");
@@ -199,6 +201,22 @@ async function start() {
       soilRange.value = soilReset.dataset.default;
       soilRange.dispatchEvent(new Event("input", { bubbles: true }));
       soilRange.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+  }
+  // A scene is a template (§7b): picking one brings its soil line and its recolor
+  // default before the page saves itself (these run before the form's own listener).
+  const recolor = document.querySelector('input[name="recolor"]');
+  for (const radio of document.querySelectorAll('input[name="background"]')) {
+    radio.addEventListener("change", () => {
+      if (soilRange && radio.dataset.soil) {
+        soilRange.value = radio.dataset.soil;
+        soilRange.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+      if (soilReset && radio.dataset.soil) {
+        soilReset.dataset.default = radio.dataset.soil;
+        if (soilReset.dataset.label) soilReset.textContent = soilReset.dataset.label.replace("{value}", radio.dataset.soil);
+      }
+      if (recolor) recolor.checked = radio.dataset.recolor === "on";
     });
   }
   const flush = autosave();

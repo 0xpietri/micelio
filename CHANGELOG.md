@@ -8,6 +8,14 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Nine new scenes to pick on the Appearance page, in three styles (blacklight, neon and
+  brushstrokes), with a quiet dark underground so your own mycelium and the names on the
+  graphs stand out. Each scene brings its soil line and its own illustrated mushrooms; the
+  first painting is still there as "Psychedelic dusk". Blacklight planet is the new default.
+- Fifteen illustrated mushroom species per style. Click a project's mushroom to pick its
+  species from the pictures and its size; the Appearance page can also keep the drawn
+  mushrooms or use another style's.
+
 - Write your own words into a note from its page: said bubbles with your profile picture.
   On a computer a floating "Add a note" button puts one between the paragraphs at its height;
   on a phone hold a blank space between paragraphs and tap "Write a note". Bubbles can be
@@ -45,6 +53,10 @@ All notable changes to this project are documented here. The format follows
   carry a badge on the projects list.
 
 ### Changed
+
+- The mushroom editor no longer picks a color: illustrated mushrooms keep the picture's
+  colors and drawn ones the palette's. A color chosen before still tints the project's glow
+  and threads. Sources keep their color picker.
 
 - Graph threads are drawn once per pair: a note that links back to its project (or two
   notes that link each other) no longer shows two threads. Threads are almost straight

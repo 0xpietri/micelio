@@ -33,7 +33,7 @@ document.querySelectorAll("[data-mushroom]").forEach((slot, i) => {
     const tx = x + (rand() - 0.5) * 200;
     const ty = soil + 30 + rand() * 45;
     const c1x = x + (tx - x) * 0.3 + (rand() - 0.5) * 30;
-    threads += `<path class="hypha" d="M${x},${soil + 4} Q${f1(c1x)},${f1(soil + 40)} ${f1(tx)},${f1(ty)}" stroke-width="1.4"/>`;
+    threads += `<path class="hypha" d="M${x},${soil + 4} Q${f1(c1x)},${f1(soil + 40)} ${f1(tx)},${f1(ty)}" fill="none" stroke="${pal.thread}" stroke-opacity=".85" stroke-width="1.4"/>`;
     threads += `<circle cx="${f1(tx)}" cy="${f1(ty)}" r="2.6" fill="${pal.thread}"/>`;
   }
   const svg = el("svg", { viewBox: `${x - 150} ${soil - 135} 300 210`, preserveAspectRatio: "xMidYMid slice", "aria-hidden": "true", focusable: "false" },

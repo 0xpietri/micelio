@@ -50,6 +50,7 @@ from micelio.config import (
 from micelio.i18n import Translate, active_language
 from micelio.landing import LandingBuilder, background_url
 from micelio.looks import NodeLooks
+from micelio.scenes import MUSHROOM_STYLES, SCENES, mushroom_style_named
 from micelio.vault import PublicView, VaultIndex
 
 PROMPT_FIELDS = ("style", "sky", "horizon", "underground", "colors", "mood")
@@ -200,6 +201,8 @@ class LandingPages:
                 "nav": "appearance",
                 "appearance": appearance,
                 "palettes": [PALETTES[k] for k in PALETTE_NAMES],
+                "scenes": list(SCENES.values()),
+                "mushroom_styles": MUSHROOM_STYLES,
                 "background": background_url(appearance),
                 "default_headline": self.default_headline(),
                 "default_tagline": self.default_tagline(),
@@ -238,6 +241,7 @@ class LandingPages:
             csrf: Annotated[str, Form()] = "",
             palette: Annotated[str, Form()] = "",
             background: Annotated[str, Form()] = "builtin",
+            mushrooms: Annotated[str, Form()] = "",
             recolor: Annotated[str, Form()] = "",
             soil: Annotated[int, Form()] = 0,
             headline: Annotated[str, Form()] = "",
@@ -257,12 +261,24 @@ class LandingPages:
                     return JSONResponse({"ok": False, "error": "form"}, status_code=403)
                 return _back(error="form")
             now = self.store.current()
+            # ``background`` is "own" or a scene's key ("builtin" keeps the scene).
+            own = background == "own" and now.own_type is not None
+            scene = background if background in SCENES else now.scene
+            painting_changed = own != now.uses_own or scene != now.scene
             chosen = replace(
                 now,
                 palette=palette_named(palette, now.palette),
-                background="own" if background == "own" and now.own_type else "builtin",
-                recolor=recolor == "on",
-                soil=soil if SOIL_MIN <= soil <= SOIL_MAX else now.soil,
+                background="own" if own else "builtin",
+                scene=scene,
+                mushrooms=mushroom_style_named(mushrooms),
+                # Another painting starts with its own recolor default (§7b).
+                recolor=None if painting_changed else recolor == "on",
+                # A scene brings its own soil line; the slider then fine-tunes it.
+                soil=SCENES[scene].soil
+                if painting_changed and not own
+                else soil
+                if SOIL_MIN <= soil <= SOIL_MAX
+                else now.soil,
                 headline=clean_text(headline),
                 tagline=clean_text(tagline),
                 site_name=clean_text(site_name)[:MAX_NAME],
@@ -285,6 +301,8 @@ class LandingPages:
                     "url": background_url(chosen),
                     "soil": chosen.soil,
                     "ramp": " ".join(ramp) if ramp else "",
+                    "recolor": chosen.recolors,
+                    "mushrooms": chosen.mushroom_style,
                 }
                 return JSONResponse({"ok": True, "backdrop": backdrop})
             return _back(done="saved")
