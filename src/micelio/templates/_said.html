@@ -1,7 +1,7 @@
 {#- A note's body. For the owner with editing on (§8a) it carries what said-edit.js needs
     to write said bubbles: where to send them, the key, and the hash of the file shown. #}
 {% macro prose(body, editing) -%}
-<div class="prose"{% if editing %} data-said-url="{{ editing.url }}" data-said-hash="{{ editing.hash }}" data-said-token="{{ editing.token }}"{% endif %}>{{ body|callout_titles }}</div>
+<div class="prose"{% if editing %} data-said-url="{{ editing.url }}" data-said-hash="{{ editing.hash }}" data-said-token="{{ editing.token }}" data-said-source="{{ editing.source }}" data-said-undo="{{ editing.undo }}"{% endif %}>{{ body|callout_titles }}</div>
 {%- endmacro %}
 
 {% macro said_script(editing) -%}
