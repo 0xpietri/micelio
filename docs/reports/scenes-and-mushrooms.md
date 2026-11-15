@@ -52,3 +52,13 @@ Three older tests now expect the new default scene.
   ones. Crystals (sources) are the next assets to replace.
 - No per-category default species per style yet: the categories keep the species set in
   `micelio.toml` and the owner changes a project's from its page.
+
+## Second round (marcos, 2026-11-15)
+
+- The palette colors everything: every scene is recolored by default (Psychedelic has no
+  ramp, so it keeps the painting's colors), and picking another palette turns the
+  recolor back on. The illustrated mushrooms use the same filter as the painting. A
+  project's stored color is dropped, so its mushroom, glow and threads follow the
+  category's palette color; sources keep theirs.
+- Smaller mushrooms: the pictures draw at 84 units instead of 112, and the size goes
+  from 30 % to 120 % (was 60 % to 160 %). Larger saved sizes are clamped.

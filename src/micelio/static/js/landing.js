@@ -82,7 +82,8 @@ function layout(data, V, soil, k) {
 
 function draw(svg, data, strings, state) {
   const pal = data.palette;
-  const paint = painter(pal);
+  const recolor = data.background.recolor && pal.ramp;
+  const paint = painter(pal, undefined, recolor ? "bgmap" : null);
   const soil = Math.round((1024 * data.background.soil) / 100);
   const V = viewWindow(svg, soil);
   svg.setAttribute("viewBox", `${f1(V.x)} ${f1(V.y)} ${f1(V.w)} ${f1(V.h)}`);
@@ -174,7 +175,6 @@ function draw(svg, data, strings, state) {
     spores.appendChild(a);
   });
 
-  const recolor = data.background.recolor && pal.ramp;
   const image = el("image", {
     href: data.background.url,
     x: 0, y: 0, width: 1536, height: 1024,

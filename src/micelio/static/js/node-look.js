@@ -1,6 +1,6 @@
 // The owner dresses a project or a source (§7c): on its own page, clicking its mushroom
 // or mineral opens this panel. A mushroom has a species and a size (its color follows
-// the palette, or is the picture's own); a mineral a type and a color. The choice is
+// the palette, pictures included); a mineral a type and a color. The choice is
 // saved in Micelio's data folder (never in the notes) through POST /api/looks/<slug>,
 // and the graph draws it at once.
 import { MINERALS, SPECIES, mushroomPicture, tr } from "./draw.js";
@@ -111,7 +111,7 @@ export function openLookPanel(host, node, now, strings, draw) {
     const head = html("span", { class: "look-range-head" });
     const out = html("output", {}, `${Math.round((now.size || 1) * 100)} %`);
     head.append(html("span", {}, tr(strings, "graph.dress_size")), out);
-    size = html("input", { type: "range", name: "look-size", min: 60, max: 160, step: 5 });
+    size = html("input", { type: "range", name: "look-size", min: 30, max: 120, step: 5 });
     size.value = String(Math.round((now.size || 1) * 100));
     size.addEventListener("input", () => { out.textContent = `${size.value} %`; look.size = Number(size.value) / 100; draw({ ...look }); });
     size.addEventListener("change", () => { look.size = Number(size.value) / 100; changed(); });

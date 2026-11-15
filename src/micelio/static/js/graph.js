@@ -38,9 +38,8 @@ function look(data) {
     color: (key) => (key && cats[key] ? cats[key].color : neutral),
     species: (key) => (key && cats[key] ? cats[key].species : UNCATEGORIZED_SPECIES),
     /** A project's own color: its category's, shifted a little per project, so two
-     * projects of one category are told apart (the owner may choose it, ``node.look``). */
+     * projects of one category are told apart. */
     projectColor(node) {
-      if (node.look && node.look.color) return node.look.color;
       return shade(node.id, this.color(node.category), pal);
     },
     projectSpecies(node) { return (node.look && node.look.species) || this.species(node.category); },
@@ -55,7 +54,8 @@ function look(data) {
 /* ---------- one mark per node; a mushroom's base sits on the node's point ---------- */
 
 /** A square picture centered on the node's point, ``size`` units across. */
-const img = (href, size) => `<image href="${href}" x="${f1(-size / 2)}" y="${f1(-size / 2)}" width="${f1(size)}" height="${f1(size)}"/>`;
+// Pictures take the palette's colors through the painting's filter, like the mushrooms (§7b).
+const img = (href, size) => `<image href="${href}" x="${f1(-size / 2)}" y="${f1(-size / 2)}" width="${f1(size)}" height="${f1(size)}"${document.getElementById("bgmap-page") ? ' filter="url(#bgmap-page)"' : ""}/>`;
 
 function mark(node, L, k = 1) {
   const { pal, paint } = L;

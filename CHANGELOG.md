@@ -20,6 +20,9 @@ All notable changes to this project are documented here. The format follows
 - Fifteen illustrated mushroom species per style. Click a project's mushroom to pick its
   species from the pictures and its size; the Appearance page can also keep the drawn
   mushrooms or use another style's.
+- The palette now colors every scene, its illustrated mushrooms and its threads, not only
+  the first painting. Psychedelic keeps each scene's own colors.
+- Mushrooms can be much smaller (30 % to 120 %), and the default one is smaller.
 
 - Write your own words into a note from its page: said bubbles with your profile picture.
   On a computer a floating "Add a note" button puts one between the paragraphs at its height;

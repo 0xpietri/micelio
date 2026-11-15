@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from micelio.appearance import Appearance, AppearanceStore
+from micelio.appearance import PALETTES, Appearance, AppearanceStore
 from micelio.config import SPECIES, Config, VaultConfig
 from micelio.i18n import load_strings
 from micelio.looks import clean_look
@@ -42,8 +42,8 @@ def test_every_scene_ships_a_painting_and_a_thumbnail() -> None:
             assert path.read_bytes()[8:12] == b"WEBP", url
         assert 30 <= scene.soil <= 70
         assert scene.mushrooms in MUSHROOM_STYLES
-    # Only the first painting is recolored by default: the others keep their colors.
-    assert [k for k, s in SCENES.items() if s.recolor] == ["dusk"]
+    # Every scene takes the palette's colors by default (Psychedelic keeps them).
+    assert all(s.recolor for s in SCENES.values())
 
 
 def test_every_illustrated_style_has_every_species() -> None:
@@ -71,7 +71,7 @@ def test_every_scene_and_species_has_a_name() -> None:
 def test_a_scene_sets_soil_recolor_and_mushrooms() -> None:
     neon = Appearance(scene="neon-sun")
     assert neon.painting.url == "/static/img/scenes/neon-sun.webp"
-    assert not neon.recolors
+    assert neon.recolors
     assert neon.mushroom_style == "neon"
     assert Appearance(scene="dusk").recolors
     assert Appearance(scene="dusk").mushroom_style == "drawn"
@@ -89,7 +89,7 @@ def test_a_choice_saved_before_scenes_starts_on_the_default_scene(tmp_path: Path
     now = store.current()
     assert now.palette == "tokyo-night"
     assert now.scene == DEFAULT_SCENE
-    assert not now.recolors  # the old box was about the first painting
+    assert now.recolors  # the old box was about the first painting
     assert now.soil == SCENES[DEFAULT_SCENE].soil
     store.save(now)
     assert store.current().soil == SCENES[DEFAULT_SCENE].soil
@@ -122,17 +122,18 @@ def test_picking_a_scene_brings_its_values(client: TestClient) -> None:
         assert isinstance(backdrop, dict)
         return backdrop
 
-    neon = post(background="neon-sun", recolor="on")
+    neon = post(background="neon-sun")
     assert neon == {
         "url": "/static/img/scenes/neon-sun.webp",
         "soil": SCENES["neon-sun"].soil,
-        "ramp": "",
-        "recolor": False,  # a new scene starts with its own default, not the old box
+        "ramp": " ".join(PALETTES["tokyo-night"].ramp or ()),
+        "recolor": True,  # a new scene starts recolored, whatever the old box said
         "mushrooms": "neon",
     }
     # On the same scene the box and the slider count.
-    again = post(background="neon-sun", recolor="on", soil="47")
-    assert again["recolor"] is True
+    again = post(background="neon-sun", soil="47")
+    assert again["recolor"] is False
+    assert again["ramp"] == ""
     assert again["soil"] == 47
     dusk = post(background="dusk")
     assert dusk["recolor"] is True

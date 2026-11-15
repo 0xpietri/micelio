@@ -39,7 +39,7 @@ class Scene:
 
 
 def _painted(key: str, soil: int, mushrooms: MushroomStyle) -> Scene:
-    return Scene(key, f"img/scenes/{key}.webp", soil, mushrooms, recolor=False)
+    return Scene(key, f"img/scenes/{key}.webp", soil, mushrooms, recolor=True)
 
 
 SCENES: dict[str, Scene] = {
@@ -54,7 +54,7 @@ SCENES: dict[str, Scene] = {
         _painted("neon-dusk", 53, "neon"),
         _painted("brush-night", 53, "brush"),
         _painted("brush-hills", 52, "brush"),
-        # The first painting (§7a): drawn mushrooms, recolored by the palette.
+        # The first painting (§7a), with the drawn mushrooms.
         Scene("dusk", "img/psychedelic-dusk.webp", 52, "drawn", recolor=True),
     )
 }

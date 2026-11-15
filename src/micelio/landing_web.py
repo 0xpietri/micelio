@@ -265,14 +265,16 @@ class LandingPages:
             own = background == "own" and now.own_type is not None
             scene = background if background in SCENES else now.scene
             painting_changed = own != now.uses_own or scene != now.scene
+            palette_changed = palette_named(palette, now.palette) != now.palette
             chosen = replace(
                 now,
                 palette=palette_named(palette, now.palette),
                 background="own" if own else "builtin",
                 scene=scene,
                 mushrooms=mushroom_style_named(mushrooms),
-                # Another painting starts with its own recolor default (§7b).
-                recolor=None if painting_changed else recolor == "on",
+                # Another painting or palette starts with the recolor default (§7b):
+                # every scene takes the palette's colors, an upload keeps its own.
+                recolor=None if painting_changed or palette_changed else recolor == "on",
                 # A scene brings its own soil line; the slider then fine-tunes it.
                 soil=SCENES[scene].soil
                 if painting_changed and not own

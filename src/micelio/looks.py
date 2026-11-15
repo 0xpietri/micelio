@@ -16,7 +16,7 @@ from micelio.appearance import AppearanceStore
 from micelio.config import SPECIES
 
 MINERALS: tuple[str, ...] = ("diamond", "emerald", "amber", "quartz", "amethyst")
-SIZE_MIN, SIZE_MAX = 0.6, 1.6
+SIZE_MIN, SIZE_MAX = 0.3, 1.2
 _KEY = "node_looks"
 _COLOR = re.compile(r"#[0-9a-f]{6}")
 
@@ -34,7 +34,8 @@ def clean_look(raw: object, kind: str) -> Look:
     if not isinstance(raw, dict):
         return look
     color = raw.get("color")
-    if isinstance(color, str) and _COLOR.fullmatch(color.lower()):
+    # A project's color follows the palette (§7b); only a source keeps one of its own.
+    if kind == "source" and isinstance(color, str) and _COLOR.fullmatch(color.lower()):
         look["color"] = color.lower()
     if kind == "project":
         species = raw.get("species")
