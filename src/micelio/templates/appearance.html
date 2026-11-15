@@ -36,28 +36,37 @@
     <fieldset>
       <legend><h2>{{ t("appearance.background") }}</h2></legend>
       <p class="muted small">{{ t("appearance.background_help") }}</p>
-      <div class="choices">
-        <label class="choice">
-          <input type="radio" name="background" value="builtin"{% if not appearance.uses_own %} checked{% endif %}>
-          <img class="thumb" src="/static/img/psychedelic-dusk.webp" alt="" width="300" height="200">
-          <span class="choice-name">{{ t("appearance.builtin") }}</span>
+      <div class="choices scenes">
+        {% for scene in scenes %}
+        <label class="choice scene-choice">
+          <input type="radio" name="background" value="{{ scene.key }}" data-soil="{{ scene.soil }}" data-recolor="{{ 'on' if scene.recolor else '' }}" data-mushrooms="{{ scene.mushrooms }}"{% if not appearance.uses_own and scene.key == appearance.scene %} checked{% endif %}>
+          <img class="thumb" src="{{ scene.thumb }}" alt="" width="180" height="120" loading="lazy">
+          <span class="choice-name">{{ t("scene." ~ scene.key) }}</span>
         </label>
-        <label class="choice">
-          <input type="radio" name="background" value="own"{% if appearance.uses_own %} checked{% endif %}{% if not appearance.own_type %} disabled{% endif %}>
+        {% endfor %}
+        <label class="choice scene-choice">
+          <input type="radio" name="background" value="own" data-soil="{{ soil_default }}" data-recolor="" data-mushrooms="drawn"{% if appearance.uses_own %} checked{% endif %}{% if not appearance.own_type %} disabled{% endif %}>
           {% if appearance.own_type %}
-          <img class="thumb" src="/appearance/background?v={{ appearance.own_version }}" alt="" width="300" height="200">
+          <img class="thumb" src="/appearance/background?v={{ appearance.own_version }}" alt="" width="180" height="120">
           {% else %}
           <span class="thumb empty">{{ t("appearance.own_none") }}</span>
           {% endif %}
           <span class="choice-name">{{ t("appearance.own") }}</span>
         </label>
       </div>
+      <label>{{ t("appearance.mushrooms") }}
+        <select name="mushrooms" id="mushrooms">
+          <option value=""{% if appearance.mushrooms is none %} selected{% endif %}>{{ t("appearance.mushrooms_scene") }}</option>
+          {% for style in mushroom_styles %}<option value="{{ style }}"{% if appearance.mushrooms == style %} selected{% endif %}>{{ t("appearance.mushrooms_" ~ style) }}</option>{% endfor %}
+        </select>
+        <span class="muted small">{{ t("appearance.mushrooms_help") }}</span>
+      </label>
       <label class="inline-check"><input type="checkbox" name="recolor"{% if appearance.recolors %} checked{% endif %}> {{ t("appearance.recolor") }}</label>
       <label class="range">{{ t("appearance.soil") }}
         <span class="range-row">
           <input type="range" name="soil" id="soil" min="{{ soil_min }}" max="{{ soil_max }}" value="{{ appearance.soil }}" aria-describedby="soil-help">
           <output for="soil" id="soil-value">{{ appearance.soil }}%</output>
-          <button type="button" class="link soil-reset" data-default="{{ soil_default }}">{{ t("appearance.soil_default", value=soil_default) }}</button>
+          {% set soil_here = soil_default if appearance.uses_own else appearance.painting.soil %}<button type="button" class="link soil-reset" data-default="{{ soil_here }}" data-label="{{ t('appearance.soil_default', value='{value}') }}">{{ t("appearance.soil_default", value=soil_here) }}</button>
         </span>
         <span class="muted small" id="soil-help">{{ t("appearance.soil_help") }}</span>
       </label>

@@ -34,6 +34,14 @@ from micelio.config import (
     TitleEffect,
     TitleFont,
 )
+from micelio.scenes import (
+    DEFAULT_SCENE,
+    SCENES,
+    MushroomStyle,
+    Scene,
+    mushroom_style_named,
+    scene_named,
+)
 
 # The chalkboard that closes a concept (`> [!takeaway]`): its color and the hand it is
 # written in. The chalk's color is not a choice: it follows the palette (micelio.css).
@@ -44,7 +52,6 @@ BOARD_FONTS: tuple[BoardFont, ...] = ("caveat", "patrick-hand", "gochi-hand")
 
 SITE_DB = "site.sqlite3"
 BACKGROUNDS = "backgrounds"
-BUILTIN_BACKGROUND = "img/psychedelic-dusk.webp"  # under /static
 BUILTIN_SOIL = 52
 
 MAX_UPLOAD_BYTES = 8 * 1024 * 1024
@@ -197,10 +204,12 @@ class Appearance:
     """What the landing looks like right now: the saved choices over the config."""
 
     palette: PaletteName = "psychedelic"
-    background: Literal["builtin", "own"] = "builtin"
+    background: Literal["builtin", "own"] = "builtin"  # builtin: the chosen scene
+    scene: str = DEFAULT_SCENE
+    mushrooms: MushroomStyle | None = None  # None: the scene's (drawn for an upload)
     own_type: ImageType | None = None  # set while an uploaded image exists
     own_version: int = 0  # bumps on each upload, for cache busting
-    recolor: bool | None = None  # None: on for the included painting, off for an upload
+    recolor: bool | None = None  # None: the scene's own default, off for an upload
     soil: int = BUILTIN_SOIL
     headline: str = ""
     tagline: str | None = None  # None: the default; "" once saved empty: no tagline
@@ -221,10 +230,20 @@ class Appearance:
         return self.background == "own" and self.own_type is not None
 
     @property
+    def painting(self) -> Scene:
+        return SCENES.get(self.scene, SCENES[DEFAULT_SCENE])
+
+    @property
     def recolors(self) -> bool:
         if self.recolor is not None:
             return self.recolor
-        return not self.uses_own
+        return False if self.uses_own else self.painting.recolor
+
+    @property
+    def mushroom_style(self) -> MushroomStyle:
+        if self.mushrooms is not None:
+            return self.mushrooms
+        return "drawn" if self.uses_own else self.painting.mushrooms
 
     @property
     def colors(self) -> Palette:
@@ -442,8 +461,15 @@ class AppearanceStore:
         background: Literal["builtin", "own"] = (
             "own" if saved.get("background") == "own" and own_type else "builtin"
         )
-        recolor = saved.get("recolor")
-        soil = saved.get("soil", defaults.soil)
+        scene = scene_named(saved.get("scene"), defaults.scene)
+        # Saved before scenes existed (2026-11-15): the box and the soil line were about
+        # the first painting, so the new default scene starts with its own.
+        legacy = "scene" not in saved
+        recolor = None if legacy else saved.get("recolor")
+        if legacy and background == "builtin":
+            soil: object = SCENES[scene].soil
+        else:
+            soil = saved.get("soil", defaults.soil)
         version = saved.get("own_version", 0)
         avatar_type = next((k for k in MEDIA_TYPES if k == saved.get("avatar_type")), None)
         if avatar_type is not None and not self.avatar_path(avatar_type).is_file():
@@ -452,6 +478,8 @@ class AppearanceStore:
         return Appearance(
             palette=palette,
             background=background,
+            scene=scene,
+            mushrooms=mushroom_style_named(saved.get("mushrooms")),
             own_type=own_type,
             own_version=version if isinstance(version, int) else 0,
             recolor=recolor if isinstance(recolor, bool) else None,
@@ -545,7 +573,10 @@ class AppearanceStore:
     def remove_background(self) -> Appearance:
         for kind in MEDIA_TYPES:
             self.own_path(kind).unlink(missing_ok=True)
-        updated = replace(self.current(), background="builtin", own_type=None, recolor=None)
+        now = self.current()
+        updated = replace(
+            now, background="builtin", own_type=None, recolor=None, soil=now.painting.soil
+        )
         self.save(updated)
         return updated
 

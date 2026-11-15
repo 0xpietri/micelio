@@ -229,7 +229,7 @@ def test_store_round_trip_and_uploads(tmp_path: Path) -> None:
 
     removed = store.remove_background()
     assert not removed.uses_own
-    assert removed.recolors
+    assert not removed.recolors  # an included scene keeps its own colors (§7b)
     assert not any((tmp_path / "data" / "backgrounds").iterdir())
     store.close()
 
@@ -266,7 +266,7 @@ def test_landing_data(example_index: VaultIndex) -> None:
     assert journal[0]["links"] == [PLANETS]
     assert data["hidden"] == 0
     assert data["background"] == {
-        "url": "/static/img/psychedelic-dusk.webp",
+        "url": "/static/img/scenes/blacklight-planet.webp",
         "recolor": False,
         "soil": 52,
     }
@@ -278,7 +278,7 @@ def test_landing_draws_only_the_most_connected_notes(tmp_path: Path) -> None:
     )
     index = VaultIndex(config)
     index.refresh(force=True)
-    data = LandingBuilder(config, index).build(Appearance(palette="catppuccin"))
+    data = LandingBuilder(config, index).build(Appearance(palette="catppuccin", scene="dusk"))
     assert len(data["notes"]) == 10
     assert data["hidden"] == sum(1 for n in index.notes.values() if n.type == "note") - 10
     assert data["palette"]["key"] == "catppuccin"

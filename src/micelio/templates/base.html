@@ -18,6 +18,8 @@
   <script type="module" src="/static/js/menu.js"></script>
   {%- set dress_key = looks_token(request) if looks_token is defined else "" %}
   {% if dress_key %}<meta name="micelio-looks" content="{{ dress_key }}">{% endif %}
+  {#- The style every mushroom is drawn in (§7b): read by static/js/draw.js. #}
+  <meta name="micelio-mushrooms" content="{{ backdrop().mushrooms }}">
   {% block head %}{% endblock %}
 </head>
 <body{% block body_class %}{% endblock %}>

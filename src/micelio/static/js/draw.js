@@ -71,10 +71,29 @@ export async function loadStrings() {
   }
 }
 
-/* ---------- the eight species: base at (0,0), about 100 units tall ---------- */
+/* ---------- the species: base at (0,0), about 100 units tall ---------- */
 
+/** Every species (§7a); the illustrated styles have a picture of each. */
+export const SPECIES = [
+  "morel", "fly-agaric", "liberty-caps", "flat-cap", "coral", "turkey-tail", "puffball", "chanterelle",
+  "shaggy-inkcap", "glowing-bonnets", "parasol", "cup", "lattice", "oyster", "spiral",
+];
+// Drawn in code, the species added with the pictures borrow a close silhouette.
+const DRAWN_AS = { "flat-cap": "parasol", "turkey-tail": "coral", puffball: "glowing-bonnets", cup: "chanterelle", lattice: "morel", oyster: "chanterelle", spiral: "liberty-caps" };
 
-export function painter(pal) {
+/** The style the owner chose for mushrooms (§7b): "drawn" or an illustrated set. */
+export function mushroomStyle() {
+  const meta = document.querySelector('meta[name="micelio-mushrooms"]');
+  return (meta && meta.content) || "drawn";
+}
+
+/** The picture of ``kind`` in an illustrated ``style``, or "" when drawn. */
+export function mushroomPicture(kind, style = mushroomStyle()) {
+  if (!style || style === "drawn") return "";
+  return `/static/img/mushrooms/${encodeURIComponent(style)}/${SPECIES.includes(kind) ? kind : "glowing-bonnets"}.webp`;
+}
+
+export function painter(pal, style = mushroomStyle()) {
   const INK = pal.ink;
   const STEM = pal.stem;
   const P = (d, fill, sw = 3) =>
@@ -227,7 +246,11 @@ export function painter(pal) {
   /** A project's mushroom; its status is its growth (§7a). */
   function mushroom(kind, color, status) {
     if (status === "draft") return button(color);
-    const body = (species[kind] || species["glowing-bonnets"])(color);
+    const picture = mushroomPicture(kind, style);
+    // A picture is 512 px square with the stem's foot at the bottom middle.
+    const body = picture
+      ? `<image href="${picture}" x="-56" y="-111" width="112" height="112" preserveAspectRatio="xMidYMax meet"/>`
+      : (species[kind] || species[DRAWN_AS[kind]] || species["glowing-bonnets"])(color);
     if (status === "paused") return `<g filter="url(#paused)" opacity=".6">${body}</g>`;
     if (status === "closed") return `<g filter="url(#dried)"><g transform="rotate(-20) scale(.92,.82)">${body}</g></g>`;
     return body;

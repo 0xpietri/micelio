@@ -1,9 +1,9 @@
 // The owner dresses a project or a source (§7c): on its own page, clicking its mushroom
-// or mineral opens this panel. The choice is saved in Micelio's data folder (never in
-// the notes) through POST /api/looks/<slug>, and the graph draws it at once.
-import { MINERALS, tr } from "./draw.js";
-
-const SPECIES = ["fly-agaric", "shaggy-inkcap", "morel", "chanterelle", "liberty-caps", "coral", "parasol", "glowing-bonnets"];
+// or mineral opens this panel. A mushroom has a species and a size (its color follows
+// the palette, or is the picture's own); a mineral a type and a color. The choice is
+// saved in Micelio's data folder (never in the notes) through POST /api/looks/<slug>,
+// and the graph draws it at once.
+import { MINERALS, SPECIES, mushroomPicture, tr } from "./draw.js";
 
 function html(tag, attrs = {}, text = "") {
   const node = document.createElement(tag);
@@ -70,18 +70,40 @@ export function openLookPanel(host, node, now, strings, draw) {
     panel.appendChild(row);
     return input;
   };
+  /** The species as pictures to pick from, when mushrooms are illustrated (§7b). */
+  const gallery = () => {
+    const group = html("div", { class: "look-species", role: "radiogroup", "aria-label": tr(strings, "graph.dress_species") });
+    panel.appendChild(html("span", { class: "look-species-head" }, tr(strings, "graph.dress_species")));
+    let chosen = null;
+    for (const option of SPECIES) {
+      const name = tr(strings, `species.${option}`);
+      const button = html("button", { type: "button", class: "look-specimen", role: "radio", "aria-checked": option === now.species ? "true" : "false", title: name, "aria-label": name });
+      button.appendChild(html("img", { src: mushroomPicture(option), alt: "", width: 44, height: 44, loading: "lazy" }));
+      button.addEventListener("click", () => {
+        for (const other of group.children) other.setAttribute("aria-checked", other === button ? "true" : "false");
+        look.species = option;
+        changed();
+      });
+      if (option === now.species) chosen = button;
+      group.appendChild(button);
+    }
+    panel.appendChild(group);
+    return chosen || group.firstElementChild;
+  };
   const kind = project
-    ? select("species", SPECIES, now.species, "species")
+    ? (mushroomPicture(now.species) ? gallery() : select("species", SPECIES, now.species, "species"))
     : select("mineral", Object.keys(MINERALS), now.mineral, "mineral");
 
-  const colorRow = html("label", { class: "look-range look-color" });
-  colorRow.appendChild(html("span", {}, tr(strings, "graph.dress_color")));
-  const color = html("input", { type: "color", name: "look-color", value: now.color });
-  color.addEventListener("input", () => { look.color = color.value; draw({ ...look }); });
-  color.addEventListener("change", () => { look.color = color.value; changed(); });
-  colorInput = color;
-  colorRow.appendChild(color);
-  panel.appendChild(colorRow);
+  if (!project) {
+    const colorRow = html("label", { class: "look-range look-color" });
+    colorRow.appendChild(html("span", {}, tr(strings, "graph.dress_color")));
+    const color = html("input", { type: "color", name: "look-color", value: now.color });
+    color.addEventListener("input", () => { look.color = color.value; draw({ ...look }); });
+    color.addEventListener("change", () => { look.color = color.value; changed(); });
+    colorInput = color;
+    colorRow.appendChild(color);
+    panel.appendChild(colorRow);
+  }
 
   let size = null;
   if (project) {

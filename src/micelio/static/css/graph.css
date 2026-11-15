@@ -313,3 +313,11 @@ button.share-toggle:hover .share-art { transform: scale(1.05); }
   .share-art { width: 2.9rem; height: 3.2rem; }
   .share-caption { font-size: 0.68rem; white-space: normal; text-align: center; line-height: 1.15; }
 }
+
+/* The species as pictures when mushrooms are illustrated (§7b). */
+.look-editor .look-species-head { font-weight: 700; }
+.look-editor .look-species { display: grid; grid-template-columns: repeat(5, 3rem); gap: 0.3rem; }
+.look-editor .look-specimen { width: 3rem; height: 3rem; padding: 0.15rem; border: 2px solid transparent; border-radius: 10px; background: color-mix(in srgb, var(--pal-ink) 70%, transparent); cursor: pointer; }
+.look-editor .look-specimen img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.look-editor .look-specimen:hover, .look-editor .look-specimen:focus-visible { border-color: color-mix(in srgb, var(--pal-accent) 60%, transparent); }
+.look-editor .look-specimen[aria-checked="true"] { border-color: var(--pal-accent); background: color-mix(in srgb, var(--pal-accent) 22%, var(--pal-ink)); }

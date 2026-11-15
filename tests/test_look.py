@@ -186,7 +186,8 @@ def test_every_page_has_the_painted_background(client: TestClient) -> None:
         assert int(top) + int(height) == 1024, path
         assert soil == "52"
         assert ramp == ""  # the psychedelic palette keeps the painting as it is
-        assert 'href="/static/img/psychedelic-dusk.webp"' in html
+        assert 'href="/static/img/scenes/blacklight-planet.webp"' in html
+        assert '<meta name="micelio-mushrooms" content="blacklight">' in html
         assert '/static/css/fonts.css"' in html
         assert '<meta name="color-scheme" content="dark">' in html
         assert "backdrop.js" not in html

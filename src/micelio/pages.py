@@ -266,7 +266,8 @@ class Pages:
     def backdrop(self) -> dict[str, object]:
         """The painted background behind every page (§7c): the image, its soil line and,
         when it is recolored, the palette's ramp and the SVG filter's tables, written
-        into the page so the first paint already has the right colors."""
+        into the page so the first paint already has the right colors. ``mushrooms`` is
+        the style every mushroom is drawn in (§7b)."""
         look = self.looks.current()
         ramp = look.colors.ramp if look.recolors else None
         return {
@@ -274,6 +275,7 @@ class Pages:
             "soil": look.soil,
             "ramp": " ".join(ramp) if ramp else "",
             "tables": ramp_tables(ramp) if ramp else None,
+            "mushrooms": look.mushroom_style,
         }
 
     def category_of(self, key: str | None) -> Category | None:

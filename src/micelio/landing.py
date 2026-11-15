@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import TypedDict
 
-from micelio.appearance import BUILTIN_BACKGROUND, Appearance, category_colors
+from micelio.appearance import Appearance, category_colors
 from micelio.config import Config
 from micelio.looks import Look
 from micelio.render import href_for
@@ -68,7 +68,7 @@ class LandingData(TypedDict):
 def background_url(appearance: Appearance) -> str:
     if appearance.uses_own:
         return f"/appearance/background?v={appearance.own_version}"
-    return f"/static/{BUILTIN_BACKGROUND}"
+    return appearance.painting.url
 
 
 class LandingBuilder:

@@ -16,6 +16,8 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from babel import Locale, UnknownLocaleError
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from micelio.scenes import DEFAULT_SCENE, SCENES
+
 CONFIG_ENV = "MICELIO_CONFIG"
 VAULT_ENV = "MICELIO_VAULT"
 DATA_ENV = "MICELIO_DATA"
@@ -30,6 +32,15 @@ SPECIES: frozenset[str] = frozenset(
         "coral",
         "parasol",
         "glowing-bonnets",
+        # Added with the illustrated mushrooms (2026-11-15); drawn, each borrows the
+        # silhouette of a close species (draw.js).
+        "flat-cap",
+        "turkey-tail",
+        "puffball",
+        "cup",
+        "lattice",
+        "oyster",
+        "spiral",
     }
 )
 
@@ -217,8 +228,18 @@ class LandingConfig(_Strict):
     """Defaults for the landing (§7a, §7b). The Appearance page can override them."""
 
     palette: PaletteName = "psychedelic"
+    # The included scene (§7b); ``soil`` is then the scene's own, and this one only
+    # applies to an uploaded image.
+    scene: str = DEFAULT_SCENE
     soil: int = Field(default=52, ge=SOIL_MIN, le=SOIL_MAX)
     max_notes: int = Field(default=300, ge=10, le=5000)
+
+    @field_validator("scene")
+    @classmethod
+    def _known_scene(cls, value: str) -> str:
+        if value not in SCENES:
+            raise ValueError(f"unknown scene; choose one of {', '.join(SCENES)}")
+        return value
 
 
 class AuthConfig(_Strict):
