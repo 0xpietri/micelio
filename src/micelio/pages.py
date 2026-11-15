@@ -24,7 +24,7 @@ from micelio.appearance import (
 )
 from micelio.auth.web import SignIn
 from micelio.config import NOTE_TYPES, STATUSES, Category, Config
-from micelio.editing import Edit, EditError, SaidEditor, content_hash
+from micelio.editing import Edit, EditError, NoteEditor, content_hash
 from micelio.formatting import Dates, authors
 from micelio.graph import GraphBuilder, ScopeError, UnknownNodeError, parse_scope
 from micelio.growth import growth
@@ -161,7 +161,7 @@ class Pages:
             Renderer(index, guide_headings=config.guide.headings, anchors=config.editing.enabled),
             GraphBuilder(config, index, self.colors, dress),
         )
-        self.editor = SaidEditor(
+        self.editor = NoteEditor(
             config.vault.root,
             config.data.dir / "edits",
             config.editing.author or config.site.owner,
@@ -218,8 +218,9 @@ class Pages:
         }
 
     def said_editing(self, request: Request, note: Note) -> dict[str, str] | None:
-        """What the page needs to let the owner write said bubbles (§8a): the key for the
-        change and the hash of the file shown. None for visitors or with editing off."""
+        """What the page needs to let the owner change the note (§8a): the key for the
+        change, the hash of the file shown and whether Undo has something to put back.
+        None for visitors or with editing off."""
         if not self.config.editing.enabled or not self.sign_in.sees_everything(request):
             return None
         path = self.config.vault.root / note.path
@@ -228,12 +229,15 @@ class Pages:
             fresh = path.stat().st_mtime_ns == note.mtime_ns
         except OSError:
             return None
+        current = content_hash(raw)
         return {
             "token": self.sign_in.form_token(request, "said"),
             # A file newer than the page's text gets a hash nothing matches: the first
             # change asks for a reload instead of writing at the wrong lines.
-            "hash": content_hash(raw) if fresh else "stale",
+            "hash": current if fresh else "stale",
             "url": f"/api/notes/{note.slug}/said",
+            "source": f"/api/notes/{note.slug}/source",
+            "undo": "1" if fresh and self.editor.undoable(note.path, current) else "",
         }
 
     def is_shared(self, note: Note) -> bool:
@@ -477,10 +481,28 @@ class Pages:
                 return JSONResponse({"ok": False, "error": error.code}, status_code=error.status)
             return JSONResponse({"ok": True, "text": words}, headers={"Cache-Control": "no-store"})
 
+        @router.get("/api/notes/{slug}/source", include_in_schema=False)
+        def note_source(
+            request: Request, slug: str, start: int | None = Query(default=None, ge=0)
+        ) -> Response:
+            """The note's body as written, or one top-level block of it, for the owner's
+            editors (§8a). The frontmatter is left out: it is not changed from the site."""
+            if not self.config.editing.enabled or not self.sign_in.sees_everything(request):
+                raise HTTPException(status_code=404)
+            note = self.index.notes.get(slug)
+            if note is None:
+                raise HTTPException(status_code=404)
+            try:
+                text = self.editor.source(note.path, start)
+            except EditError as error:
+                return JSONResponse({"ok": False, "error": error.code}, status_code=error.status)
+            return JSONResponse({"ok": True, "text": text}, headers={"Cache-Control": "no-store"})
+
         @router.post("/api/notes/{slug}/said", include_in_schema=False)
         async def said(request: Request, slug: str) -> Response:
-            """The owner inserts, changes, moves or deletes a said bubble (§8a): the one
-            write to the vault, refused when the note changed since the page showed it."""
+            """The owner changes the note (§8a): a said bubble, any top-level block or
+            section, the whole body, or Undo. The one write to the vault, refused when the
+            note changed since the page showed it."""
             if not self.config.editing.enabled or not self.sign_in.sees_everything(request):
                 raise HTTPException(status_code=404)
             token = request.headers.get("x-micelio-form", "")
@@ -514,7 +536,8 @@ class Pages:
             except EditError as error:
                 return JSONResponse({"ok": False, "error": error.code}, status_code=error.status)
             self.index.refresh(force=True)
-            return JSONResponse({"ok": True, "hash": new_hash})
+            undo = self.editor.undoable(note.path, new_hash)
+            return JSONResponse({"ok": True, "hash": new_hash, "undo": undo})
 
         @router.post("/projects/{slug}/share", include_in_schema=False)
         def share(
