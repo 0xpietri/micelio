@@ -795,7 +795,7 @@ form.inline { display: inline; }
 .said-add[hidden] { display: none; }
 .said-add-title { color: var(--sun); font-weight: 700; font-size: 0.9rem; }
 .said-add-title > span { display: inline-block; min-width: 0.9em; }
-.said-add:hover, .said-add:focus-visible { border-color: var(--sun); }
+.said-add:hover, .said-add:focus-visible { border-color: var(--sun); box-shadow: 0 0 0 1px var(--sun) inset, 6px 6px 0 color-mix(in srgb, var(--ink) 70%, transparent); }
 .said-add:focus-visible { outline: 3px solid var(--text); outline-offset: 2px; }
 
 /* Phone: what a held blank space opens. */
@@ -848,6 +848,9 @@ form.inline { display: inline; }
 .said-note-tools button { padding: 0.3rem 0.8rem; font-size: 0.85rem; background: var(--surface); color: var(--text); border-color: var(--muted); box-shadow: none; }
 .said-note-tools button[aria-pressed="true"] { background: var(--sun); color: var(--ink); }
 .said-note-tools .said-status { flex: 1; }
+/* "Edit" is a card like "Add a comment", not one of the small pills. */
+.said-note-tools button.said-edit-note { padding: 0.45rem 0.75rem; background: var(--glass); border-color: transparent; color: var(--text); font-size: 0.78rem; box-shadow: 0 0 0 1px var(--line) inset, 6px 6px 0 color-mix(in srgb, var(--ink) 70%, transparent); }
+.said-note-tools button.said-edit-note:hover, .said-note-tools button.said-edit-note:focus-visible { background: var(--glass); box-shadow: 0 0 0 1px var(--sun) inset, 6px 6px 0 color-mix(in srgb, var(--ink) 70%, transparent); }
 .said-parts-toggle { display: none; }
 @media (pointer: coarse) {
   .said-parts-toggle { display: inline-block; }

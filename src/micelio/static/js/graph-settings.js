@@ -73,24 +73,6 @@ export function save(settings, storage = globalThis.localStorage) {
   }
 }
 
-/** Whether the reader dug into the project at ``path`` in this tab, so the Back button
- * comes back to its underground open. Kept for the tab only (sessionStorage). */
-export function dug(path, storage = globalThis.sessionStorage) {
-  try {
-    return storage.getItem(`micelio.dug:${path}`) === "1";
-  } catch {
-    return false;
-  }
-}
-
-export function setDug(path, yes, storage = globalThis.sessionStorage) {
-  try {
-    storage.setItem(`micelio.dug:${path}`, yes ? "1" : "0");
-  } catch {
-    /* blocked storage: the page opens closed next time */
-  }
-}
-
 /** ``title`` cut to at most ``max`` characters, at a word when one is close, with "…". */
 export function shorten(title, max) {
   const chars = [...String(title)];

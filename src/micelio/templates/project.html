@@ -12,14 +12,12 @@
 <section class="hero-scene" aria-labelledby="project-map">
   <h2 class="visually-hidden" id="project-map">{{ t("project.graph") }}</h2>
   {{ graph_box("project:" ~ note.slug, t("project.graph_label"), mode="forest") }}
+  {#- The title and, on the same line, the Share switch (§9): a small drawing and what it
+      says, "Spores in the air" (shared) or "Underground" (private). Only the owner can flip
+      it; visitors just read it. Flipping changes the drawing and the words, not the color. #}
   <div class="hero-heading">
+    <div class="title-line">
     <h1>{{ note.title }}</h1>
-  </div>
-  {#- The cards on the soil line: the growth card at the left, the Share switch at the right. #}
-  <div class="scene-cards">
-    {#- The Share switch (§9), on the soil line at the right: a neon mushroom when visitors can
-        read the project, only its mycelium under the soil when it is private. Only the owner
-        can flip it; visitors just see the mushroom. #}
     {% set share = share_switch(request, note) %}
     {% if share %}
     {% set on = share.shared or share.in_note %}
@@ -63,6 +61,10 @@
       {% if fixed %}</span>{% else %}</button>{% endif %}
     {% if share.owner %}</form>{% else %}</div>{% endif %}
     {% endif %}
+    </div>
+  </div>
+  {#- The card on the soil line: how the project grows. #}
+  <div class="scene-cards">
     {#- How the project grows: a stage and twelve weeks of notes (§7c). #}
     <div class="growth glass stage-{{ growth.stage }}{% if category %} cat-{{ category.key }}{% endif %}" title="{{ t('growth.score', score=growth.score) }}">
       <p class="growth-head">

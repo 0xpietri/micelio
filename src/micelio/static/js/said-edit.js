@@ -503,7 +503,10 @@ function parts(root) {
     partBar.style.top = `${top}px`;
     partBar.hidden = false;
   };
+  // Pointing at the text never offers to change it: the parts answer only with "Edit
+  // parts" on; otherwise the note changes only through the Edit card.
   root.addEventListener("pointerover", (e) => {
+    if (!root.classList.contains("said-parts")) return;
     if (e.pointerType === "touch" || partBar.contains(e.target)) return;
     const block = blockAt(root, e.target);
     if (block || e.target === root) show(block);
@@ -664,7 +667,10 @@ async function noteEditor() {
 function noteTools() {
   const root = prose();
   const status = el("span", { class: "said-status", role: "status" });
-  const whole = el("button", { type: "button", text: `✎ ${t("edit_note")}`, onclick: noteEditor });
+  // "Edit" looks like the "Add a comment" card beside it: the one way into the note's text.
+  const whole = el("button", { type: "button", class: "note-card glass said-add said-edit-note", onclick: noteEditor }, [
+    el("span", { class: "said-add-title" }, [el("span", { "aria-hidden": "true", text: "✎" }), document.createTextNode(` ${t("edit_note")}`)]),
+  ]);
   const partsButton = el("button", {
     type: "button",
     class: "said-parts-toggle",

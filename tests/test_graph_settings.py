@@ -200,17 +200,26 @@ def test_visitors_get_the_same_graph_code(site_for: SiteFor) -> None:
     assert strings["graph.settings"] == "Graph settings"
 
 
-def test_the_dug_underground_lasts_for_the_tab() -> None:
-    out = run_module(
-        "const store = new Map(); const s = {getItem: (k) => store.get(k) ?? null,"
-        " setItem: (k, v) => store.set(k, v)};"
-        " const before = m.dug('/projects/p', s); m.setDug('/projects/p', true, s);"
-        " const after = [m.dug('/projects/p', s), m.dug('/projects/q', s)];"
-        " m.setDug('/projects/p', false, s);"
-        " const no = () => { throw new Error('no'); };"
-        " const blocked = {getItem: no, setItem: no};"
-        " m.setDug('/x', true, blocked);"
-        " console.log(JSON.stringify([before, ...after, m.dug('/projects/p', s),"
-        " m.dug('/x', blocked), m.clean({every: true}).every]));"
-    )
-    assert out == [False, True, False, False, False, True]
+@needs_node
+def test_a_project_always_opens_closed() -> None:
+    # Digging is not remembered: a reload or another project starts with the underground
+    # hidden, and the same button folds it back up.
+    settings = (STATIC / "js" / "graph-settings.js").read_text(encoding="utf-8")
+    graph = (STATIC / "js" / "graph.js").read_text(encoding="utf-8")
+    assert "micelio.dug" not in settings + graph
+    assert "sessionStorage" not in settings + graph
+    assert "const state = { deep: false" in graph
+    assert "go(!state.deep)" in graph
+    out = run_module("console.log(JSON.stringify(m.clean({every: true}).every));")
+    assert out is True
+
+
+def test_notes_are_palette_dots_and_the_neighborhood_reads_like_words() -> None:
+    graph = (STATIC / "js" / "graph.js").read_text(encoding="utf-8")
+    # Notes and drafts are dots in their category's color, never pictures.
+    assert 'picture("note"' not in graph
+    assert 'nodePicture("draft")' not in graph
+    # The Neighborhood draws each node as a small mark with its name on the same line.
+    assert "function token(" in graph
+    assert 'inline: mode === "box"' in graph
+    assert 'text.setAttribute("text-anchor", "start")' in graph
