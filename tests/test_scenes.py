@@ -7,6 +7,7 @@ from __future__ import annotations
 import json
 import re
 import sqlite3
+from contextlib import closing
 from pathlib import Path
 
 import pytest
@@ -97,11 +98,10 @@ def test_a_choice_saved_before_scenes_starts_on_the_default_scene(tmp_path: Path
 def test_a_legacy_upload_keeps_its_soil(tmp_path: Path) -> None:
     store = AppearanceStore(make_config(tmp_path))
     store.store_background(png())
-    raw = json.loads(
-        sqlite3.connect(tmp_path / "data" / "site.sqlite3")
-        .execute("SELECT value FROM settings WHERE key = 'appearance'")
-        .fetchone()[0]
-    )
+    with closing(sqlite3.connect(tmp_path / "data" / "site.sqlite3")) as db:
+        raw = json.loads(
+            db.execute("SELECT value FROM settings WHERE key = 'appearance'").fetchone()[0]
+        )
     raw.pop("scene")
     raw["soil"] = 41
     store.write_setting("appearance", raw)
