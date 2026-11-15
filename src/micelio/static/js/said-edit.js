@@ -3,9 +3,9 @@
 // carries where to send changes, the key and the hash of the file shown, and each
 // top-level block the lines it came from (data-l="start-end").
 //
-// Desktop: a floating "Add a note" button beside the text; the gap between paragraphs
-// nearest to it lights up and a click opens the composer there. Bubbles are dragged by
-// their handle, or moved with Move. Phone: hold a blank space between paragraphs, a popup
+// Every screen: an "Add a note" card where the note ends, beside where the pager starts;
+// a click opens the composer after the last block. Desktop: bubbles are dragged by their
+// handle, or moved with Move. Phone: also hold a blank space between paragraphs, a popup
 // offers "Write a note"; bubbles have a ⋯ menu (Edit, Move with ↑ ↓, Delete).
 //
 // The composer and the popup keep an empty slot (.said-extra) for the voice-note button
@@ -696,7 +696,10 @@ function noteTools() {
     },
   });
   const bar = el("div", { class: "said-ui said-note-tools" }, [whole, partsButton, undo, status]);
-  root.after(bar);
+  // On the same row as the "Add a note" card, at its left; under the text without it.
+  const foot = document.querySelector(".note-foot");
+  if (foot) foot.prepend(bar);
+  else root.after(bar);
   noteBar = {
     el: bar,
     status,
@@ -709,37 +712,26 @@ function noteTools() {
   noteBar.refresh();
 }
 
-/* ---------- desktop: the floating button ---------- */
+/* ---------- "Add a note": the card under the note ---------- */
 
-function fab() {
-  const add = el("button", { type: "button", class: "said-fab-add", title: t("add_here"), "aria-label": t("add_here") }, [
-    el("span", { "aria-hidden": "true", text: "+" }),
-    el("span", { class: "said-fab-label", text: t("add") }),
-  ]);
-  // The voice-note button will sit in this same floating bar, under "Add a note".
-  const bar = el("div", { class: "said-ui said-fab" }, [add, el("span", { class: "said-extra" })]);
-  document.body.append(bar);
-  const centre = () => {
-    const r = add.getBoundingClientRect();
-    return r.top + r.height / 2 + window.scrollY;
+/** The card the page puts where the note ends (desktop and phone): it writes after the
+ * last block; the bubble can then be dragged or moved anywhere. */
+function addCard() {
+  const add = document.querySelector("[data-said-add]");
+  if (!add) return;
+  const last = () => {
+    const all = gaps(prose());
+    return all[all.length - 1] || null;
   };
-  const place = () => {
-    const root = prose();
-    const r = root.getBoundingClientRect();
-    const room = innerWidth - r.right;
-    bar.style.left = room > 190 ? `${r.right + 24}px` : "";
-    bar.classList.toggle("tight", room <= 190);
-    bar.hidden = r.bottom < innerHeight * 0.3 || r.top > innerHeight * 0.7;
-    if (bar.matches(":hover, :focus-within") && !composing) showLine(nearest(root, centre()));
-  };
-  add.addEventListener("pointerenter", () => !composing && showLine(nearest(prose(), centre())));
-  add.addEventListener("focus", () => !composing && showLine(nearest(prose(), centre())));
+  add.hidden = false;
+  add.addEventListener("pointerenter", () => !composing && showLine(last()));
+  add.addEventListener("focus", () => !composing && showLine(last()));
   add.addEventListener("pointerleave", hideLine);
   add.addEventListener("blur", hideLine);
-  add.addEventListener("click", () => composer(nearest(prose(), centre())));
-  window.addEventListener("scroll", place, { passive: true });
-  window.addEventListener("resize", place);
-  place();
+  add.addEventListener("click", () => {
+    const gap = last();
+    if (gap) composer(gap);
+  });
 }
 
 /* ---------- phone: hold a blank space, a popup ---------- */
@@ -830,7 +822,7 @@ async function start() {
   }
   noteTools();
   decorate();
-  if (!coarse()) fab();
+  addCard();
   hold();
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closePopup();

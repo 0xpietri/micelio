@@ -68,6 +68,11 @@ max_nodes = 400                      # over this, /explore draws only the most c
 # with ### for its stretches. Without it the guide follows the order of the index's links.
 headings = ["Guide", "Guía"]
 
+[note]
+# The heading of a note's own list of links. It is left out of the note's page, since
+# the Neighborhood below the note lists the same notes. [] shows it again.
+links_headings = ["Links", "Enlaces"]
+
 [auth]
 mode = "local"                       # local | none (when a gateway in front handles sign-in)
 session_hours = 12

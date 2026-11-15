@@ -212,6 +212,18 @@ class GuideConfig(_Strict):
     headings: list[str] = Field(default_factory=_default_guide_headings, min_length=1)
 
 
+def _default_links_headings() -> list[str]:
+    return ["Links", "Enlaces"]
+
+
+class NotePageConfig(_Strict):
+    """A note's page: the heading of a note's own list of links, left out of its body
+    because the Neighborhood below lists the same notes (§7). Compared without case or
+    accents; an empty list shows that section again."""
+
+    links_headings: list[str] = Field(default_factory=_default_links_headings)
+
+
 class TypographyConfig(_Strict):
     """Defaults for titles and text on every page (§7b). The Appearance page can
     override them."""
@@ -271,6 +283,7 @@ class Config(_Strict):
     categories: list[Category] = Field(default_factory=_default_categories)
     graph: GraphConfig = Field(default_factory=GraphConfig)
     guide: GuideConfig = Field(default_factory=GuideConfig)
+    note: NotePageConfig = Field(default_factory=NotePageConfig)
     landing: LandingConfig = Field(default_factory=LandingConfig)
     typography: TypographyConfig = Field(default_factory=TypographyConfig)
     auth: AuthConfig = Field(default_factory=AuthConfig)

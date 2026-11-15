@@ -39,34 +39,25 @@
 
   {{ prose(body, editing) }}
 
+  {% if editing %}
+  {#- The owner's "Add a note", where the note ends: a card like the dates card above, at
+      the same height (the voice-note button will join it in .said-extra). said-edit.js shows it and opens the composer after the last block. #}
+  <div class="note-foot">
+    <button type="button" class="note-card glass said-add" data-said-add hidden>
+      <span class="said-add-title"><span aria-hidden="true">+</span> {{ t("said.add") }}</span>
+    </button>
+    <span class="said-extra"></span>
+  </div>
+  {% endif %}
+
   {% if guide %}{{ guide_pager(guide, note.slug) }}{% endif %}
 
+  {#- One place for everything around the note (§7): the graph. Each node is a link, and
+      sparks run along the threads from the note that links to the one it links. #}
   <aside class="related">
-    <section>
+    <section class="neighborhood">
       <h2>{{ t("note.graph") }}</h2>
       {{ graph_box("note:" ~ note.slug, t("note.graph_label"), "graph-small", mode="box") }}
-    </section>
-    {% if note.type != "journal" %}
-    <section>
-      <h2>{{ t("note.projects") }}</h2>
-      {% if projects %}
-      <ul class="rows">
-        {% for project in projects %}
-        <li class="row">{{ mushroom(project) }} <a href="{{ href(project) }}">{{ project.title }}</a> {{ status_badge(project.status) }}</li>
-        {% endfor %}
-      </ul>
-      {% else %}<p class="muted">{{ t("note.no_projects") }}</p>{% endif %}
-    </section>
-    {% endif %}
-    <section>
-      <h2>{{ t("note.backlinks") }}</h2>
-      {% if backlinks %}
-      <ul class="rows">
-        {% for other in backlinks %}
-        <li class="row"><span class="spore-icon{% if other.type == 'source' %} crystal{% elif other.type == 'journal' %} golden{% elif other.type in ('gap', 'question') %} {{ other.type }}{% endif %}" aria-hidden="true"></span> <a href="{{ href(other) }}">{{ other.title }}</a>{% if other.type != "note" %} <span class="badge">{{ t("type." ~ other.type) }}</span>{% endif %}</li>
-        {% endfor %}
-      </ul>
-      {% else %}<p class="muted">{{ t("note.no_backlinks") }}</p>{% endif %}
     </section>
   </aside>
 </article>

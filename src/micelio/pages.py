@@ -158,7 +158,12 @@ class Pages:
         dress = self.node_looks.all
         self.everything = Reader(
             index,
-            Renderer(index, guide_headings=config.guide.headings, anchors=config.editing.enabled),
+            Renderer(
+                index,
+                guide_headings=config.guide.headings,
+                links_headings=config.note.links_headings,
+                anchors=config.editing.enabled,
+            ),
             GraphBuilder(config, index, self.colors, dress),
         )
         self.editor = NoteEditor(
@@ -168,7 +173,12 @@ class Pages:
         )
         self.public = Reader(
             public,
-            Renderer(public, ghosts=False, guide_headings=config.guide.headings),
+            Renderer(
+                public,
+                ghosts=False,
+                guide_headings=config.guide.headings,
+                links_headings=config.note.links_headings,
+            ),
             GraphBuilder(config, public, self.colors, dress),
         )
 
@@ -419,19 +429,9 @@ class Pages:
             note = self._note(vault, slug)
             if note.type == "project":
                 return RedirectResponse(href_for(note), status_code=308)
-            backlinks = sorted(
-                (vault.notes[s] for s in vault.backlinks.get(slug, set())),
-                key=lambda n: n.title.lower(),
-            )
-            projects = sorted(
-                (vault.notes[s] for s in vault.projects_of.get(slug, set())),
-                key=lambda n: n.title.lower(),
-            )
             context = {
                 "note": note,
                 "body": reader.renderer.html(note),
-                "backlinks": [b for b in backlinks if b.type != "project"],
-                "projects": projects,
                 "guide": self._guide_for(vault, note, guide),
                 "nav": "journal" if note.type == "journal" else "",
             }

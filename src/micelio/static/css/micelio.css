@@ -763,32 +763,35 @@ form.inline { display: inline; }
 .callout-said.moving { outline: 3px dashed var(--sun); outline-offset: 4px; }
 .callout-said .said-move-tools { position: static; display: flex; margin-top: 0.6rem; width: max-content; max-width: 100%; flex-wrap: wrap; }
 
-/* Desktop: the floating "Add a note" beside the text, at the middle of the window. */
-.said-fab {
-  position: fixed;
-  top: 50%;
-  right: 1rem;
-  transform: translateY(-50%);
-  z-index: 15;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-.said-fab[style*="left"] { right: auto; }
-.said-fab-add {
+/* "Add a note" where the note ends: a card like the dates card under the title, right
+   aligned like it, before the pager. */
+.note-foot { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 0.5rem; margin-top: 1.4rem; }
+.note-foot .said-note-tools { flex: 1 1 14rem; margin: 0; }
+.said-add {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.55rem 0.9rem 0.55rem 0.7rem;
-  border-radius: 999px;
-  background: var(--sun);
-  color: var(--ink);
-  font-weight: 700;
-  box-shadow: 0 3px 14px rgb(0 0 0 / 0.45);
+  /* As tall as the dates card's two lines. */
+  min-height: 3.6rem;
+  gap: 0;
+  margin: 0;
+  /* The dates card's own look: the plain button rules would make it a pill. */
+  padding: 0.45rem 0.75rem;
+  border-radius: 12px;
+  background: var(--glass);
+  box-shadow: 0 0 0 1px var(--line) inset, 6px 6px 0 color-mix(in srgb, var(--ink) 70%, transparent);
+  color: var(--text);
+  text-align: left;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 400;
+  line-height: inherit;
+  cursor: pointer;
 }
-.said-fab-add > span:first-child { font-size: 1.3rem; line-height: 1; }
-.said-fab.tight .said-fab-label { display: none; }
-.said-fab-add:focus-visible { outline: 3px solid var(--text); outline-offset: 2px; }
+.said-add[hidden] { display: none; }
+.said-add-title { color: var(--sun); font-weight: 700; font-size: 0.9rem; }
+.said-add-title > span { display: inline-block; min-width: 0.9em; }
+.said-add:hover, .said-add:focus-visible { border-color: var(--sun); }
+.said-add:focus-visible { outline: 3px solid var(--text); outline-offset: 2px; }
 
 /* Phone: what a held blank space opens. */
 .said-popup {

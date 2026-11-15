@@ -48,6 +48,8 @@ class EdgeData(TypedDict):
     source: str
     target: str
     faded: bool
+    # The two notes link each other: drawn as one thread, read both ways.
+    both: bool
 
 
 class CategoryData(TypedDict):
@@ -212,12 +214,14 @@ class GraphBuilder:
         # that link each other) would otherwise be drawn twice, one over the other.
         # The direction kept starts at the project, else at the first link found.
         pairs: dict[frozenset[str], tuple[str, str]] = {}
+        seen_ways: set[tuple[str, str]] = set()
         for e in self.index.edges:
             if e.source not in everyone or e.target not in everyone:
                 continue
             # Two faded neighbours of a project are not part of its story.
             if e.source in faded and e.target in faded:
                 continue
+            seen_ways.add((e.source, e.target))
             key = frozenset((e.source, e.target))
             if key not in pairs or (
                 notes[e.source].type == "project" and notes[e.target].type != "project"
@@ -229,6 +233,7 @@ class GraphBuilder:
                 "source": source,
                 "target": target,
                 "faded": source in faded or target in faded,
+                "both": (target, source) in seen_ways,
             }
             for source, target in pairs.values()
         ]
@@ -243,7 +248,14 @@ class GraphBuilder:
                 seen.add(gid)
                 nodes.append(self._ghost(target))
             edges.extend(
-                {"id": f"{s}->{gid}", "source": s, "target": gid, "faded": s in faded} for s in hits
+                {
+                    "id": f"{s}->{gid}",
+                    "source": s,
+                    "target": gid,
+                    "faded": s in faded,
+                    "both": False,
+                }
+                for s in hits
             )
         return nodes, edges
 

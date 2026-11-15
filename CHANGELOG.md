@@ -59,6 +59,16 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- A note's page is simpler: everything around it is in the Neighborhood graph. The note's
+  own "Links" / "Enlaces" section and the "Part of" and "Linked from" lists are gone, since
+  the graph already shows every one of those notes.
+- In the Neighborhood, sparks run along each thread from the note that links to the one it
+  links (both ways when they link each other).
+- Graph marks: a journal entry is a golden seed, a draft note a closed button mushroom over
+  its category's color, and with the illustrated scenes a source is its illustrated mineral.
+- "Add a note" is no longer a floating button: it is a small card where the note ends, just
+  above previous / next, like the Created / Edited card and as tall. It adds the bubble at
+  the end; drag or move it from there.
 - The mushroom editor no longer picks a color: illustrated mushrooms keep the picture's
   colors and drawn ones the palette's. A color chosen before still tints the project's glow
   and threads. Sources keep their color picker.
@@ -85,6 +95,8 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- Every name shows in a note's Neighborhood graph: a name that would cover another moves a
+  line down or up instead of hiding (Defensa en capas was missing on Hash esperado).
 - Pages no longer flash the background in its original colors before the chosen palette
   recolors it: the recoloring comes with the page itself. The landing waits until its
   scene is drawn and then fades in, instead of jumping from one framing to another.
