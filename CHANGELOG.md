@@ -8,6 +8,12 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- A project's underground now starts closed: press the bright "Dig deeper" button under
+  its mushroom and the mycelium spreads from the mushroom's foot to every note. "Back to the
+  surface" closes it again.
+- The project graph draws one thread per note, branching from the project through its most
+  linked notes, instead of every link at once. Point at a note to light up all its other
+  connections, or switch on "Every connection" to see them all.
 - Nine new scenes to pick on the Appearance page, in three styles (blacklight, neon and
   brushstrokes), with a quiet dark underground so your own mycelium and the names on the
   graphs stand out. Each scene brings its soil line and its own illustrated mushrooms; the
@@ -54,6 +60,8 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- The guide beside a project and its notes is headed by the project's name, a link to the
+  project, with an arrow beside it to fold and open the guide; the word "Guide" is gone.
 - The mushroom editor no longer picks a color: illustrated mushrooms keep the picture's
   colors and drawn ones the palette's. A color chosen before still tints the project's glow
   and threads. Sources keep their color picker.

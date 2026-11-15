@@ -65,6 +65,7 @@ def test_defaults_and_cleaning() -> None:
         "labels": 100,
         "shorten": True,
         "length": 28,
+        "every": False,
         "zoom": {"free": 1, "box": 1, "forest": 1},
     }
     assert from_null == defaults
@@ -73,6 +74,7 @@ def test_defaults_and_cleaning() -> None:
     assert cleaned["labels"] == 100  # not a number: the default
     assert cleaned["length"] in (12, 14)  # snapped to the slider's step
     assert cleaned["shorten"] is True  # not a boolean: the default
+    assert cleaned["every"] is False
     assert "extra" not in cleaned
     assert cleaned["zoom"] == {"free": 8, "box": 1, "forest": 2}
 
@@ -196,3 +198,19 @@ def test_visitors_get_the_same_graph_code(site_for: SiteFor) -> None:
         assert visitor.get(path).status_code == 200, path
     strings = visitor.get("/static/locales/en.json").json()
     assert strings["graph.settings"] == "Graph settings"
+
+
+def test_the_dug_underground_lasts_for_the_tab() -> None:
+    out = run_module(
+        "const store = new Map(); const s = {getItem: (k) => store.get(k) ?? null,"
+        " setItem: (k, v) => store.set(k, v)};"
+        " const before = m.dug('/projects/p', s); m.setDug('/projects/p', true, s);"
+        " const after = [m.dug('/projects/p', s), m.dug('/projects/q', s)];"
+        " m.setDug('/projects/p', false, s);"
+        " const no = () => { throw new Error('no'); };"
+        " const blocked = {getItem: no, setItem: no};"
+        " m.setDug('/x', true, blocked);"
+        " console.log(JSON.stringify([before, ...after, m.dug('/projects/p', s),"
+        " m.dug('/x', blocked), m.clean({every: true}).every]));"
+    )
+    assert out == [False, True, False, False, False, True]

@@ -37,9 +37,11 @@
 {% macro guide_box(guide, current=none) %}
 {% set category = category_of(guide.project.category) %}
 <details class="guide glass{% if category %} cat-{{ category.key }}{% endif %}" data-guide>
+  {#- The project's name opens the project; the arrow beside it folds the guide. #}
   <summary>
-    <span class="guide-title">{{ t("guide.title") }}</span>
-    <span class="muted small">{{ guide.project.title }}</span>
+    <span class="visually-hidden">{{ t("guide.title") }}:</span>
+    <a class="guide-title" href="{{ href(guide.project) }}">{{ guide.project.title }}</a>
+    <span class="guide-fold" aria-hidden="true"></span>
   </summary>
   {% if guide.others %}
   <p class="guide-projects small">{{ t("guide.also_in") }}

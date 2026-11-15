@@ -321,3 +321,35 @@ button.share-toggle:hover .share-art { transform: scale(1.05); }
 .look-editor .look-specimen img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .look-editor .look-specimen:hover, .look-editor .look-specimen:focus-visible { border-color: color-mix(in srgb, var(--pal-accent) 60%, transparent); }
 .look-editor .look-specimen[aria-checked="true"] { border-color: var(--pal-accent); background: color-mix(in srgb, var(--pal-accent) 22%, var(--pal-ink)); }
+
+/* A project's underground stays closed until the reader digs: a bright button under the
+   mushroom on the soil line opens it, a bar at the bottom brings the reader back up. */
+.scene-page .hero-scene.digging { transition: height 0.9s cubic-bezier(0.3, 0.7, 0.3, 1); }
+.graph-forest:not(.deep) > .graph-tools, .graph-forest:not(.deep) > .forest-bar { display: none; }
+.graph-forest.deep > .dig-button { display: none; }
+.dig-button {
+  position: absolute; z-index: 3; left: var(--dig-x, 50%); top: calc(var(--soil-y, 70%) + 1.4rem); transform: translateX(-50%);
+  display: inline-flex; align-items: center; gap: 0.5rem; min-height: 46px; padding: 0.55rem 1.3rem 0.55rem 1rem;
+  border: 2px solid var(--ink); border-radius: 999px; background: var(--sun); color: var(--ink);
+  font: inherit; font-size: 1.05rem; font-weight: 800; letter-spacing: 0.02em; cursor: pointer;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--sun) 30%, transparent), 0 0 26px color-mix(in srgb, var(--sun) 70%, transparent);
+  animation: dig-call 2.6s ease-in-out infinite;
+}
+.dig-button svg { width: 1.35rem; height: 1.35rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.dig-button:hover, .dig-button:focus-visible { background: var(--text); box-shadow: 0 0 0 4px color-mix(in srgb, var(--text) 35%, transparent), 0 0 34px var(--sun); }
+.dig-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+@keyframes dig-call { 0%, 100% { translate: 0 0; } 50% { translate: 0 4px; } }
+.forest-bar { position: absolute; z-index: 3; left: 50%; bottom: 2.2rem; transform: translateX(-50%); display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; width: max-content; max-width: calc(100% - 2rem); }
+.forest-bar button { min-height: 40px; padding: 0.4rem 1rem; border: 2px solid var(--ink); border-radius: 999px; background: color-mix(in srgb, var(--ink) 78%, transparent); color: var(--text); font: inherit; font-size: 0.9rem; font-weight: 700; cursor: pointer; box-shadow: none; }
+.forest-bar button:hover, .forest-bar button:focus-visible { background: var(--text); color: var(--ink); }
+.forest-bar .every-button[aria-pressed="true"] { background: var(--sun); color: var(--ink); }
+.forest-bar .every-button::before { content: ""; display: inline-block; width: 0.7rem; height: 0.7rem; margin-right: 0.45rem; border: 2px solid currentColor; border-radius: 3px; vertical-align: -0.05rem; }
+.forest-bar .every-button[aria-pressed="true"]::before { background: currentColor; }
+/* The connections that are not threads of the mycelium wait for a pointer on their note. */
+.graph-forest .hypha.extra { display: none; }
+.graph-forest .hypha.extra.lit { display: inline; stroke-opacity: 0.75; stroke-width: 1.4; }
+.dig-ring { fill: none; stroke-width: 3; filter: url(#glow); pointer-events: none; }
+@media (prefers-reduced-motion: reduce) {
+  .dig-button { animation: none; }
+  .scene-page .hero-scene.digging { transition: none; }
+}

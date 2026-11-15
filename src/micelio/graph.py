@@ -48,6 +48,10 @@ class EdgeData(TypedDict):
     source: str
     target: str
     faded: bool
+    # In a project's scope, the threads of its mycelium: one per note, branching from the
+    # project through its most linked notes. The page draws only these until asked for
+    # every connection. Every edge of the other scopes is part of it.
+    spine: bool
 
 
 class CategoryData(TypedDict):
@@ -229,6 +233,7 @@ class GraphBuilder:
                 "source": source,
                 "target": target,
                 "faded": source in faded or target in faded,
+                "spine": True,
             }
             for source, target in pairs.values()
         ]
@@ -243,7 +248,14 @@ class GraphBuilder:
                 seen.add(gid)
                 nodes.append(self._ghost(target))
             edges.extend(
-                {"id": f"{s}->{gid}", "source": s, "target": gid, "faded": s in faded} for s in hits
+                {
+                    "id": f"{h}->{gid}",
+                    "source": h,
+                    "target": gid,
+                    "faded": h in faded,
+                    "spine": True,
+                }
+                for h in hits
             )
         return nodes, edges
 
@@ -261,7 +273,9 @@ class GraphBuilder:
             for project in self.index.projects_of.get(member, ())
             if project != slug
         }
-        return self._assemble(core, faded=others - core, focus=slug, ghost_sources=core)
+        nodes, edges = self._assemble(core, faded=others - core, focus=slug, ghost_sources=core)
+        mark_spine(slug, nodes, edges)
+        return nodes, edges
 
     def _neighborhood(self, slug: str) -> tuple[list[NodeData], list[EdgeData]]:
         """The note and everything one link away, either direction."""
@@ -271,3 +285,63 @@ class GraphBuilder:
             *self.index.backlinks.get(slug, ()),
         }
         return self._assemble(around, focus=slug, ghost_sources={slug})
+
+
+def mark_spine(root: str, nodes: list[NodeData], edges: list[EdgeData]) -> None:
+    """Keep one thread per note of a project, so its underground reads as a mycelium
+    rather than a hairball. The project feeds its most linked notes (about the square
+    root of their number); every other note hangs from its most linked neighbour that is
+    already on the mycelium, else from the project. A ghost's thread is left out, and each
+    other project keeps a single thread: the one to its most linked bridge note."""
+    ghosts = {n["id"] for n in nodes if n["ghost"]}
+    faded = {n["id"] for n in nodes if n["faded"]}
+    near: dict[str, set[str]] = {n["id"]: set() for n in nodes if n["id"] not in ghosts | faded}
+    for e in edges:
+        a, b = e["source"], e["target"]
+        if a in near and b in near:
+            near[a].add(b)
+            near[b].add(a)
+
+    def degree(slug: str) -> int:
+        return len(near[slug] - {root})
+
+    notes = sorted((s for s in near if s != root), key=lambda s: (-degree(s), s))
+    hubs = max(3, round(len(notes) ** 0.5))
+    placed = {root}
+    kept: set[frozenset[str]] = set()
+
+    def attach(slug: str, parent: str) -> None:
+        placed.add(slug)
+        kept.add(frozenset((slug, parent)))
+
+    waiting = notes
+    while waiting:
+        later: list[str] = []
+        for slug in waiting:
+            on = sorted(near[slug] & placed - {root}, key=lambda p: (-degree(p), p))
+            if root in near[slug] and (len(placed) <= hubs or not on):
+                attach(slug, root)
+            elif on:
+                attach(slug, on[0])
+            else:
+                later.append(slug)
+        if len(later) == len(waiting):
+            # Linked to the project's notes only through each other: start a strand anyway.
+            first = later.pop(0)
+            if near[first]:
+                attach(first, min(near[first]))
+            else:
+                placed.add(first)
+        waiting = later
+
+    bridges: dict[str, list[str]] = {}
+    for e in edges:
+        a, b = e["source"], e["target"]
+        if a in faded and b in near:
+            bridges.setdefault(a, []).append(b)
+        elif b in faded and a in near:
+            bridges.setdefault(b, []).append(a)
+    for other, members in bridges.items():
+        kept.add(frozenset((other, min(members, key=lambda m: (-degree(m), m)))))
+    for e in edges:
+        e["spine"] = frozenset((e["source"], e["target"])) in kept
