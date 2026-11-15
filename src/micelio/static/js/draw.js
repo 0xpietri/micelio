@@ -93,6 +93,19 @@ export function mushroomPicture(kind, style = mushroomStyle()) {
   return `/static/img/mushrooms/${encodeURIComponent(style)}/${SPECIES.includes(kind) ? kind : "glowing-bonnets"}.webp`;
 }
 
+/** The picture of a source's mineral in an illustrated ``style``, or "" (drawn). */
+export function mineralPicture(kind, style = mushroomStyle()) {
+  if (!style || style === "drawn") return "";
+  return `/static/img/minerals/${encodeURIComponent(style)}/${kind in MINERALS ? kind : "diamond"}.webp`;
+}
+
+/** The picture of a kind of node in an illustrated ``style`` (``journal``: a golden
+ * seed; ``draft``: a button mushroom), or "" when drawn. */
+export function nodePicture(kind, style = mushroomStyle()) {
+  if (!style || style === "drawn" || !["journal", "draft"].includes(kind)) return "";
+  return `/static/img/nodes/${encodeURIComponent(style)}/${kind}.webp`;
+}
+
 export function painter(pal, style = mushroomStyle()) {
   const INK = pal.ink;
   const STEM = pal.stem;

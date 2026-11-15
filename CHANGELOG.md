@@ -17,6 +17,11 @@ All notable changes to this project are documented here. The format follows
 - Pointing at a note in a project's underground dims the rest and sends sparks along its
   threads, from the note that links to the one it links (both ways when they link each
   other).
+- Edit your notes by hand from the site. Hover any paragraph, list, table or box such as
+  "What you should know" to change it as Markdown or delete it, and delete a heading with
+  everything under it. "Edit note" under the text opens the whole note as Markdown (tags,
+  type and status stay as they are), and "Undo" puts back what your last change replaced.
+  On a phone, tap "Edit parts" and then the part to change.
 - Nine new scenes to pick on the Appearance page, in three styles (blacklight, neon and
   brushstrokes), with a quiet dark underground so your own mycelium and the names on the
   graphs stand out. Each scene brings its soil line and its own illustrated mushrooms; the
@@ -65,6 +70,16 @@ All notable changes to this project are documented here. The format follows
 
 - The guide beside a project and its notes is headed by the project's name, a link to the
   project, with an arrow beside it to fold and open the guide; the word "Guide" is gone.
+- A note's page is simpler: everything around it is in the Neighborhood graph. The note's
+  own "Links" / "Enlaces" section and the "Part of" and "Linked from" lists are gone, since
+  the graph already shows every one of those notes.
+- In the Neighborhood, sparks run along each thread from the note that links to the one it
+  links (both ways when they link each other).
+- Graph marks: a journal entry is a golden seed, a draft note a closed button mushroom over
+  its category's color, and with the illustrated scenes a source is its illustrated mineral.
+- "Add a note" is no longer a floating button: it is a small card where the note ends, just
+  above previous / next, like the Created / Edited card and as tall. It adds the bubble at
+  the end; drag or move it from there.
 - The mushroom editor no longer picks a color: illustrated mushrooms keep the picture's
   colors and drawn ones the palette's. A color chosen before still tints the project's glow
   and threads. Sources keep their color picker.
@@ -91,6 +106,8 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- Every name shows in a note's Neighborhood graph: a name that would cover another moves a
+  line down or up instead of hiding (Defensa en capas was missing on Hash esperado).
 - Pages no longer flash the background in its original colors before the chosen palette
   recolors it: the recoloring comes with the page itself. The landing waits until its
   scene is drawn and then fades in, instead of jumping from one framing to another.

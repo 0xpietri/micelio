@@ -346,21 +346,30 @@ button.share-toggle:hover .share-art { transform: scale(1.05); }
 .forest-bar .every-button::before { content: ""; display: inline-block; width: 0.7rem; height: 0.7rem; margin-right: 0.45rem; border: 2px solid currentColor; border-radius: 3px; vertical-align: -0.05rem; }
 .forest-bar .every-button[aria-pressed="true"]::before { background: currentColor; }
 /* The connections that are not threads of the mycelium wait for a pointer on their note;
-   then every thread of that note lights up, the others dim, and sparks run from the note
-   that links to the one it links (both ways when they link each other). */
+   then every thread of that note lights up, the others dim, and the Neighborhood's sparks
+   (.flow, below) run from the note that links to the one it links. */
 .graph-forest .hypha.extra { display: none; }
 .graph-forest .hypha.extra.lit { display: inline; }
 .graph-forest .graph-svg.tracing .hypha { transition: stroke-opacity 0.2s; }
 .graph-forest .graph-svg.tracing .hypha:not(.lit) { stroke-opacity: 0.12; }
 .graph-forest .graph-svg.tracing .hypha.lit { stroke-opacity: 0.9; stroke-width: 1.8; }
-.graph-forest .flow {
-  fill: none; stroke: var(--sun); stroke-width: 3.6; stroke-linecap: round; stroke-dasharray: 0.1 9.9;
-  pointer-events: none; filter: drop-shadow(0 0 2px var(--sun)); animation: forest-flow 1.2s linear infinite;
-}
-.graph-forest .flow.back { animation-direction: reverse; stroke: var(--text); filter: none; }
-@keyframes forest-flow { from { stroke-dashoffset: 10; } to { stroke-dashoffset: 0; } }
 .dig-ring { fill: none; stroke-width: 3; filter: url(#glow); pointer-events: none; }
 @media (prefers-reduced-motion: reduce) {
-  .dig-button, .graph-forest .flow { animation: none; }
+  .dig-button { animation: none; }
   .scene-page .hero-scene.digging { transition: none; }
 }
+/* A note's Neighborhood: sparks run along each thread from the note that links to the one
+   it links (both ways when they link each other). Still when motion is reduced. */
+.flow {
+  fill: none;
+  stroke: var(--pal-spore, #ffd23f);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-dasharray: 0.1 11.9;
+  opacity: 0.9;
+  pointer-events: none;
+  animation: flow 1.6s linear infinite;
+}
+.flow.back { animation-direction: reverse; stroke: var(--pal-thread, #9ef); }
+@keyframes flow { from { stroke-dashoffset: 12; } to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) { .flow { animation: none; } }

@@ -3,16 +3,25 @@
 // carries where to send changes, the key and the hash of the file shown, and each
 // top-level block the lines it came from (data-l="start-end").
 //
-// Desktop: a floating "Add a note" button beside the text; the gap between paragraphs
-// nearest to it lights up and a click opens the composer there. Bubbles are dragged by
-// their handle, or moved with Move. Phone: hold a blank space between paragraphs, a popup
+// Every screen: an "Add a note" card where the note ends, beside where the pager starts;
+// a click opens the composer after the last block. Desktop: bubbles are dragged by their
+// handle, or moved with Move. Phone: also hold a blank space between paragraphs, a popup
 // offers "Write a note"; bubbles have a ⋯ menu (Edit, Move with ↑ ↓, Delete).
 //
 // The composer and the popup keep an empty slot (.said-extra) for the voice-note button
 // still to come: it will record in the same composer and save into the same bubble.
+//
+// The rest of the note too (§8a): every other top-level block (a paragraph, a list, the
+// takeaway, a table) can be changed as Markdown or deleted, and a heading deleted with
+// everything under it. Desktop: the tools show over the block under the pointer. Phone:
+// "Edit parts" under the text, then tap a block. "Edit note" opens the whole body as
+// Markdown (the frontmatter stays as it is); its text is kept in the browser until it is
+// saved, so a refused save loses nothing. "Undo" puts back what the last change replaced,
+// while nobody else has written the note since.
 
 const HOLD_MS = 500;
 const HINT_KEY = "micelio.said.hint.v1";
+const DRAFT_KEY = "micelio.draft.v1:";
 
 let strings = {};
 const t = (key, values = {}) =>
@@ -126,7 +135,9 @@ async function reloadBody() {
 
 function showError(holder, error) {
   holder.replaceChildren();
-  if (error.code === "changed") {
+  if (error.code === "not-last" || error.code === "nothing") {
+    holder.append(t(error.code === "nothing" ? "nothing" : "not_last"));
+  } else if (error.code === "changed") {
     holder.append(t("changed"), " ", el("button", { type: "button", class: "said-link", text: t("reload"), onclick: () => location.reload() }));
   } else {
     holder.append(t("failed", { error: error.code || error.message }));
@@ -372,39 +383,355 @@ function decorate() {
     if (b.el.classList.contains("callout-said")) tools(b.el, b.start);
   }
   if (coarse()) hint(root);
+  parts(root);
+  if (noteBar) noteBar.refresh();
 }
 
-/* ---------- desktop: the floating button ---------- */
+/* ---------- any other block: change it, delete it, delete its section ---------- */
 
-function fab() {
-  const add = el("button", { type: "button", class: "said-fab-add", title: t("add_here"), "aria-label": t("add_here") }, [
-    el("span", { "aria-hidden": "true", text: "+" }),
-    el("span", { class: "said-fab-label", text: t("add") }),
+const isSaid = (node) => node.classList.contains("callout-said");
+const headingLevel = (node) => (/^H([1-6])$/.exec(node.tagName) || [])[1];
+
+function blockAt(root, target) {
+  let node = target;
+  while (node && node.parentElement !== root) node = node.parentElement;
+  if (!node || node.classList.contains("said-ui") || isSaid(node)) return null;
+  return blocks(root).find((b) => b.el === node) || null;
+}
+
+/** The blocks a heading's section holds: it, and all up to a heading as high as it. */
+function sectionOf(root, block) {
+  const level = headingLevel(block.el);
+  if (!level) return [];
+  const list = blocks(root);
+  const from = list.findIndex((b) => b.el === block.el);
+  const found = [list[from]];
+  for (const b of list.slice(from + 1)) {
+    const other = headingLevel(b.el);
+    if (other && other <= level) break;
+    found.push(b);
+  }
+  return found;
+}
+
+function confirmTwice(button, label, armedLabel, onArm, onDisarm, action) {
+  let armed = 0;
+  button.addEventListener("click", async () => {
+    if (!armed) {
+      button.textContent = armedLabel;
+      button.classList.add("armed");
+      onArm();
+      armed = window.setTimeout(() => {
+        armed = 0;
+        button.textContent = label;
+        button.classList.remove("armed");
+        onDisarm();
+      }, 4000);
+      return;
+    }
+    clearTimeout(armed);
+    armed = 0;
+    await action();
+  });
+}
+
+let partBar = null;
+let partCurrent = null;
+
+function parts(root) {
+  // A fresh body (after each save) gets a fresh toolbar.
+  partCurrent = null;
+  const status = el("span", { class: "said-status", role: "status" });
+  const edit = el("button", { type: "button", text: t("edit") });
+  const remove = el("button", { type: "button", class: "said-delete", text: t("delete") });
+  const section = el("button", { type: "button", class: "said-delete", text: t("delete_section") });
+  const doomed = (on, list) => list.forEach((b) => b.el.classList.toggle("said-doomed", on));
+  confirmTwice(remove, t("delete"), t("delete_confirm"),
+    () => partCurrent && doomed(true, [partCurrent]),
+    () => document.querySelectorAll(".said-doomed").forEach((n) => n.classList.remove("said-doomed")),
+    async () => {
+      try {
+        await send({ op: "drop", start: partCurrent.start });
+        await reloadBody();
+      } catch (error) {
+        showError(status, error);
+      }
+    });
+  confirmTwice(section, t("delete_section"), t("delete_section_confirm"),
+    () => partCurrent && doomed(true, sectionOf(prose(), partCurrent)),
+    () => document.querySelectorAll(".said-doomed").forEach((n) => n.classList.remove("said-doomed")),
+    async () => {
+      try {
+        await send({ op: "section", start: partCurrent.start });
+        await reloadBody();
+      } catch (error) {
+        showError(status, error);
+      }
+    });
+  edit.addEventListener("click", async () => {
+    const block = partCurrent;
+    if (!block) return;
+    try {
+      const r = await fetch(`${prose().dataset.saidSource}?start=${block.start}`, { credentials: "same-origin" });
+      const data = await r.json();
+      if (!r.ok || !data.ok) throw Object.assign(new Error(data.error), { code: data.error });
+      blockEditor(block, data.text);
+    } catch (error) {
+      showError(status, error);
+    }
+  });
+  partBar = el("div", { class: "said-ui said-tools said-part-tools", role: "toolbar", "aria-label": t("part_menu"), hidden: true }, [
+    edit, remove, section, status,
   ]);
-  // The voice-note button will sit in this same floating bar, under "Add a note".
-  const bar = el("div", { class: "said-ui said-fab" }, [add, el("span", { class: "said-extra" })]);
-  document.body.append(bar);
-  const centre = () => {
-    const r = add.getBoundingClientRect();
-    return r.top + r.height / 2 + window.scrollY;
+  partBar.sectionButton = section;
+  partBar.status = status;
+  root.append(partBar);
+
+  const show = (block) => {
+    if (partCurrent?.el === block?.el || composing) return;
+    document.querySelectorAll(".said-part-on").forEach((n) => n.classList.remove("said-part-on"));
+    partCurrent = block;
+    if (!block) {
+      partBar.hidden = true;
+      return;
+    }
+    block.el.classList.add("said-part-on");
+    status.replaceChildren();
+    status.classList.remove("said-error");
+    section.hidden = !headingLevel(block.el);
+    const top = block.el.getBoundingClientRect().top - root.getBoundingClientRect().top;
+    partBar.style.top = `${top}px`;
+    partBar.hidden = false;
   };
-  const place = () => {
-    const root = prose();
-    const r = root.getBoundingClientRect();
-    const room = innerWidth - r.right;
-    bar.style.left = room > 190 ? `${r.right + 24}px` : "";
-    bar.classList.toggle("tight", room <= 190);
-    bar.hidden = r.bottom < innerHeight * 0.3 || r.top > innerHeight * 0.7;
-    if (bar.matches(":hover, :focus-within") && !composing) showLine(nearest(root, centre()));
+  root.addEventListener("pointerover", (e) => {
+    if (e.pointerType === "touch" || partBar.contains(e.target)) return;
+    const block = blockAt(root, e.target);
+    if (block || e.target === root) show(block);
+  });
+  root.addEventListener("pointerleave", (e) => {
+    if (e.pointerType !== "touch" && !partBar.querySelector(".armed")) show(null);
+  });
+  // Phone: with "Edit parts" on, a tap picks the block.
+  root.addEventListener("click", (e) => {
+    if (!root.classList.contains("said-parts") || partBar.contains(e.target)) return;
+    const block = blockAt(root, e.target);
+    if (!block) return;
+    e.preventDefault();
+    show(block);
+  });
+}
+
+function blockEditor(block, text) {
+  closeComposer();
+  partBar.hidden = true;
+  const area = el("textarea", { rows: "4", "aria-label": t("edit_part"), spellcheck: "true" });
+  area.value = text;
+  const status = el("span", { class: "said-status", role: "status" });
+  const save = el("button", { type: "button", class: "said-save", text: t("save") });
+  const cancel = el("button", { type: "button", class: "said-cancel", text: t("cancel"), onclick: closeComposer });
+  const box = el("div", { class: "said-ui said-composer said-part-editor" }, [
+    area,
+    el("div", { class: "said-actions" }, [el("span", { class: "muted said-tip", text: t("part_tip") }), status, cancel, save]),
+  ]);
+  block.el.before(box);
+  block.el.hidden = true;
+  composing = { box, hidden: block.el };
+  const grow = () => {
+    area.style.height = "auto";
+    area.style.height = `${area.scrollHeight + 2}px`;
   };
-  add.addEventListener("pointerenter", () => !composing && showLine(nearest(prose(), centre())));
-  add.addEventListener("focus", () => !composing && showLine(nearest(prose(), centre())));
+  area.addEventListener("input", grow);
+  const submit = async () => {
+    save.disabled = true;
+    status.classList.remove("said-error");
+    status.textContent = t("saving");
+    try {
+      await send({ op: "block", start: block.start, text: area.value });
+      composing = null;
+      await reloadBody();
+    } catch (error) {
+      save.disabled = false;
+      showError(status, error);
+    }
+  };
+  save.addEventListener("click", submit);
+  area.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) submit();
+    if (e.key === "Escape") closeComposer();
+  });
+  grow();
+  area.focus({ preventScroll: true });
+}
+
+/* ---------- the whole note, and Undo ---------- */
+
+let noteBar = null;
+
+function draftKey() {
+  return DRAFT_KEY + prose().dataset.saidUrl;
+}
+function readDraft() {
+  try {
+    return localStorage.getItem(draftKey());
+  } catch {
+    return null;
+  }
+}
+function writeDraft(text) {
+  try {
+    if (text === null) localStorage.removeItem(draftKey());
+    else localStorage.setItem(draftKey(), text);
+  } catch {
+    /* blocked storage: the text stays in the box */
+  }
+}
+
+async function noteEditor() {
+  const root = prose();
+  closeComposer();
+  let text;
+  try {
+    const r = await fetch(root.dataset.saidSource, { credentials: "same-origin", cache: "no-store" });
+    const data = await r.json();
+    if (!r.ok || !data.ok) throw Object.assign(new Error(data.error), { code: data.error });
+    text = data.text;
+  } catch (error) {
+    showError(noteBar.status, error);
+    return;
+  }
+  const draft = readDraft();
+  const area = el("textarea", { rows: "20", "aria-label": t("note_editor"), spellcheck: "true" });
+  area.value = draft && draft !== text ? draft : text;
+  const status = el("span", { class: "said-status", role: "status" });
+  if (draft && draft !== text) {
+    status.append(t("draft_back"), " ", el("button", {
+      type: "button",
+      class: "said-link",
+      text: t("discard"),
+      onclick: () => {
+        area.value = text;
+        writeDraft(null);
+        status.replaceChildren();
+      },
+    }));
+  }
+  const save = el("button", { type: "button", class: "said-save", text: t("save") });
+  const close = () => {
+    box.remove();
+    root.hidden = false;
+    noteBar.el.hidden = false;
+  };
+  const cancel = el("button", {
+    type: "button",
+    class: "said-cancel",
+    text: t("cancel"),
+    onclick: () => {
+      writeDraft(null);
+      close();
+    },
+  });
+  const box = el("div", { class: "said-ui said-composer said-note-editor" }, [
+    el("p", { class: "muted said-tip", text: t("note_tip") }),
+    area,
+    el("div", { class: "said-actions" }, [status, cancel, save]),
+  ]);
+  root.before(box);
+  root.hidden = true;
+  noteBar.el.hidden = true;
+  area.addEventListener("input", () => writeDraft(area.value));
+  const submit = async () => {
+    save.disabled = true;
+    status.classList.remove("said-error");
+    status.textContent = t("saving");
+    try {
+      await send({ op: "body", text: area.value });
+      writeDraft(null);
+      close();
+      await reloadBody();
+    } catch (error) {
+      save.disabled = false;
+      showError(status, error);
+    }
+  };
+  save.addEventListener("click", submit);
+  area.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) submit();
+  });
+  area.focus({ preventScroll: true });
+  box.scrollIntoView({ block: "start", behavior: "smooth" });
+}
+
+function noteTools() {
+  const root = prose();
+  const status = el("span", { class: "said-status", role: "status" });
+  const whole = el("button", { type: "button", text: `✎ ${t("edit_note")}`, onclick: noteEditor });
+  const partsButton = el("button", {
+    type: "button",
+    class: "said-parts-toggle",
+    "aria-pressed": "false",
+    text: t("edit_parts"),
+    onclick: () => {
+      const on = prose().classList.toggle("said-parts");
+      partsButton.setAttribute("aria-pressed", String(on));
+      partsButton.textContent = on ? t("parts_done") : t("edit_parts");
+      if (!on && partBar) partBar.hidden = true;
+    },
+  });
+  const undo = el("button", {
+    type: "button",
+    text: `↶ ${t("undo")}`,
+    title: t("undo_title"),
+    onclick: async () => {
+      undo.disabled = true;
+      status.classList.remove("said-error");
+      status.textContent = t("saving");
+      try {
+        await send({ op: "undo" });
+        await reloadBody();
+        status.textContent = t("undone");
+      } catch (error) {
+        showError(status, error);
+      }
+      undo.disabled = false;
+    },
+  });
+  const bar = el("div", { class: "said-ui said-note-tools" }, [whole, partsButton, undo, status]);
+  // On the same row as the "Add a note" card, at its left; under the text without it.
+  const foot = document.querySelector(".note-foot");
+  if (foot) foot.prepend(bar);
+  else root.after(bar);
+  noteBar = {
+    el: bar,
+    status,
+    refresh: () => {
+      const fresh = prose();
+      undo.hidden = fresh.dataset.saidUndo !== "1";
+      if (partsButton.getAttribute("aria-pressed") === "true") fresh.classList.add("said-parts");
+    },
+  };
+  noteBar.refresh();
+}
+
+/* ---------- "Add a note": the card under the note ---------- */
+
+/** The card the page puts where the note ends (desktop and phone): it writes after the
+ * last block; the bubble can then be dragged or moved anywhere. */
+function addCard() {
+  const add = document.querySelector("[data-said-add]");
+  if (!add) return;
+  const last = () => {
+    const all = gaps(prose());
+    return all[all.length - 1] || null;
+  };
+  add.hidden = false;
+  add.addEventListener("pointerenter", () => !composing && showLine(last()));
+  add.addEventListener("focus", () => !composing && showLine(last()));
   add.addEventListener("pointerleave", hideLine);
   add.addEventListener("blur", hideLine);
-  add.addEventListener("click", () => composer(nearest(prose(), centre())));
-  window.addEventListener("scroll", place, { passive: true });
-  window.addEventListener("resize", place);
-  place();
+  add.addEventListener("click", () => {
+    const gap = last();
+    if (gap) composer(gap);
+  });
 }
 
 /* ---------- phone: hold a blank space, a popup ---------- */
@@ -493,8 +820,9 @@ async function start() {
   } catch {
     strings = {};
   }
+  noteTools();
   decorate();
-  if (!coarse()) fab();
+  addCard();
   hold();
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closePopup();

@@ -37,9 +37,8 @@ On a test project of 36 densely linked notes and 3 journal entries, the page wen
 marcos asked (same night) for an animation showing which note links to which. Pointing at
 or focusing a note in the underground lights all its threads, dims the rest, and runs
 sparks along each thread from the linking note to the linked one. Mutual links run both
-ways once the API's `both` field from the note-page PR (#28) is merged; until then they
-run one way. The sparks are forest-scoped CSS (`.graph-forest .flow`), so they sit beside
-#28's own `.flow` without clashing. Touch screens have no pointer to hover: a tap still
+ways, from the API's `both` field. The sparks reuse the Neighborhood's `.flow` style
+from the note-page PR (#28). Touch screens have no pointer to hover: a tap still
 opens the note.
 
 ## Tests

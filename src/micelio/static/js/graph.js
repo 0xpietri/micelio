@@ -4,7 +4,7 @@
 // always draws the same map. Plain ES module, no build step.
 
 import {
-  DEFS, MINERALS, SVG_NS, cloud, el, f1, fold, fragment, lighter, loadStrings, mix, painter,
+  DEFS, MINERALS, SVG_NS, cloud, el, f1, fold, fragment, lighter, loadStrings, mineralPicture, mix, nodePicture, painter,
   paletteFromCss, rampFilter, reduced, seededRandom, shade, threadPath, tr,
 } from "./draw.js";
 import { dug, labelText, lengthFor, load, save, setDug } from "./graph-settings.js";
@@ -54,6 +54,9 @@ function look(data) {
 
 /* ---------- one mark per node; a mushroom's base sits on the node's point ---------- */
 
+/** A square picture centered on the node's point, ``size`` units across. */
+const img = (href, size) => `<image href="${href}" x="${f1(-size / 2)}" y="${f1(-size / 2)}" width="${f1(size)}" height="${f1(size)}"/>`;
+
 function mark(node, L, k = 1) {
   const { pal, paint } = L;
   const degree = node.degree || 0;
@@ -69,6 +72,9 @@ function mark(node, L, k = 1) {
   }
   if (node.type === "source") {
     const { kind, color } = L.mineral(node);
+    // The illustrated styles have a picture of each mineral; the drawn one paints it.
+    const picture = mineralPicture(kind);
+    if (picture) return { r: 11 * k, top: 11 * k, markup: `<g class="cloud">${img(picture, 26 * k)}<circle r="${f1(13 * k)}" fill="transparent"/></g>` };
     const s = 0.42 * k;
     return { r: 10 * k, top: 10 * k, markup: `<g class="cloud"><g transform="scale(${s.toFixed(2)})">${paint.mineral(kind, color)}</g><circle r="${f1(12 * k)}" fill="transparent"/></g>` };
   }
@@ -90,8 +96,23 @@ function mark(node, L, k = 1) {
     return { r, top: r, markup: `<g class="cloud drifting"><circle r="${f1(r + 3)}" fill="none" stroke="${pal.thread}" stroke-opacity=".7" stroke-width="1.1"/><circle r="${f1(r)}" fill="${color}" fill-opacity=".75" stroke="${pal.ink}" stroke-width="1.2"/><circle cx="${f1(r + 5)}" cy="${f1(-r - 3)}" r="${f1(1.4 * k)}" fill="${pal.thread}" fill-opacity=".8"/><circle r="${f1(r + 7)}" fill="transparent"/></g>` };
   }
   if (node.type === "journal") {
+    // A conversation: a golden seed (its picture in the illustrated styles); the thread
+    // runs to the seed itself.
+    const picture = nodePicture("journal");
+    if (picture) return { r: 9 * k, top: 9 * k, markup: `<g class="cloud">${img(picture, 22 * k)}<circle r="${f1(13 * k)}" fill="transparent"/></g>` };
     const r = 4.5 * k;
-    return { r, top: r, markup: `<g class="cloud"><circle r="${f1(r)}" fill="${pal.spore}" stroke="${pal.ink}" stroke-width="1.4"/><circle r="${f1(r + 7)}" fill="transparent"/></g>` };
+    return { r: r * 1.4, top: r * 1.4, markup: `<g class="cloud"><g transform="rotate(-35)"><ellipse rx="${f1(r * 0.85)}" ry="${f1(r * 1.45)}" fill="${pal.spore}" stroke="${pal.ink}" stroke-width="1.4"/><path d="M0 ${f1(-r * 1.2)}V${f1(r * 1.2)}" stroke="${pal.ink}" stroke-opacity=".45" stroke-width="1"/></g><circle r="${f1(r + 7)}" fill="transparent"/></g>` };
+  }
+  if (node.status === "draft") {
+    // A draft concept: a button mushroom still closed, over a ring in its category's color.
+    const r = (4.5 + Math.sqrt(degree) * 1.1) * k;
+    const color = L.color(node.category);
+    const picture = nodePicture("draft");
+    const ring = `<circle cy="${f1(r * 0.55)}" r="${f1(r * 0.75)}" fill="${color}" fill-opacity=".35" stroke="${color}" stroke-width="1.2"/>`;
+    const body = picture
+      ? img(picture, r * 2.6)
+      : `<g transform="translate(0,${f1(r)}) scale(${(r / 26).toFixed(3)})">${paint.button(color)}</g>`;
+    return { r: r * 1.2, top: r * 1.3, markup: `<g class="cloud draft">${ring}${body}<circle r="${f1(r + 7)}" fill="transparent"/></g>` };
   }
   // A note: a plain dot in its category's color, so the links stay readable.
   const r = (3.6 + Math.sqrt(degree) * 1.25) * k;
@@ -424,21 +445,28 @@ function label(node, x, y, cls, settings) {
   return text;
 }
 
-/** Names that would sit on top of each other: the better connected node keeps its name,
- * the other one hides it until its node is pointed at (openLabels shows it). Run again
- * after every zoom, since the names keep their size on screen. */
+/** Names that would sit on top of each other: the better connected node keeps its name
+ * where it is; the other one first tries a line or two lower, and only when there is no
+ * room there either it hides until its node is pointed at (openLabels shows it). Run
+ * again after every zoom, since the names keep their size on screen. */
 function declutter(root) {
   const texts = [...root.querySelectorAll("text.lbl")].sort((a, b) => Number(b.dataset.rank) - Number(a.dataset.rank));
   const kept = [];
+  const overlaps = (box, pad) => kept.some((k) => box.x < k.x + k.width + pad && k.x < box.x + box.width + pad && box.y < k.y + k.height && k.y < box.y + box.height);
   for (const t of texts) {
     t.classList.remove("crowded");
+    if (t.dataset.y0 == null) t.dataset.y0 = t.getAttribute("y");
+    const y0 = Number(t.dataset.y0);
+    t.setAttribute("y", f1(y0));
     let box;
     try { box = t.getBBox(); } catch { continue; }
     if (!box.width) continue;
     const pad = box.height * 0.25;
-    const hit = kept.some((k) => box.x < k.x + k.width + pad && k.x < box.x + box.width + pad && box.y < k.y + k.height && k.y < box.y + box.height);
-    if (hit) t.classList.add("crowded");
-    else kept.push(box);
+    const step = box.height * 1.05;
+    const shift = [0, step, -2 * step, 2 * step].find((dy) => !overlaps({ x: box.x, y: box.y + dy, width: box.width, height: box.height }, pad));
+    if (shift == null) { t.classList.add("crowded"); continue; }
+    if (shift) t.setAttribute("y", f1(y0 + shift));
+    kept.push({ x: box.x, y: box.y + shift, width: box.width, height: box.height });
   }
 }
 
@@ -504,6 +532,12 @@ function drawFree(layer, laid, L, strings, opts) {
     const t = thread(a, b, L);
     const cls = ["hypha", `k-${t.kind}`, l.faded ? "faded" : "", dimmed(a) && dimmed(b) ? "dim" : ""].join(" ").trim();
     markup += `<path class="${cls}" d="${d}" ${t.attrs}/>`;
+    // Which way a link goes (the Neighborhood): sparks run from the note that links to
+    // the one linked; both ways when the two link each other.
+    if (opts.flow && !ghost && !l.faded) {
+      markup += `<path class="flow" d="${d}" pathLength="100"/>`;
+      if (l.both) markup += `<path class="flow back" d="${d}" pathLength="100"/>`;
+    }
     if (!ghost) {
       pulses.push({ d, color: a.type === "project" ? L.projectColor(a) : b.type === "project" ? L.projectColor(b) : L.pal.spore });
     }
@@ -620,7 +654,7 @@ function drawForest(svg, data, L, strings, state, settings, zoom = 1, { deep = t
     const b = byId[l.target];
     const d = threadPath(a, b, [a.id, b.id].sort().join("|"), soil + 8);
     const look = thread(a, b, L);
-    markup += `<path class="hypha extra k-${look.kind}" data-a="${a.id}" data-b="${b.id}"${l.both ? " data-both" : ""} d="${d}" ${look.attrs}/>`;
+    markup += `<path class="hypha extra k-${look.kind}" data-a="${a.id}" data-b="${b.id}"${l.both ? ` data-both="1"` : ""} d="${d}" ${look.attrs}/>`;
   }
   for (const l of spine) {
     const s = l.source;
@@ -631,7 +665,7 @@ function drawForest(svg, data, L, strings, state, settings, zoom = 1, { deep = t
     const ghost = s.ghost || t.ghost;
     const look = thread(s, t, L);
     // Drawn from the note that links to the one it links, so sparks can run that way.
-    markup += `<path class="hypha k-${look.kind}${l.faded ? " faded" : ""}" data-a="${s.id}" data-b="${t.id}"${l.both ? " data-both" : ""} d="${d}" ${look.attrs}/>`;
+    markup += `<path class="hypha k-${look.kind}${l.faded ? " faded" : ""}" data-a="${s.id}" data-b="${t.id}"${l.both ? ` data-both="1"` : ""} d="${d}" ${look.attrs}/>`;
     if (!ghost) {
       pulses.push({ d, color: s.type === "project" ? L.projectColor(s) : L.pal.spore });
     }
@@ -980,7 +1014,7 @@ export async function mountGraph(host) {
     laid = layoutFree(data, settings.spacing);
     redraw = () => {
       labels.close();
-      drawFree(layer, laid, L, strings, { visible, dimmed, state, settings, focusAll: mode === "box", pulseEvery: mode === "box" ? 1100 : 700 });
+      drawFree(layer, laid, L, strings, { visible, dimmed, state, settings, focusAll: mode === "box", pulseEvery: mode === "box" ? 1100 : 700, flow: String(data.scope || "").startsWith("note:") });
     };
     fitBox = () => bounds(laid.nodes.filter((n) => visible(n)), mode === "box" ? 70 : 60);
   }
