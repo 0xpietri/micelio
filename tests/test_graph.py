@@ -170,6 +170,55 @@ def test_project_scope(builder: GraphBuilder, example_index: VaultIndex) -> None
     assert data["hidden_types"] == []
 
 
+def _dense_project(make_vault: VaultFactory, notes: int = 25) -> dict[str, str]:
+    """A project whose notes all link each other in a ring and to two hubs."""
+    names = [f"N{i:02d}" for i in range(notes)]
+    files = {
+        "projects/P.md": "---\ntype: project\n---\n# P\n"
+        + "".join(f"- [[{n}]]\n" for n in names)
+        + "- [[Missing]]\n",
+        "projects/Q.md": "---\ntype: project\n---\n# Q\n- [[N01]]\n- [[N02]]\n",
+    }
+    for i, name in enumerate(names):
+        ring = {names[(i + 1) % notes], names[(i + 2) % notes], "N00", "N01"} - {name}
+        files[f"notes/{name}.md"] = f"# {name}\n" + "".join(f"[[{r}]]\n" for r in sorted(ring))
+    return files
+
+
+def test_project_scope_marks_one_thread_per_note(make_vault: VaultFactory) -> None:
+    index = make_vault(_dense_project(make_vault))
+    data = GraphBuilder(index.config, index).build(Scope("project", "p"))
+    nodes = by_id(data["nodes"])
+    spine = [e for e in data["edges"] if e["spine"]]
+    alive = {k for k, n in nodes.items() if not n["ghost"] and not n["faded"]}
+    # A tree over the project and its notes, plus one thread to the other project.
+    inside = [e for e in spine if e["source"] in alive and e["target"] in alive]
+    assert len(inside) == len(alive) - 1
+    reached = {"p"}
+    for _ in alive:
+        for e in inside:
+            if e["source"] in reached or e["target"] in reached:
+                reached |= {e["source"], e["target"]}
+    assert reached == alive
+    outside = [e for e in spine if e not in inside]
+    assert [(e["source"], e["target"]) for e in outside] in (
+        [("q", "n01")],
+        [("n01", "q")],
+    )
+    # No ghost thread, and far fewer threads than links.
+    assert not any(nodes[e["target"]]["ghost"] for e in spine)
+    assert len(spine) < len(data["edges"]) / 2
+    # The project feeds only its few most linked notes; the rest branch from them.
+    fed = [e for e in inside if "p" in (e["source"], e["target"])]
+    assert 3 <= len(fed) <= 6
+    assert ("p", "n00") in {(e["source"], e["target"]) for e in fed}
+
+
+def test_other_scopes_draw_every_edge(builder: GraphBuilder) -> None:
+    for scope in (Scope("all"), Scope("note", PRIORS)):
+        assert all(e["spine"] for e in builder.build(scope)["edges"])
+
+
 def test_project_scope_shows_ghosts_of_its_notes(builder: GraphBuilder) -> None:
     nodes = by_id(builder.build(Scope("project", PLANETS))["nodes"])
     assert ghost_id("Tidal forces explained") in nodes
@@ -492,4 +541,5 @@ def test_graph_json_is_plain(client: TestClient) -> None:
         "degree", "public", "href", "ghost", "faded", "focus", "look",
     }  # fmt: skip
     assert all(set(n) == keys for n in data["nodes"])
-    assert all(set(e) == {"id", "source", "target", "faded", "both"} for e in data["edges"])
+    edge_keys = {"id", "source", "target", "faded", "spine", "both"}
+    assert all(set(e) == edge_keys for e in data["edges"])

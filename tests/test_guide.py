@@ -159,6 +159,11 @@ def test_project_page_shows_the_guide_beside_and_not_in_the_body() -> None:
         html = c.get(f"/projects/{BAYES}").text
     assert 'class="guide glass' in html
     assert "<h2>Guide</h2>" not in html
+    # The guide is headed by the project's name, a link, and the arrow that folds it.
+    summary = html.split('<details class="guide glass', 1)[1].split("</summary>", 1)[0]
+    assert f'<a class="guide-title" href="/projects/{BAYES}">' in summary
+    assert 'class="guide-fold"' in summary
+    assert ">Guide<" not in summary
     assert html.count('data-guide-list="guide"') == 1
     assert 'data-guide-list="time" hidden' in html
     assert 'data-kind="gap"' in html

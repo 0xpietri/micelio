@@ -22,6 +22,8 @@ export function defaults() {
     labels: LIMITS.labels[3],
     shorten: true,
     length: LIMITS.length[3],
+    // A project's underground: every link, or only the threads of its mycelium.
+    every: false,
     zoom: Object.fromEntries(MODES.map((m) => [m, 1])),
   };
 }
@@ -45,6 +47,7 @@ export function clean(raw) {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return out;
   for (const key of Object.keys(LIMITS)) out[key] = inRange(raw[key], LIMITS[key]);
   if (typeof raw.shorten === "boolean") out.shorten = raw.shorten;
+  if (typeof raw.every === "boolean") out.every = raw.every;
   const zoom = raw.zoom && typeof raw.zoom === "object" ? raw.zoom : {};
   for (const mode of MODES) out.zoom[mode] = zoomOf(zoom[mode]);
   return out;
@@ -67,6 +70,24 @@ export function save(settings, storage = globalThis.localStorage) {
     return true;
   } catch {
     return false;
+  }
+}
+
+/** Whether the reader dug into the project at ``path`` in this tab, so the Back button
+ * comes back to its underground open. Kept for the tab only (sessionStorage). */
+export function dug(path, storage = globalThis.sessionStorage) {
+  try {
+    return storage.getItem(`micelio.dug:${path}`) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function setDug(path, yes, storage = globalThis.sessionStorage) {
+  try {
+    storage.setItem(`micelio.dug:${path}`, yes ? "1" : "0");
+  } catch {
+    /* blocked storage: the page opens closed next time */
   }
 }
 

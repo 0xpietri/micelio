@@ -560,14 +560,19 @@ form.inline { display: inline; }
   padding: 0.7rem 0.9rem 0.9rem;
   border-color: color-mix(in srgb, var(--cat) 55%, var(--ink));
 }
-.guide summary { display: flex; flex-direction: column; cursor: pointer; list-style: none; }
+.guide summary { display: flex; align-items: baseline; gap: 0.45rem; cursor: pointer; list-style: none; }
 .guide summary::-webkit-details-marker { display: none; }
-.guide summary::after { content: "▾"; position: absolute; top: 0.6rem; right: 0.9rem; color: var(--muted); }
-.guide:not([open]) summary::after { content: "▸"; }
+/* The arrow beside the project's name folds and opens the guide. */
+.guide-fold { flex: none; display: inline-grid; place-items: center; width: 1.6rem; height: 1.6rem; border-radius: 999px; color: var(--muted); transition: transform 0.2s ease, color 0.15s; }
+.guide-fold::before { content: "▾"; font-size: 1rem; line-height: 1; }
+.guide:not([open]) .guide-fold { transform: rotate(-90deg); }
+.guide summary:hover .guide-fold, .guide summary:focus-visible .guide-fold { color: var(--text); background: color-mix(in srgb, var(--cat) 30%, transparent); }
+@media (prefers-reduced-motion: reduce) { .guide-fold { transition: none; } }
 .guide { position: relative; }
 .guide [hidden], .guide-pager[hidden] { display: none; }
 .guide-pager > [hidden] { display: inline; visibility: hidden; }
-.guide-title { font-family: var(--display); font-size: 1.15rem; color: var(--cat); }
+.guide-title { font-family: var(--display); font-size: 1.15rem; line-height: 1.2; color: var(--cat); text-decoration: none; }
+.guide-title:hover, .guide-title:focus-visible { text-decoration: underline; }
 .guide-projects { margin: 0.4rem 0 0; color: var(--muted); }
 .guide-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; margin: 0.6rem 0 0.5rem; }
 .guide-order select {

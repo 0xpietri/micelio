@@ -8,6 +8,15 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- A project's underground now starts closed: press the bright "Dig deeper" button under
+  its mushroom and the mycelium spreads from the mushroom's foot to every note. "Back to the
+  surface" closes it again.
+- The project graph draws one thread per note, branching from the project through its most
+  linked notes, instead of every link at once. Point at a note to light up all its other
+  connections, or switch on "Every connection" to see them all.
+- Pointing at a note in a project's underground dims the rest and sends sparks along its
+  threads, from the note that links to the one it links (both ways when they link each
+  other).
 - Edit your notes by hand from the site. Hover any paragraph, list, table or box such as
   "What you should know" to change it as Markdown or delete it, and delete a heading with
   everything under it. "Edit note" under the text opens the whole note as Markdown (tags,
@@ -62,6 +71,8 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- The guide beside a project and its notes is headed by the project's name, a link to the
+  project, with an arrow beside it to fold and open the guide; the word "Guide" is gone.
 - A note's page is simpler: everything around it is in the Neighborhood graph. The note's
   own "Links" / "Enlaces" section and the "Part of" and "Linked from" lists are gone, since
   the graph already shows every one of those notes.

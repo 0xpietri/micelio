@@ -7,7 +7,7 @@ import {
   DEFS, MINERALS, SVG_NS, cloud, el, f1, fold, fragment, lighter, loadStrings, mineralPicture, mix, nodePicture, painter,
   paletteFromCss, rampFilter, reduced, seededRandom, shade, threadPath, tr,
 } from "./draw.js";
-import { labelText, lengthFor, load, save } from "./graph-settings.js";
+import { dug, labelText, lengthFor, load, save, setDug } from "./graph-settings.js";
 import { graphSection } from "./graph-panel.js";
 import { lookKey, openLookPanel } from "./node-look.js";
 
@@ -566,8 +566,13 @@ function drawFree(layer, laid, L, strings, opts) {
 }
 
 /** The project's own little forest: its mushroom on the soil line, its notes below, the
- * other projects its bridge notes reach standing faded at the sides. */
-function drawForest(svg, data, L, strings, state, settings, zoom = 1) {
+ * other projects its bridge notes reach standing faded at the sides.
+ *
+ * ``deep`` false keeps the underground closed: only the sky and the soil show, until the
+ * reader digs. ``all`` false draws only the project's mycelium (the edges the API marks
+ * ``spine``: one thread per note) and leaves the ghosts out; a note's other connections
+ * light up while it is pointed at. */
+function drawForest(svg, data, L, strings, state, settings, zoom = 1, { deep = true, all = false } = {}) {
   const bg = backdropInfo();
   const soil = bg.soil;
   const r = svg.getBoundingClientRect();
@@ -587,7 +592,7 @@ function drawForest(svg, data, L, strings, state, settings, zoom = 1) {
 
   const focus = data.nodes.find((n) => n.focus);
   const others = data.nodes.filter((n) => n.type === "project" && !n.focus);
-  const below = data.nodes.filter((n) => n.type !== "project");
+  const below = data.nodes.filter((n) => n.type !== "project" && (all || !n.ghost));
   const nodes = [];
   if (focus) nodes.push({ ...focus, fx: cx, fy: soil + 6 });
   others.forEach((o, i) => nodes.push({ ...o, fx: cx + (i % 2 ? 1 : -1) * w * (0.28 + 0.06 * Math.floor(i / 2)), fy: soil + 6 }));
@@ -595,11 +600,14 @@ function drawForest(svg, data, L, strings, state, settings, zoom = 1) {
   below.forEach((n) => nodes.push({ ...n, x: cx + (rand() - 0.5) * 300, y: soil + 120 + rand() * 200 }));
   const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
   const links = data.edges.filter((e) => byId[e.source] && byId[e.target]).map((e) => ({ ...e }));
+  // The mycelium the layout follows and draws; the other connections wait for a pointer.
+  const spine = all ? links : links.filter((l) => l.spine !== false);
+  const extra = all ? [] : links.filter((l) => l.spine === false);
   const d3 = window.d3;
   // More notes, more depth: the ground they settle in deepens with their number.
   const depth = (150 + 22 * Math.sqrt(below.length) * 6) * k * s;
   const sim = d3.forceSimulation(nodes).randomSource(seededRandom(`${focus ? focus.id : ""}f`)).stop()
-    .force("link", d3.forceLink(links).id((d) => d.id).distance(140 * k * Math.sqrt(s)).strength(0.25))
+    .force("link", d3.forceLink(spine).id((d) => d.id).distance((all ? 140 : 110) * k * Math.sqrt(s)).strength(all ? 0.25 : 0.5))
     .force("charge", d3.forceManyBody().strength(-260 * s))
     .force("collide", d3.forceCollide(42 * k * Math.sqrt(s)))
     .force("y", d3.forceY(soil + depth * 0.55).strength(0.05));
@@ -621,7 +629,12 @@ function drawForest(svg, data, L, strings, state, settings, zoom = 1) {
     n.y = soil + (n.y - soil) * zoom;
   }
   const deepest = Math.max(soil + 300 * u, ...free.map((n) => n.y + 70));
-  const vb = { x: left, y: top, w, h: deepest - top };
+  // Closed, the scene ends a little under the soil, where the button to dig waits.
+  // Open, it keeps room at the bottom for the bar that brings the reader back up.
+  const bottom = deep ? deepest + 70 * u : Math.min(deepest, soil + 150 * u);
+  const vb = { x: left, y: top, w, h: bottom - top, cx, soil, deep };
+  // How far the digging has to reach to uncover every note.
+  vb.reach = Math.max(1, ...free.map((n) => Math.hypot(n.x - cx, n.y - soil) + 60));
   svg.setAttribute("viewBox", `${f1(vb.x)} ${f1(vb.y)} ${f1(vb.w)} ${f1(vb.h)}`);
   svg.setAttribute("preserveAspectRatio", "xMidYMin meet");
   // Names keep a readable size on screen whatever the scene's width (a little larger here).
@@ -635,7 +648,15 @@ function drawForest(svg, data, L, strings, state, settings, zoom = 1) {
 
   let markup = "";
   const pulses = [];
-  for (const l of links) {
+  for (const l of extra) {
+    // Not in the layout's links, so still named by id.
+    const a = byId[l.source];
+    const b = byId[l.target];
+    const d = threadPath(a, b, [a.id, b.id].sort().join("|"), soil + 8);
+    const look = thread(a, b, L);
+    markup += `<path class="hypha extra k-${look.kind}" data-a="${a.id}" data-b="${b.id}"${l.both ? ` data-both="1"` : ""} d="${d}" ${look.attrs}/>`;
+  }
+  for (const l of spine) {
     const s = l.source;
     const t = l.target;
     const from = s.type === "project" ? { x: s.x, y: soil + 6 } : s;
@@ -643,7 +664,8 @@ function drawForest(svg, data, L, strings, state, settings, zoom = 1) {
     const d = threadPath(from, to, [s.id, t.id].sort().join("|"), soil + 8);
     const ghost = s.ghost || t.ghost;
     const look = thread(s, t, L);
-    markup += `<path class="hypha k-${look.kind}${l.faded ? " faded" : ""}" d="${d}" ${look.attrs}/>`;
+    // Drawn from the note that links to the one it links, so sparks can run that way.
+    markup += `<path class="hypha k-${look.kind}${l.faded ? " faded" : ""}" data-a="${s.id}" data-b="${t.id}"${l.both ? ` data-both="1"` : ""} d="${d}" ${look.attrs}/>`;
     if (!ghost) {
       pulses.push({ d, color: s.type === "project" ? L.projectColor(s) : L.pal.spore });
     }
@@ -651,6 +673,7 @@ function drawForest(svg, data, L, strings, state, settings, zoom = 1) {
   const marks = el("g");
   const labels = el("g");
   for (const n of nodes) {
+    if (!deep && n.type !== "project") continue;
     const link = nodeLink(n, strings, true);
     if (n.type === "project") {
       const s = (n.focus ? 1 : 0.62) * k * ((n.look && n.look.size) || 1);
@@ -682,10 +705,12 @@ function drawForest(svg, data, L, strings, state, settings, zoom = 1) {
   if (vb.y + vb.h > 1024) image.appendChild(el("rect", { class: "ground-shade", x: 0, y: 1024, width: 1536, height: f1(vb.y + vb.h - 1024) }));
   const plane = el("g", { class: "pulses" });
   const hyphae = el("g");
-  hyphae.appendChild(fragment(markup));
-  svg.replaceChildren(el("defs", {}, L.defs(bg.ramp)), image, hyphae, plane, marks, labels);
+  if (deep) hyphae.appendChild(fragment(markup));
+  // Everything that lives on and under the soil, in one group the digging can uncover.
+  const life = el("g", { class: "life" }, hyphae, plane, marks, labels);
+  svg.replaceChildren(el("defs", {}, L.defs(bg.ramp)), image, life);
   declutter(labels);
-  pulsing(plane, pulses, state, 1000);
+  pulsing(plane, deep ? pulses : [], state, 1000);
   return vb;
 }
 
@@ -755,6 +780,136 @@ function groundBehind(host, L, bg) {
   el("rect", { class: "ground-shade", x: 0, y: top, width: 1536, height: 1024 - top })));
 }
 
+/* ---------- a project's underground: closed until the reader digs ---------- */
+
+/** Uncover the underground from the project's foot: a soft circle of light that widens
+ * until every note shows, with a glowing ring at its edge, as the mycelium spreads. */
+function spread(svg, vb, color) {
+  const life = svg.querySelector("g.life");
+  if (!life || reduced()) return;
+  const id = "dig-mask";
+  const fade = el("radialGradient", { id: "dig-fade" },
+    el("stop", { offset: "0.75", "stop-color": "#fff" }), el("stop", { offset: "1", "stop-color": "#000" }));
+  const hole = el("circle", { cx: f1(vb.cx), cy: f1(vb.soil), r: 1, fill: "url(#dig-fade)" });
+  const mask = el("mask", { id, maskUnits: "userSpaceOnUse", x: f1(vb.x), y: f1(vb.y), width: f1(vb.w), height: f1(vb.h) },
+    el("rect", { x: f1(vb.x), y: f1(vb.y), width: f1(vb.w), height: f1(vb.soil + 4 - vb.y), fill: "#fff" }), hole);
+  // The ring of light runs only underground.
+  const clip = el("clipPath", { id: "dig-clip" },
+    el("rect", { x: f1(vb.x), y: f1(vb.soil + 4), width: f1(vb.w), height: f1(vb.y + vb.h - vb.soil) }));
+  const defs = svg.querySelector("defs");
+  defs.append(fade, mask, clip);
+  life.setAttribute("mask", `url(#${id})`);
+  const ring = el("circle", { class: "dig-ring", cx: f1(vb.cx), cy: f1(vb.soil), r: 1, stroke: color, "clip-path": "url(#dig-clip)" });
+  svg.insertBefore(ring, life);
+  const t0 = performance.now();
+  const span = 2000;
+  const ease = (f) => (f < 0.5 ? 4 * f * f * f : 1 - Math.pow(-2 * f + 2, 3) / 2);
+  const step = (now) => {
+    if (!life.isConnected) return;
+    const f = Math.min(1, (now - t0) / span);
+    const r = vb.reach * 1.35 * ease(f);
+    hole.setAttribute("r", f1(Math.max(1, r)));
+    ring.setAttribute("r", f1(Math.max(1, r * 0.86)));
+    ring.setAttribute("stroke-opacity", (0.7 * (1 - f)).toFixed(2));
+    if (f < 1) return requestAnimationFrame(step);
+    life.removeAttribute("mask");
+    mask.remove();
+    fade.remove();
+    clip.remove();
+    ring.remove();
+  };
+  requestAnimationFrame(step);
+}
+
+/** The button that digs into a project's underground and the bar that brings the reader
+ * back up, with the switch for every connection. ``redraw`` draws again and returns the
+ * scene's view box. Whether this page was dug stays for the tab (the Back button comes
+ * back to it open); the switch is one of the viewer's graph settings. */
+function underground(host, svg, strings, settings, redraw) {
+  const scene = host.closest(".hero-scene") || host;
+  const state = { deep: dug(location.pathname), all: settings.every };
+  host.classList.toggle("deep", state.deep);
+
+  const dig = html("button", { type: "button", class: "dig-button", title: tr(strings, "graph.dig_hint") });
+  // A small mycelium spreading from a stem.
+  const roots = el("svg", { viewBox: "0 0 24 24", "aria-hidden": "true", focusable: "false" },
+    el("path", { d: "M12 2v9M12 11c-3 2-6 3-8 7M12 11c3 2 6 3 8 7M12 11c-.6 4 .4 7 0 11M7 15c-1 2-.5 4-2 6M17 15c1 2 .5 4 2 6" }));
+  dig.append(roots, html("span", {}, tr(strings, "graph.dig")));
+  const bar = html("div", { class: "forest-bar" });
+  const up = html("button", { type: "button", class: "surface-button" }, `↑ ${tr(strings, "graph.surface")}`);
+  const every = html("button", { type: "button", class: "every-button", "aria-pressed": String(state.all), title: tr(strings, "graph.every_hint") }, tr(strings, "graph.every"));
+  bar.append(up, every);
+  host.append(dig, bar);
+
+  const go = (down) => {
+    state.deep = down;
+    setDug(location.pathname, down);
+    host.classList.toggle("deep", down);
+    scene.classList.add("digging");
+    const vb = redraw();
+    setTimeout(() => scene.classList.remove("digging"), 1000);
+    const behavior = reduced() ? "auto" : "smooth";
+    const top = scene.getBoundingClientRect().top + window.scrollY;
+    if (down) {
+      spread(svg, vb, getComputedStyle(host).getPropertyValue("--sun").trim() || "#fff");
+      const soil = parseFloat(getComputedStyle(scene).getPropertyValue("--soil-y")) || 0;
+      window.scrollTo({ top: Math.max(0, top + soil - window.innerHeight * 0.25), behavior });
+      up.focus({ preventScroll: true });
+    } else {
+      if (window.scrollY > top) window.scrollTo({ top, behavior });
+      dig.focus({ preventScroll: true });
+    }
+  };
+  dig.addEventListener("click", () => go(true));
+  up.addEventListener("click", () => go(false));
+  every.addEventListener("click", () => {
+    state.all = !state.all;
+    every.setAttribute("aria-pressed", String(state.all));
+    settings.every = state.all;
+    save(settings);
+    redraw();
+  });
+
+  // While a note is pointed at or focused, all its connections light up (the hidden ones
+  // too), the rest dims, and sparks run along each thread from the note that links to the
+  // one it links: both ways when the two link each other (the API's ``both``).
+  const light = (target) => {
+    svg.classList.remove("tracing");
+    for (const p of svg.querySelectorAll(".hypha.lit")) p.classList.remove("lit");
+    for (const f of svg.querySelectorAll(".flows")) f.remove();
+    const a = target && target.closest && target.closest("a.node");
+    if (!a) return;
+    const id = CSS.escape(a.dataset.id);
+    const threads = svg.querySelectorAll(`.hypha[data-a="${id}"], .hypha[data-b="${id}"]`);
+    if (!threads.length) return;
+    const flows = el("g", { class: "flows" });
+    for (const p of threads) {
+      p.classList.add("lit");
+      const d = p.getAttribute("d");
+      flows.appendChild(el("path", { class: "flow", d, pathLength: 100 }));
+      if (p.hasAttribute("data-both")) flows.appendChild(el("path", { class: "flow back", d, pathLength: 100 }));
+    }
+    const life = svg.querySelector("g.life");
+    if (life) life.insertBefore(flows, life.children[2] || null);
+    svg.classList.add("tracing");
+  };
+  svg.addEventListener("pointerover", (e) => light(e.target));
+  svg.addEventListener("pointerout", () => light(null));
+  svg.addEventListener("focusin", (e) => light(e.target));
+  svg.addEventListener("focusout", () => light(null));
+
+  return {
+    state,
+    /** Put the dig button under the project's mushroom, on the soil line. */
+    place(vb) {
+      const ctm = svg.getScreenCTM();
+      if (!ctm) return;
+      const x = ctm.a * vb.cx + ctm.e - host.getBoundingClientRect().left;
+      host.style.setProperty("--dig-x", `${Math.round(x)}px`);
+    },
+  };
+}
+
 /** Draw the graph named by ``el.dataset.graph`` into ``el``. ``data-mode`` is ``free``
  * (the whole vault on /explore, the default), ``box`` (a note's neighborhood over the
  * underground) or ``forest`` (a project's scene on the soil line). Every mode pans and
@@ -798,7 +953,7 @@ export async function mountGraph(host) {
 
   // How to use the graph sits behind a discreet ⓘ in the corner; the status line only
   // says how many nodes were left out, if any.
-  const hint = tr(strings, mode === "free" ? "graph.hint" : "graph.hint_box");
+  const hint = tr(strings, mode === "free" ? "graph.hint" : mode === "forest" ? "graph.hint_forest" : "graph.hint_box");
   if (status) {
     status.textContent = trimmed.hidden ? (trimmed.hidden === 1 ? tr(strings, "landing.more_one") : tr(strings, "landing.more", { count: trimmed.hidden })) : "";
   }
@@ -841,11 +996,13 @@ export async function mountGraph(host) {
   let redraw;
   let fitBox;
 
+  let forest = null;
   if (mode === "forest") {
+    forest = underground(host, svg, strings, settings, () => { redraw(); return home; });
     redraw = () => {
       labels.close();
-      home = drawForest(svg, data, L, strings, state, settings, depthZoom);
-      requestAnimationFrame(soilLine);
+      home = drawForest(svg, data, L, strings, state, settings, depthZoom, forest.state);
+      requestAnimationFrame(() => { soilLine(); forest.place(home); });
       narrow = home.w < 700;
     };
     fitBox = () => home;
