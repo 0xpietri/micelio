@@ -1,8 +1,15 @@
-"""The owner's said bubbles, written into the vault (§8a).
+"""The owner's own changes to a note, written into the vault (§8a).
 
-The one place Micelio writes a note, and only ``> [!said]`` callouts at the top level of
-its body: insert one between two blocks, change its words, move it or delete it. Nothing
-else of the note changes, except ``edited_by`` and ``updated`` in its frontmatter.
+The one place Micelio writes a note. From the note's page the signed-in owner can:
+
+- write ``> [!said]`` bubbles at the top level of its body: insert one between two
+  blocks, change its words, move it or delete it;
+- change or delete any top-level block (a paragraph, a list, a callout such as the
+  takeaway, a table), or delete a heading with everything under it (a section);
+- replace the whole body, written as Markdown;
+- undo the site's last change, while nobody else has written the note since.
+
+The frontmatter is never changed from the site, except ``edited_by`` and ``updated``.
 
 Safe against the other writers (the notes MCP, Obsidian through Syncthing):
 
@@ -11,8 +18,9 @@ Safe against the other writers (the notes MCP, Obsidian through Syncthing):
 - **Atomic.** The new text goes to a temporary file in the same folder, named the way
   Syncthing names its own temporary files (so it never syncs it), then replaces the
   note in one rename. The note keeps its permissions and its line endings.
-- **A copy of each version replaced** goes to the data folder (``edits/``), never to the
-  vault: the last ``KEEP_VERSIONS``, to undo a mistake by hand.
+- **A copy of each version replaced** goes to the data folder (``edits/<note>/``), never
+  to the vault: the last ``KEEP_VERSIONS`` of each note, with the hash of the file that
+  change wrote, so Undo restores it only while the note is still that file.
 """
 
 from __future__ import annotations
@@ -26,16 +34,28 @@ from datetime import date, datetime
 from pathlib import Path
 
 from markdown_it import MarkdownIt
+from mdit_py_plugins.footnote import footnote_plugin
+from mdit_py_plugins.tasklists import tasklists_plugin
 
 from micelio.vault.parser import split_frontmatter
 
 MAX_SAID_CHARS = 5000
-KEEP_VERSIONS = 50
+MAX_BODY_CHARS = 200_000
+KEEP_VERSIONS = 20  # of each note
 _SAID = re.compile(r"^[ \t]{0,3}>[ \t]?\[!said\][+-]?(.*)$", re.IGNORECASE)
 _FRONTMATTER_END = re.compile(r"\A---[ \t]*\n.*?\n---[ \t]*(?:\n|\Z)", re.DOTALL)
 # Holds the place a moved bubble goes to while it is cut out (never a line of a note).
 _MARK = "\x00micelio-move\x00"
-_BLOCKS = MarkdownIt("commonmark").enable(["table", "strikethrough"])
+# The renderer's own block rules, so a block's lines here are the ones its page shows.
+_BLOCKS = (
+    MarkdownIt("commonmark", {"html": True})
+    .enable(["table", "strikethrough"])
+    .use(tasklists_plugin)
+    .use(footnote_plugin)
+)
+_HEADING = re.compile(r"^h([1-6])$")
+
+Block = tuple[int, int, str, str]  # first line, line after it, token type, tag
 
 
 class EditError(Exception):
@@ -60,10 +80,13 @@ class Edit:
     """One change asked by the page. Lines count from 0 in the note's body (the text
     after the frontmatter), the numbers the owner's renderer puts on each block."""
 
-    op: str  # insert | edit | move | delete
+    # Said bubbles: insert | edit | move | delete. Any top-level block: block (its new
+    # text; empty deletes it) | drop | section (a heading and everything under it).
+    # The whole note: body (its new text, frontmatter kept) | undo.
+    op: str
     at: int | None = None  # insert, move: the body line the bubble goes before
-    start: int | None = None  # edit, move, delete: the first line of the bubble
-    text: str = ""  # insert, edit: the words, Markdown allowed
+    start: int | None = None  # edit, move, delete, block, drop, section: the first line
+    text: str = ""  # insert, edit, block, body: the words, Markdown allowed
 
 
 def said_lines(text: str, title: str = "") -> list[str]:
@@ -73,13 +96,24 @@ def said_lines(text: str, title: str = "") -> list[str]:
     return [head, *(f"> {line}".rstrip() if line.strip() else ">" for line in words.split("\n"))]
 
 
-def _blocks(body: str) -> list[tuple[int, int, str]]:
-    """Each top-level block of ``body``: first line, line after it, token type."""
+def _blocks(body: str) -> list[Block]:
+    """Each top-level block of ``body``: first line, line after it, token type, tag."""
     found = []
     for token in _BLOCKS.parse(body):
-        if token.level == 0 and token.nesting in (0, 1) and token.map:
-            found.append((token.map[0], token.map[1], token.type))
+        if token.level == 0 and token.nesting in (0, 1) and token.map and token.type != "inline":
+            found.append((token.map[0], token.map[1], token.type, token.tag))
     return found
+
+
+def _text_lines(text: str) -> list[str]:
+    return text.replace("\r\n", "\n").replace("\r", "\n").strip("\n").split("\n")
+
+
+def _trim(lines: list[str], first: int, after: int) -> int:
+    """``after`` moved up past the empty lines that end a block."""
+    while after > first and not lines[after - 1].strip():
+        after -= 1
+    return after
 
 
 def _set_field(front: list[str], key: str, value: str) -> list[str]:
@@ -109,7 +143,7 @@ def _place(lines: list[str], i: int, block: list[str]) -> None:
     lines[i:i] = [*before, *block, *after]
 
 
-class SaidEditor:
+class NoteEditor:
     def __init__(self, root: Path, history: Path, author: str) -> None:
         self.root = root
         self.history = history
@@ -135,6 +169,8 @@ class SaidEditor:
             text = raw.decode("utf-8")
         except UnicodeDecodeError as exc:
             raise EditError("encoding") from exc
+        if edit.op == "undo":
+            return self._undo(rel, path, raw)
         newline = "\r\n" if "\r\n" in text else "\n"
         # Normalized the way the index read it, so the lines are the ones the page numbered.
         text = text.replace("\r\n", "\n").replace("\r", "\n")
@@ -145,6 +181,8 @@ class SaidEditor:
         head = text[: match.end()] if match else ""
         body = text[len(head) :]
         lines = self._change(body, body.split("\n"), edit)
+        if not head and _FRONTMATTER_END.match("\n".join(lines)):
+            raise EditError("frontmatter")  # the new text would turn into frontmatter
 
         if head:
             front = head.rstrip("\n").split("\n")[1:-1]
@@ -156,13 +194,28 @@ class SaidEditor:
         if not new.endswith("\n"):
             new += "\n"
         data = new.replace("\n", newline).encode("utf-8")
-        self._keep(rel, raw)
+        if data == raw:
+            return content_hash(raw)
+        self._keep(rel, raw, content_hash(data))
         self._write(path, data)
         return content_hash(data)
 
-    def words(self, rel: str, start: int) -> str:
-        """The words of the said bubble at ``start`` as written (Markdown kept), for the
-        page's editor."""
+    def source(self, rel: str, start: int | None = None) -> str:
+        """The note's body as written (frontmatter left out), or with ``start`` the text of
+        the top-level block that starts there, for the page's editors."""
+        lines = self._body_lines(rel)
+        if start is None:
+            return "\n".join(lines).strip("\n")
+        first, end = self._block(_blocks("\n".join(lines)), lines, start)
+        return "\n".join(lines[first:end])
+
+    def undoable(self, rel: str, current: str) -> bool:
+        """Whether Undo can put back what the site's last change replaced: it was the
+        last to write the note, which is still the file hashed ``current``."""
+        latest = self._latest(rel)
+        return latest is not None and _after(latest) == current
+
+    def _body_lines(self, rel: str) -> list[str]:
         path = self.path_of(rel)
         try:
             text = path.read_bytes().decode("utf-8")
@@ -171,14 +224,38 @@ class SaidEditor:
         text = text.replace("\r\n", "\n").replace("\r", "\n")
         match = _FRONTMATTER_END.match(text)
         body = text[match.end() :] if match else text
-        lines = body.split("\n")
-        first, end = self._said(_blocks(body), lines, start)
+        return body.split("\n")
+
+    def words(self, rel: str, start: int) -> str:
+        """The words of the said bubble at ``start`` as written (Markdown kept), for the
+        page's editor."""
+        lines = self._body_lines(rel)
+        first, end = self._said(_blocks("\n".join(lines)), lines, start)
         inner = [re.sub(r"^[ \t]{0,3}>[ \t]?", "", line) for line in lines[first + 1 : end]]
         return "\n".join(inner).strip("\n")
 
     def _change(self, body: str, lines: list[str], edit: Edit) -> list[str]:
         blocks = _blocks(body)
         lines = list(lines)
+        if edit.op == "body":
+            if not edit.text.strip():
+                raise EditError("empty")
+            if len(edit.text) > MAX_BODY_CHARS:
+                raise EditError("too-long")
+            return _text_lines(edit.text)
+        if edit.op in ("block", "drop", "section"):
+            if len(edit.text) > MAX_BODY_CHARS:
+                raise EditError("too-long")
+            if edit.op == "section":
+                start, end = self._section(blocks, lines, edit.start)
+            else:
+                start, end = self._block(blocks, lines, edit.start)
+            if edit.op == "block" and edit.text.strip():
+                lines[start:end] = _text_lines(edit.text)
+                return lines
+            del lines[start:end]
+            _tidy(lines, start)
+            return lines
         if edit.op in ("insert", "edit"):
             words = edit.text.strip()
             if not words:
@@ -216,7 +293,7 @@ class SaidEditor:
         raise EditError("op")
 
     @staticmethod
-    def _gap(blocks: list[tuple[int, int, str]], lines: list[str], at: int | None) -> int:
+    def _gap(blocks: list[Block], lines: list[str], at: int | None) -> int:
         """``at`` if it is a place between two top-level blocks (or before the first or
         after the last), never inside one."""
         if at is None:
@@ -227,30 +304,82 @@ class SaidEditor:
         return at
 
     @staticmethod
-    def _said(
-        blocks: list[tuple[int, int, str]], lines: list[str], start: int | None
-    ) -> tuple[int, int]:
+    def _said(blocks: list[Block], lines: list[str], start: int | None) -> tuple[int, int]:
         """The lines of the top-level said bubble starting at ``start``."""
-        for first, after, kind in blocks:
+        for first, after, kind, _tag in blocks:
             if first == start and kind == "blockquote_open" and _SAID.match(lines[first]):
-                end = after
-                while end > first and not lines[end - 1].strip():
-                    end -= 1
-                return first, end
+                return first, _trim(lines, first, after)
         raise EditError("not-said")
 
-    def _keep(self, rel: str, raw: bytes) -> None:
-        """The version being replaced, into the data folder; the oldest ones go."""
+    @staticmethod
+    def _block(blocks: list[Block], lines: list[str], start: int | None) -> tuple[int, int]:
+        """The lines of the top-level block starting at ``start``, whatever it is."""
+        for first, after, _kind, _tag in blocks:
+            if first == start:
+                return first, _trim(lines, first, after)
+        raise EditError("not-block")
+
+    @staticmethod
+    def _section(blocks: list[Block], lines: list[str], start: int | None) -> tuple[int, int]:
+        """A heading at ``start`` and everything under it: up to the next heading of the
+        same level or a higher one, or the end of the note."""
+        for i, (first, _after, kind, tag) in enumerate(blocks):
+            level = _HEADING.match(tag)
+            if first != start or kind != "heading_open" or not level:
+                continue
+            end = len(lines)
+            for other_first, _a, other_kind, other_tag in blocks[i + 1 :]:
+                other = _HEADING.match(other_tag)
+                if other_kind == "heading_open" and other and other.group(1) <= level.group(1):
+                    end = other_first
+                    break
+            return first, _trim(lines, first, end)
+        raise EditError("not-heading")
+
+    # -- the versions replaced, and Undo ------------------------------------------------
+
+    def _folder(self, rel: str) -> Path:
+        return self.history / re.sub(r"[^\w.-]+", "_", rel)
+
+    def _latest(self, rel: str) -> Path | None:
         try:
-            self.history.mkdir(parents=True, exist_ok=True)
+            kept = sorted(self._folder(rel).glob("*.md"))
+        except OSError:
+            return None
+        return kept[-1] if kept else None
+
+    def _keep(self, rel: str, raw: bytes, after: str) -> None:
+        """The version being replaced, into the data folder, with the hash of the file
+        replacing it; the oldest ones of this note go."""
+        try:
+            folder = self._folder(rel)
+            folder.mkdir(parents=True, exist_ok=True)
             stamp = datetime.now().strftime("%Y%m%d-%H%M%S-%f")
-            name = re.sub(r"[^\w.-]+", "_", rel)
-            (self.history / f"{stamp}--{name}").write_bytes(raw)
-            kept = sorted(self.history.iterdir())
+            (folder / f"{stamp}.md").write_bytes(raw)
+            (folder / f"{stamp}.after").write_text(after, encoding="utf-8")
+            kept = sorted(folder.glob("*.md"))
             for old in kept[: max(0, len(kept) - KEEP_VERSIONS)]:
                 old.unlink(missing_ok=True)
+                old.with_suffix(".after").unlink(missing_ok=True)
         except OSError as exc:
             raise EditError("history", 500) from exc
+
+    def _undo(self, rel: str, path: Path, raw: bytes) -> str:
+        """The version the site's last change replaced, back in the vault. Refused when
+        someone else wrote the note after that change: Undo would throw their words away."""
+        latest = self._latest(rel)
+        if latest is None:
+            raise EditError("nothing", 409)
+        if _after(latest) != content_hash(raw):
+            raise EditError("not-last", 409)
+        try:
+            data = latest.read_bytes()
+        except OSError as exc:
+            raise EditError("history", 500) from exc
+        self._write(path, data)
+        latest.unlink(missing_ok=True)
+        latest.with_suffix(".after").unlink(missing_ok=True)
+        return content_hash(data)
 
     @staticmethod
     def _write(path: Path, data: bytes) -> None:
@@ -266,3 +395,10 @@ class SaidEditor:
         except OSError as exc:
             temp.unlink(missing_ok=True)
             raise EditError("write", 500) from exc
+
+
+def _after(version: Path) -> str:
+    try:
+        return version.with_suffix(".after").read_text(encoding="utf-8").strip()
+    except OSError:
+        return ""

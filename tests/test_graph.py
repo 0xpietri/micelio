@@ -248,6 +248,21 @@ def test_two_notes_linking_each_other_get_one_thread(make_vault: VaultFactory) -
         ("p", "b"),
     }
     assert len(edges) == 3
+    # Each thread says whether the two link each other (the Neighborhood shows it both ways).
+    ways = {(e["source"], e["target"]): e["both"] for e in edges}
+    assert ways[("p", "a")] is True
+    assert ways[("p", "b")] is False
+    assert next(v for k, v in ways.items() if set(k) == {"a", "b"}) is True
+
+
+def test_node_pictures_ship_for_every_illustrated_style() -> None:
+    """Journal seeds, draft buttons and the minerals (draw.js nodePicture, mineralPicture)."""
+    static = Path(__file__).parents[1] / "src" / "micelio" / "static" / "img"
+    for style in ("blacklight", "brush", "neon"):
+        for kind in ("journal", "draft"):
+            assert (static / "nodes" / style / f"{kind}.webp").is_file()
+        for mineral in ("diamond", "emerald", "amber", "quartz", "amethyst"):
+            assert (static / "minerals" / style / f"{mineral}.webp").is_file()
 
 
 def test_graph_threads_are_soft_bows() -> None:
@@ -477,4 +492,4 @@ def test_graph_json_is_plain(client: TestClient) -> None:
         "degree", "public", "href", "ghost", "faded", "focus", "look",
     }  # fmt: skip
     assert all(set(n) == keys for n in data["nodes"])
-    assert all(set(e) == {"id", "source", "target", "faded"} for e in data["edges"])
+    assert all(set(e) == {"id", "source", "target", "faded", "both"} for e in data["edges"])
