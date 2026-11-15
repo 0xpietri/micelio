@@ -2,7 +2,7 @@
 // value next to its slider, the prompt builder, and a click outside the panel goes back.
 // Without JavaScript the page still works with its Save buttons; the prompt then shows
 // the defaults.
-import { rampFilter } from "./draw.js";
+import { fragment, painter, paletteFromCss, rampFilter } from "./draw.js";
 
 const TITLE_LOOKS = {
   poster: { "--title-stroke": "0.08em", "--title-shadow": "0.05em 0.06em 0 var(--pal-accent)" },
@@ -88,7 +88,10 @@ function repaint(look) {
     // Swap once the new sheet has loaded, so the page never flashes unstyled.
     const fresh = theme.cloneNode();
     fresh.href = `/theme.css?v=${Date.now()}`;
-    fresh.addEventListener("load", () => theme.remove(), { once: true });
+    fresh.addEventListener("load", () => {
+      theme.remove();
+      document.dispatchEvent(new Event("micelio:theme"));
+    }, { once: true });
     theme.after(fresh);
   }
   const art = document.querySelector('meta[name="micelio-mushrooms"]');
@@ -121,9 +124,10 @@ function autosave() {
   if (!form) return () => Promise.resolve();
   const status = document.getElementById("autosave-status");
   for (const button of document.querySelectorAll(".save-fallback")) button.hidden = true;
+  // Saving is quiet; only a failure says something.
   const say = (key, cls) => {
     if (!status) return;
-    status.textContent = status.dataset[key] || "";
+    status.textContent = key === "failed" ? status.dataset.failed || "" : "";
     status.className = `autosave small ${cls}`;
   };
   let timer = null;
@@ -155,8 +159,10 @@ function autosave() {
     clearTimeout(timer);
     timer = setTimeout(send, ms);
   };
-  form.addEventListener("change", (e) => (e.target.type === "text" ? later(300) : send()));
-  form.addEventListener("input", (e) => { if (e.target.type === "text") later(800); });
+  // The background prompt's boxes live in the form but are not saved (they have no name).
+  const saved = (e) => e.target instanceof Element && e.target.hasAttribute("name");
+  form.addEventListener("change", (e) => { if (saved(e)) (e.target.type === "text" ? later(300) : send()); });
+  form.addEventListener("input", (e) => { if (saved(e) && e.target.type === "text") later(800); });
   form.addEventListener("submit", (e) => { e.preventDefault(); send(); });
 
   // A chosen image uploads at once (a normal post: the page comes back with it).
@@ -172,8 +178,6 @@ function autosave() {
 function clickOutsideLeaves(flush) {
   const panel = document.querySelector(".page.look");
   if (!panel) return;
-  const hint = document.querySelector(".leave-hint");
-  if (hint) hint.hidden = false;
   document.addEventListener("click", async (e) => {
     if (e.button !== 0 || e.defaultPrevented) return;
     const target = e.target;
@@ -191,6 +195,25 @@ function clickOutsideLeaves(flush) {
   });
 }
 
+/** The pictures preview shows the chosen scene's own style. */
+function showPictures(style) {
+  if (!style || style === "drawn") return;
+  for (const img of document.querySelectorAll('[data-preview="pictures"] img')) {
+    img.src = `/static/img/mushrooms/${encodeURIComponent(style)}/${img.dataset.kind}.webp`;
+  }
+}
+
+/** The painted preview: three mushrooms in the palette's colors, redrawn when it changes. */
+function drawnPreview() {
+  const box = document.querySelector('[data-preview="drawn"]');
+  if (!box) return;
+  const pal = paletteFromCss();
+  const paint = painter(pal, "drawn");
+  const kinds = [["fly-agaric", pal.accent], ["liberty-caps", pal.crystals[0]], ["morel", pal.sun]];
+  const body = kinds.map(([kind, color], i) => `<g transform="translate(${60 + i * 90},112) scale(.9)">${paint.mushroom(kind, color, "active")}</g>`).join("");
+  box.replaceChildren(fragment(`<svg viewBox="0 0 300 120" aria-hidden="true" focusable="false">${body}</svg>`));
+}
+
 async function start() {
   livePreview();
   // "Back to the start" for the soil line: the slider moves and the page saves itself.
@@ -203,9 +226,9 @@ async function start() {
       soilRange.dispatchEvent(new Event("change", { bubbles: true }));
     });
   }
-  // A scene is a template (§7b): picking one brings its soil line and its recolor
-  // default before the page saves itself (these run before the form's own listener).
-  const recolor = document.querySelector('input[name="recolor"]');
+  // A scene is a template (§7b): picking one brings its soil line and the style of its
+  // mushroom pictures before the page saves itself (these run before the form's own
+  // listener). The recolor box stays as the owner left it.
   for (const radio of document.querySelectorAll('input[name="background"]')) {
     radio.addEventListener("change", () => {
       if (soilRange && radio.dataset.soil) {
@@ -216,17 +239,11 @@ async function start() {
         soilReset.dataset.default = radio.dataset.soil;
         if (soilReset.dataset.label) soilReset.textContent = soilReset.dataset.label.replace("{value}", radio.dataset.soil);
       }
-      if (recolor) recolor.checked = radio.dataset.recolor === "on";
+      showPictures(radio.dataset.mushrooms);
     });
   }
-  // Another palette recolors the scene again, even after the box was unticked; an
-  // uploaded image keeps its own colors.
-  for (const radio of document.querySelectorAll('input[name="palette"]')) {
-    radio.addEventListener("change", () => {
-      const painting = document.querySelector('input[name="background"]:checked');
-      if (recolor && painting) recolor.checked = painting.dataset.recolor === "on";
-    });
-  }
+  drawnPreview();
+  document.addEventListener("micelio:theme", drawnPreview);
   const flush = autosave();
   clickOutsideLeaves(flush);
   const strings = await loadStrings();

@@ -141,3 +141,23 @@ def test_only_the_owner_can_share(site_for: SiteFor) -> None:
     assert site.client.post("/projects/nothing/share", data=fields).status_code == 404
     as_visitor(site)
     assert site.client.get(f"/projects/{PRIVATE}").status_code == 404
+
+
+def test_the_share_card_shows_the_scene_style(site_for: SiteFor) -> None:
+    site = site_for(VAULT)
+    site.sign_in()
+    page = site.client.get(f"/projects/{PRIVATE}").text
+    # Pictures by default, in the scene's style: only the mycelium while private.
+    assert "/static/img/share/blacklight/underground.webp" in page
+    toggle(site)
+    page = site.client.get(f"/projects/{PRIVATE}").text
+    assert "/static/img/share/blacklight/spores.webp" in page
+    # Painted in the palette's colors: the drawn card.
+    look = site.client.get("/appearance").text.split('id="look-form"', 1)[1]
+    token = re.search(r'name="csrf" value="([^"]+)"', look)
+    assert token
+    data = {"csrf": token.group(1), "background": "neon-sun", "mushrooms": "drawn", "soil": "52"}
+    assert site.client.post("/appearance", data=data, follow_redirects=False).status_code == 303
+    page = site.client.get(f"/projects/{PRIVATE}").text
+    assert "/static/img/share/" not in page
+    assert 'class="share-shroom"' in page

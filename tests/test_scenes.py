@@ -8,16 +8,17 @@ import json
 import re
 import sqlite3
 from contextlib import closing
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
 
-from micelio.appearance import PALETTES, Appearance, AppearanceStore
+from micelio.appearance import Appearance, AppearanceStore
 from micelio.config import SPECIES, Config, VaultConfig
 from micelio.i18n import load_strings
-from micelio.looks import clean_look
-from micelio.scenes import DEFAULT_SCENE, MUSHROOM_STYLES, SCENES
+from micelio.looks import MINERALS, clean_look
+from micelio.scenes import DEFAULT_SCENE, MUSHROOM_CHOICES, MUSHROOM_STYLES, SCENES
 
 from .conftest import EXAMPLE_VAULT
 from .test_landing import client as client  # the fixture
@@ -64,8 +65,10 @@ def test_every_scene_and_species_has_a_name() -> None:
             assert strings.get(f"scene.{key}"), (language, key)
         for kind in SPECIES:
             assert strings.get(f"species.{kind}"), (language, kind)
-        for style in MUSHROOM_STYLES:
-            assert strings.get(f"appearance.mushrooms_{style}"), (language, style)
+        for choice in MUSHROOM_CHOICES:
+            assert strings.get(f"appearance.mushrooms_{choice}"), (language, choice)
+        for kind in MINERALS:
+            assert strings.get(f"mineral.{kind}"), (language, kind)
 
 
 def test_a_scene_sets_soil_recolor_and_mushrooms() -> None:
@@ -74,12 +77,17 @@ def test_a_scene_sets_soil_recolor_and_mushrooms() -> None:
     assert neon.recolors
     assert neon.mushroom_style == "neon"
     assert Appearance(scene="dusk").recolors
-    assert Appearance(scene="dusk").mushroom_style == "drawn"
-    assert Appearance(scene="dusk", mushrooms="brush").mushroom_style == "brush"
-    # An uploaded image is never recolored by default, and its mushrooms are drawn.
+    # The first painting's pictures are blacklight.
+    assert Appearance(scene="dusk").mushroom_style == "blacklight"
+    # Pictures always follow the scene; painted ones follow the palette.
+    assert Appearance(scene="dusk", mushrooms="brush").mushroom_style == "blacklight"
+    assert Appearance(scene="neon-sun", mushrooms="drawn").mushroom_style == "drawn"
+    # An uploaded image is never recolored by default, and its mushrooms are drawn
+    # until the owner asks for pictures.
     own = Appearance(scene="neon-sun", background="own", own_type="png")
     assert not own.recolors
     assert own.mushroom_style == "drawn"
+    assert replace(own, mushrooms="blacklight").mushroom_style == "blacklight"
 
 
 def test_a_choice_saved_before_scenes_starts_on_the_default_scene(tmp_path: Path) -> None:
@@ -122,26 +130,28 @@ def test_picking_a_scene_brings_its_values(client: TestClient) -> None:
         assert isinstance(backdrop, dict)
         return backdrop
 
-    neon = post(background="neon-sun")
-    assert neon == {
-        "url": "/static/img/scenes/neon-sun.webp",
-        "soil": SCENES["neon-sun"].soil,
-        "ramp": " ".join(PALETTES["tokyo-night"].ramp or ()),
-        "recolor": True,  # a new scene starts recolored, whatever the old box said
-        "mushrooms": "neon",
-    }
+    neon = post(background="neon-sun", recolor="on", mushrooms="pictures")
+    assert neon["url"] == "/static/img/scenes/neon-sun.webp"
+    assert neon["soil"] == SCENES["neon-sun"].soil
+    assert neon["recolor"] is True  # the owner's box stays when the scene changes
+    assert neon["mushrooms"] == "neon"
+    assert post(background="brush-night", recolor="on", mushrooms="pictures")["recolor"] is True
+    assert post(background="neon-sun", recolor="", mushrooms="pictures")["recolor"] is False
     # On the same scene the box and the slider count.
     again = post(background="neon-sun", soil="47")
     assert again["recolor"] is False
     assert again["ramp"] == ""
     assert again["soil"] == 47
-    dusk = post(background="dusk")
+    dusk = post(background="dusk", recolor="on", mushrooms="pictures")
     assert dusk["recolor"] is True
-    assert dusk["mushrooms"] == "drawn"
+    assert dusk["mushrooms"] == "blacklight"
+    assert post(background="dusk", recolor="on", mushrooms="drawn")["mushrooms"] == "drawn"
     assert post(background="no-such-scene")["url"] == "/static/img/psychedelic-dusk.webp"
     landing = client.get("/api/landing").json()
     assert landing["background"]["url"] == "/static/img/psychedelic-dusk.webp"
-    chosen = post(background="dusk", recolor="on", mushrooms="blacklight")
+    chosen = post(background="neon-moon", recolor="on", mushrooms="pictures")
+    assert chosen["mushrooms"] == "neon"
+    chosen = post(background="dusk", recolor="on", mushrooms="pictures")
     assert chosen["mushrooms"] == "blacklight"
     assert '<meta name="micelio-mushrooms" content="blacklight">' in client.get("/journal").text
 
@@ -152,7 +162,18 @@ def test_the_appearance_page_lists_every_scene(client: TestClient) -> None:
         assert f'value="{key}" data-soil="{scene.soil}"' in page
         assert f'src="{scene.thumb}"' in page
     assert re.search(rf'value="{DEFAULT_SCENE}"[^>]* checked', page)
-    assert '<select name="mushrooms"' in page
+    # Mushrooms: two choices with a preview each, no drop-down.
+    assert '<select name="mushrooms"' not in page
+    assert 'name="mushrooms" value="drawn"' in page
+    assert 'name="mushrooms" value="pictures" checked' in page
+    assert 'src="/static/img/mushrooms/blacklight/fly-agaric.webp"' in page
+    # The recolor box sits under the palettes; the background prompt under the scenes.
+    assert page.index('name="recolor"') < page.index('name="background"')
+    assert page.index('name="background"') < page.index('id="prompt"') < page.index('name="soil"')
+    # No explanations on the panel any more.
+    assert "Only you see this page" not in page
+    assert "Click outside the panel" not in page
+    assert "(the first)" not in page
 
 
 def test_the_config_names_a_scene(tmp_path: Path) -> None:
@@ -166,3 +187,18 @@ def test_the_config_names_a_scene(tmp_path: Path) -> None:
 def test_the_new_species_can_be_chosen() -> None:
     for kind in ("spiral", "oyster", "turkey-tail"):
         assert clean_look({"species": kind}, "project") == {"species": kind}
+
+
+def test_every_style_has_its_minerals_nodes_and_share_pictures() -> None:
+    pictures = {
+        "minerals": MINERALS,
+        "nodes": ("note", "journal", "question", "gap", "draft"),
+        "share": ("spores", "underground"),
+    }
+    for style in MUSHROOM_STYLES:
+        if style == "drawn":
+            continue
+        for group, names in pictures.items():
+            for name in names:
+                path = STATIC / "img" / group / style / f"{name}.webp"
+                assert path.read_bytes()[8:12] == b"WEBP", path

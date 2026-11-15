@@ -15,7 +15,16 @@ from typing import TypedDict
 from micelio.appearance import AppearanceStore
 from micelio.config import SPECIES
 
-MINERALS: tuple[str, ...] = ("diamond", "emerald", "amber", "quartz", "amethyst")
+MINERALS: tuple[str, ...] = (
+    "diamond",
+    "emerald",
+    "amber",
+    "quartz",
+    "amethyst",
+    "obsidian",
+    "opal",
+    "malachite",
+)
 SIZE_MIN, SIZE_MAX = 0.3, 1.2
 _KEY = "node_looks"
 _COLOR = re.compile(r"#[0-9a-f]{6}")

@@ -50,7 +50,12 @@ from micelio.config import (
 from micelio.i18n import Translate, active_language
 from micelio.landing import LandingBuilder, background_url
 from micelio.looks import NodeLooks
-from micelio.scenes import MUSHROOM_STYLES, SCENES, mushroom_style_named
+from micelio.scenes import (
+    MUSHROOM_CHOICES,
+    OWN_PICTURES,
+    SCENES,
+    mushroom_style_named,
+)
 from micelio.vault import PublicView, VaultIndex
 
 PROMPT_FIELDS = ("style", "sky", "horizon", "underground", "colors", "mood")
@@ -202,7 +207,9 @@ class LandingPages:
                 "appearance": appearance,
                 "palettes": [PALETTES[k] for k in PALETTE_NAMES],
                 "scenes": list(SCENES.values()),
-                "mushroom_styles": MUSHROOM_STYLES,
+                "mushroom_choices": MUSHROOM_CHOICES,
+                "own_pictures": OWN_PICTURES,
+                "preview_species": ("fly-agaric", "liberty-caps", "morel"),
                 "background": background_url(appearance),
                 "default_headline": self.default_headline(),
                 "default_tagline": self.default_tagline(),
@@ -265,16 +272,19 @@ class LandingPages:
             own = background == "own" and now.own_type is not None
             scene = background if background in SCENES else now.scene
             painting_changed = own != now.uses_own or scene != now.scene
-            palette_changed = palette_named(palette, now.palette) != now.palette
             chosen = replace(
                 now,
                 palette=palette_named(palette, now.palette),
                 background="own" if own else "builtin",
                 scene=scene,
-                mushrooms=mushroom_style_named(mushrooms),
-                # Another painting or palette starts with the recolor default (§7b):
-                # every scene takes the palette's colors, an upload keeps its own.
-                recolor=None if painting_changed or palette_changed else recolor == "on",
+                # Painted in the palette, or pictures in the scene's style (§7b).
+                mushrooms="drawn"
+                if mushrooms == "drawn"
+                else (OWN_PICTURES if own else None)
+                if mushrooms == "pictures"
+                else mushroom_style_named(mushrooms),
+                # The owner's recolor choice stays when the painting changes.
+                recolor=recolor == "on",
                 # A scene brings its own soil line; the slider then fine-tunes it.
                 soil=SCENES[scene].soil
                 if painting_changed and not own

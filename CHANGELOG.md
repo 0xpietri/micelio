@@ -27,8 +27,16 @@ All notable changes to this project are documented here. The format follows
   graphs stand out. Each scene brings its soil line and its own illustrated mushrooms; the
   first painting is still there as "Psychedelic dusk". Blacklight planet is the new default.
 - Fifteen illustrated mushroom species per style. Click a project's mushroom to pick its
-  species from the pictures and its size; the Appearance page can also keep the drawn
-  mushrooms or use another style's.
+  species from the pictures and its size. On the Appearance page the mushrooms are either
+  painted in the palette's colors or pictures in the scene's own style, each with a preview.
+- Pictures for the rest of the forest in each style: eight minerals for sources (obsidian,
+  opal and malachite are new), spores for notes, a golden seed for journal entries, the
+  question and gap marks, the button mushroom of a draft, and the Share card's "Spores in the
+  air" and "Underground". Psychedelic dusk now uses the blacklight pictures; the brushstroke
+  scenes are now called Post-Impressionist.
+- A tidier Appearance page: "Recolor the background" sits under the palettes and stays as you
+  left it when you change scene, "Make your own background" sits under the scenes, and the
+  explanations and the "Saved" note are gone.
 - The palette now colors every scene, its illustrated mushrooms and its threads, not only
   the first painting. Psychedelic keeps each scene's own colors.
 - Mushrooms can be much smaller (30 % to 120 %), and the default one is smaller.

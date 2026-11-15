@@ -335,9 +335,10 @@ def test_palette_changes_every_page(client: TestClient) -> None:
     assert categories[0]["color"] == "#bb9af7"
     landing = client.get("/api/landing").json()
     assert landing["palette"]["key"] == "tokyo-night"
-    # Another palette recolors the scene even though the box was not sent ticked.
-    assert landing["background"]["recolor"] is True
-    # On the same palette the box counts.
+    # The recolor box is the owner's: it stays as sent, whatever the palette (marcos).
+    assert landing["background"]["recolor"] is False
+    save(client, palette="catppuccin", recolor="on")
+    assert client.get("/api/landing").json()["background"]["recolor"] is True
     save(client, palette="tokyo-night")
     assert client.get("/api/landing").json()["background"]["recolor"] is False
     save(client, palette="tokyo-night", recolor="on")
